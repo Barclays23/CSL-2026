@@ -6,7 +6,8 @@ import { AUTH_COOKIE_NAME } from "../../shared/constants/app.constants.js";
 import { appConfig } from "../../config/env.config.js";
 import type { IAuthController, IAuthService, AuthSessionDTO } from "./auth.types.js";
 import type { AdminUserDTO } from "../users/user.types.js";
-import { loginSchema, type LoginInput } from "./auth.dto.js";
+import { loginSchema } from "./auth.schema.js";
+import type { LoginInput } from "./auth.dto.js";
 
 export class AuthController implements IAuthController {
   constructor(
