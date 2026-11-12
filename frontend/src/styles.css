@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
+
 @theme inline {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Oswald", ui-sans-serif, sans-serif;
+  /* --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Oswald", ui-sans-serif, sans-serif; */
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Madimi One", ui-sans-serif, system-ui, sans-serif;
   --color-bg: var(--csl-bg);
   --color-bg-secondary: var(--csl-bg-secondary);
   --color-surface: var(--csl-surface);
