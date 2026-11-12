@@ -1,3 +1,4 @@
+import type { UserEntity, SafeUserEntity, AdminUserDTO, AdminUserCreateDTO } from "./user.types.js";
 import type { Types } from "mongoose";
 import type { AdminUserCreateInput } from "./user.dto.js";
 
