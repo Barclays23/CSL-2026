@@ -29,3 +29,7 @@ export type PublicSponsorDTO = Pick<SponsorFields, "name" | "logo" | "tier" | "w
 export type AdminSponsorDTO = PublicSponsorDTO & Pick<SponsorFields, "contactPerson" | "contactMobile" | "notes">;
 
 export type SponsorResponseDTO = PublicSponsorDTO | AdminSponsorDTO;
+
+export type SponsorCreateData = SponsorCreateDTO;
+export type SponsorUpdateData = SponsorUpdateDTO;
+export type SponsorQuery = GetSponsorsQueryDTO;
