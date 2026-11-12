@@ -11,3 +11,5 @@ export interface AuthSessionDTO {
   token: string;
   user: AdminUserDTO;
 }
+
+export type LoginCredentials = LoginDto;
