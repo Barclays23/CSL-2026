@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { AUCTION_MESSAGES } from "../../shared/constants/messages.constants.js";
-import type { IAuctionController, IAuctionService } from "./auction.types.js";
+import type { IAuctionController, IAuctionService } from "./auction.interfaces.js";
 import { mapSettingsEntityToResponseDTO } from "../settings/settings.mapper.js";
 import type { SettingsResponseDTO, SettingsEntity } from "../settings/settings.types.js";
 
