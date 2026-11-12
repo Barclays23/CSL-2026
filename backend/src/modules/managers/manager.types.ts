@@ -1,6 +1,7 @@
 import type { Types } from "mongoose";
-import type { Asset } from "../../shared/types/common.types.js";
-import type { TeamBriefDTO } from "../teams/team.types.js";
+import type { RequestHandler } from "express";
+import type { Asset, PaginatedResult } from "../../shared/types/common.types.js";
+import type { TeamBriefDTO, TeamRepositoryContract } from "../teams/team.types.js";
 import type { ManagerCreateInput, ManagerQueryInput, ManagerUpdateInput } from "./manager.dto.js";
 
 export type ManagerStatus = "active" | "inactive";
@@ -65,7 +66,23 @@ export interface ManagerRepositoryContract {
   findManagerWithTeamById(managerId: string): Promise<PopulatedManagerEntity | null>;
   findManagerByMobile(mobile: string): Promise<ManagerEntity | null>;
   findManagerByEmail(email: string): Promise<ManagerEntity | null>;
-  createManager(data: Omit<ManagerCreateDTO, "dateOfBirth"> & { dateOfBirth: Date | null; mobile: string; email: string | null; teamRef: Types.ObjectId | null }): Promise<ManagerEntity>;
-  updateManager(managerId: string, data: Partial<ManagerEntity>): Promise<ManagerEntity | null>;
+  createManager(data: ManagerFields): Promise<ManagerEntity>;
+  updateManager(managerId: string, data: Partial<ManagerFields>): Promise<ManagerEntity | null>;
   deleteManager(managerId: string): Promise<boolean>;
+}
+
+export interface IManagerService {
+  getManagers(query: ManagerQueryDTO, isAdmin: boolean): Promise<PaginatedResult<ManagerResponseDTO>>;
+  getManagerById(managerId: string, isAdmin: boolean): Promise<ManagerResponseDTO>;
+  createManager(input: ManagerCreateDTO): Promise<AdminManagerDTO>;
+  updateManager(managerId: string, input: ManagerUpdateDTO): Promise<AdminManagerDTO>;
+  deleteManager(managerId: string): Promise<void>;
+}
+
+export interface IManagerController {
+  getManagers: RequestHandler;
+  getManagerById: RequestHandler;
+  createManager: RequestHandler;
+  updateManager: RequestHandler;
+  deleteManager: RequestHandler;
 }
