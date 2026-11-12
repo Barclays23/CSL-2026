@@ -26,7 +26,7 @@ export class PlayerController implements IPlayerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async getPlayerById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async getPlayerById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
       const player: PlayerResponseDTO = await this._playerService.getPlayerById(playerId, Boolean(request.user));
@@ -42,7 +42,7 @@ export class PlayerController implements IPlayerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async updatePlayer(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async updatePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
       const input: PlayerUpdateInput = playerUpdateSchema.parse(request.body);
@@ -51,7 +51,7 @@ export class PlayerController implements IPlayerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async assignPlayerToTeam(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async assignPlayerToTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
       const input: PlayerAssignmentInput = playerAssignmentSchema.parse(request.body);
@@ -60,7 +60,7 @@ export class PlayerController implements IPlayerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async markPlayerUnsold(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async markPlayerUnsold(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
       const player: PlayerAdminDTO = await this._playerService.markPlayerUnsold(playerId);
@@ -68,7 +68,7 @@ export class PlayerController implements IPlayerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deactivatePlayer(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deactivatePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
       const player: PlayerAdminDTO = await this._playerService.deactivatePlayer(playerId);
@@ -76,7 +76,7 @@ export class PlayerController implements IPlayerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deletePlayer(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deletePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
       await this._playerService.deletePlayer(playerId);
