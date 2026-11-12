@@ -25,9 +25,9 @@ import type {
 
 export class MatchService implements IMatchService {
   constructor(
-    private readonly matchRepository: MatchRepositoryContract,
-    private readonly teamRepository: TeamRepositoryContract,
-    private readonly playerRepository: PlayerRepositoryContract,
+    private readonly _matchRepository: MatchRepositoryContract,
+    private readonly _teamRepository: TeamRepositoryContract,
+    private readonly _playerRepository: PlayerRepositoryContract,
   ) {}
 
   async getMatches(query: MatchQueryDTO): Promise<PaginatedResult<MatchResponseDTO>> {
@@ -37,7 +37,7 @@ export class MatchService implements IMatchService {
     if (query.status) filter.status = query.status;
 
     if (query.search) {
-      const matchedTeams = await this.teamRepository.findTeams({
+      const matchedTeams = await this._teamRepository.findTeams({
         status: "active",
         name: { $regex: query.search, $options: "i" },
       }, 1, 100);
@@ -49,7 +49,7 @@ export class MatchService implements IMatchService {
       ];
     }
 
-    const result = await this.matchRepository.findMatches(filter, query.page, query.limit);
+    const result = await this._matchRepository.findMatches(filter, query.page, query.limit);
     return {
       items: result.items.map((match) => this.mapMatchToResponseDTO(match)),
       pagination: {
@@ -63,7 +63,7 @@ export class MatchService implements IMatchService {
 
   async getMatchById(matchId: string): Promise<MatchResponseDTO> {
     this.ensureValidObjectId(matchId, "match");
-    const match = await this.matchRepository.findMatchWithTeamsAndGoals(matchId);
+    const match = await this._matchRepository.findMatchWithTeamsAndGoals(matchId);
     if (!match) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
     return this.mapMatchToResponseDTO(match);
   }
@@ -72,7 +72,7 @@ export class MatchService implements IMatchService {
     const groupName = input.stage === "group" ? input.groupName ?? null : null;
     await this.validateMatchTeams(input.team1Ref, input.team2Ref, input.stage, groupName);
 
-    if (await this.matchRepository.findMatchByNumber(input.matchNo)) {
+    if (await this._matchRepository.findMatchByNumber(input.matchNo)) {
       throw new AppError("Match number already exists", 409, "DUPLICATE_MATCH", {
         matchNo: "Match number already exists",
       });
@@ -99,15 +99,15 @@ export class MatchService implements IMatchService {
       notes: input.notes ?? null,
     };
 
-    const createdMatch = await this.matchRepository.createMatch(matchFields);
-    const populatedMatch = await this.matchRepository.findMatchWithTeamsAndGoals(String(createdMatch._id));
+    const createdMatch = await this._matchRepository.createMatch(matchFields);
+    const populatedMatch = await this._matchRepository.findMatchWithTeamsAndGoals(String(createdMatch._id));
     if (!populatedMatch) throw new AppError("Created match could not be retrieved", 500, "MATCH_CREATE_FAILED");
     return this.mapMatchToResponseDTO(populatedMatch);
   }
 
   async updateMatch(matchId: string, input: MatchUpdateDTO): Promise<MatchResponseDTO> {
     this.ensureValidObjectId(matchId, "match");
-    const existingMatch = await this.matchRepository.findMatchById(matchId);
+    const existingMatch = await this._matchRepository.findMatchById(matchId);
     if (!existingMatch) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
 
     const updatedStage = input.stage ?? existingMatch.stage;
@@ -127,7 +127,7 @@ export class MatchService implements IMatchService {
     }
 
     if (input.matchNo && input.matchNo !== existingMatch.matchNo) {
-      const duplicateMatch = await this.matchRepository.findMatchByNumber(input.matchNo);
+      const duplicateMatch = await this._matchRepository.findMatchByNumber(input.matchNo);
       if (duplicateMatch && String(duplicateMatch._id) !== matchId) {
         throw new AppError("Match number already exists", 409, "DUPLICATE_MATCH", {
           matchNo: "Match number already exists",
@@ -150,7 +150,7 @@ export class MatchService implements IMatchService {
     };
 
     this.validateCompletedMatchResult(mergedMatch);
-    const updatedMatch = await this.matchRepository.updateMatch(matchId, {
+    const updatedMatch = await this._matchRepository.updateMatch(matchId, {
       matchNo: mergedMatch.matchNo,
       stage: mergedMatch.stage,
       groupName: mergedMatch.groupName,
@@ -164,27 +164,27 @@ export class MatchService implements IMatchService {
     });
     if (!updatedMatch) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
 
-    const populatedMatch = await this.matchRepository.findMatchWithTeamsAndGoals(matchId);
+    const populatedMatch = await this._matchRepository.findMatchWithTeamsAndGoals(matchId);
     if (!populatedMatch) throw new AppError("Updated match could not be retrieved", 500, "MATCH_UPDATE_FAILED");
     return this.mapMatchToResponseDTO(populatedMatch);
   }
 
   async deleteMatch(matchId: string): Promise<void> {
     this.ensureValidObjectId(matchId, "match");
-    const deleted = await this.matchRepository.deleteMatch(matchId);
+    const deleted = await this._matchRepository.deleteMatch(matchId);
     if (!deleted) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
   }
 
   async addGoalToMatch(matchId: string, input: GoalCreateDTO): Promise<MatchResponseDTO> {
     this.ensureValidObjectId(matchId, "match");
-    const match = await this.matchRepository.findMatchById(matchId);
+    const match = await this._matchRepository.findMatchById(matchId);
     if (!match) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
 
     const goal = await this.buildValidatedGoal(match, input);
     const resultingGoals = [...match.goals, goal];
     this.validateCompletedMatchResult({ ...match, goals: resultingGoals });
 
-    const updatedMatch = await this.matchRepository.appendGoal(matchId, goal);
+    const updatedMatch = await this._matchRepository.appendGoal(matchId, goal);
     if (!updatedMatch) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
     return this.mapMatchToResponseDTO(updatedMatch);
   }
@@ -192,7 +192,7 @@ export class MatchService implements IMatchService {
   async updateMatchGoal(matchId: string, goalId: string, input: GoalCreateDTO): Promise<MatchResponseDTO> {
     this.ensureValidObjectId(matchId, "match");
     this.ensureValidObjectId(goalId, "goal");
-    const match = await this.matchRepository.findMatchById(matchId);
+    const match = await this._matchRepository.findMatchById(matchId);
     if (!match) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
 
     const existingGoal = match.goals.find((goal) => String(goal._id) === goalId);
@@ -202,7 +202,7 @@ export class MatchService implements IMatchService {
     const resultingGoals = match.goals.map((goal) => String(goal._id) === goalId ? updatedGoal : goal);
     this.validateCompletedMatchResult({ ...match, goals: resultingGoals });
 
-    const savedMatch = await this.matchRepository.updateMatchGoal(matchId, goalId, updatedGoal);
+    const savedMatch = await this._matchRepository.updateMatchGoal(matchId, goalId, updatedGoal);
     if (!savedMatch) throw new AppError("Goal not found", 404, "GOAL_NOT_FOUND");
     return this.mapMatchToResponseDTO(savedMatch);
   }
@@ -210,7 +210,7 @@ export class MatchService implements IMatchService {
   async deleteMatchGoal(matchId: string, goalId: string): Promise<MatchResponseDTO> {
     this.ensureValidObjectId(matchId, "match");
     this.ensureValidObjectId(goalId, "goal");
-    const match = await this.matchRepository.findMatchById(matchId);
+    const match = await this._matchRepository.findMatchById(matchId);
     if (!match) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
 
     const existingGoal = match.goals.find((goal) => String(goal._id) === goalId);
@@ -219,7 +219,7 @@ export class MatchService implements IMatchService {
     const resultingGoals = match.goals.filter((goal) => String(goal._id) !== goalId);
     this.validateCompletedMatchResult({ ...match, goals: resultingGoals });
 
-    const savedMatch = await this.matchRepository.removeMatchGoal(matchId, goalId);
+    const savedMatch = await this._matchRepository.removeMatchGoal(matchId, goalId);
     if (!savedMatch) throw new AppError("Goal not found", 404, "GOAL_NOT_FOUND");
     return this.mapMatchToResponseDTO(savedMatch);
   }
@@ -236,8 +236,8 @@ export class MatchService implements IMatchService {
     if (team1Id === team2Id) throw new AppError("A team cannot play itself", 422, "SAME_TEAMS");
 
     const [team1, team2] = await Promise.all([
-      this.teamRepository.findTeamById(team1Id),
-      this.teamRepository.findTeamById(team2Id),
+      this._teamRepository.findTeamById(team1Id),
+      this._teamRepository.findTeamById(team2Id),
     ]);
     if (!team1 || team1.status !== "active" || !team2 || team2.status !== "active") {
       throw new AppError("Both match teams must be active", 422, "INVALID_TEAMS");
@@ -262,7 +262,7 @@ export class MatchService implements IMatchService {
 
     if (input.goalType === "normal") {
       if (!input.scorerRef) throw new AppError("Select a goal scorer", 422, "SCORER_REQUIRED");
-      const scorer = await this.playerRepository.findPlayerById(input.scorerRef);
+      const scorer = await this._playerRepository.findPlayerById(input.scorerRef);
       if (!scorer || scorer.status !== "active" || String(scorer.teamRef) !== scoringTeamId) {
         throw new AppError("Normal scorer must be an active player in the scoring team", 422, "INVALID_SCORER");
       }
@@ -275,7 +275,7 @@ export class MatchService implements IMatchService {
     }
 
     if (!input.ownGoalPlayerRef) throw new AppError("Select the own-goal player", 422, "OWN_GOAL_PLAYER_REQUIRED");
-    const ownGoalPlayer = await this.playerRepository.findPlayerById(input.ownGoalPlayerRef);
+    const ownGoalPlayer = await this._playerRepository.findPlayerById(input.ownGoalPlayerRef);
     const opposingTeamId = scoringTeamId === team1Id ? team2Id : team1Id;
     if (!ownGoalPlayer || String(ownGoalPlayer.teamRef) !== opposingTeamId) {
       throw new AppError("Own-goal player must belong to the opposing team", 422, "INVALID_OWN_GOAL_PLAYER");
