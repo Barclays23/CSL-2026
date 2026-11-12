@@ -16,7 +16,7 @@ const envSchema = z.object({
   COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
   ADMIN_NAME: z.string().default("CSL Administrator"),
   ADMIN_EMAIL: z.email().optional(),
-  ADMIN_PASSWORD: z.string().min(10).optional(),
+  ADMIN_PASSWORD: z.string().min(8).optional(),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
