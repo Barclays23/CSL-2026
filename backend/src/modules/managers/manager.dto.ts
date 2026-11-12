@@ -25,3 +25,23 @@ export type ManagerQueryInput = ManagerQueryDto;
 export type ManagerCreateDTO = CreateManagerDto;
 export type ManagerUpdateDTO = UpdateManagerDto;
 export type ManagerQueryDTO = ManagerQueryDto;
+
+import type { TeamBriefDTO } from "../teams/team.types.js";
+
+export interface PublicManagerDTO {
+  _id: string;
+  name: string;
+  teamRef: string | null;
+  team: TeamBriefDTO | null;
+  role: string | null;
+  profilePic: Asset | null;
+  status: ManagerStatus;
+}
+
+export interface AdminManagerDTO extends PublicManagerDTO {
+  mobile: string;
+  email: string | null;
+  dateOfBirth: string | null;
+}
+
+export type ManagerResponseDTO = PublicManagerDTO | AdminManagerDTO;
