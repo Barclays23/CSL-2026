@@ -7,7 +7,9 @@ import type { IUploadController, IUploadService, ImageUploadResult, ImageUploadF
 import { imageUploadSchema, type UploadPurpose } from "./upload.dto.js";
 
 export class UploadController implements IUploadController {
-  constructor(private readonly _uploadService: IUploadService) {}
+  constructor(private readonly _uploadService: IUploadService) {
+    this.uploadImage = this.uploadImage.bind(this);
+  }
 
   async uploadImage(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
