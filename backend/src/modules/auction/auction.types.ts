@@ -21,15 +21,4 @@ export interface AuctionTotals {
   activeTeams: number;
 }
 
-export interface IAuctionService {
-  startAuction(): Promise<SettingsEntity>;
-  completeAuction(): Promise<SettingsEntity>;
-  reopenAuction(): Promise<SettingsEntity>;
-  validateAuctionCompletion(): Promise<AuctionCompletionValidationResult>;
-}
-
-export interface IAuctionController {
-  startAuction: import("../../shared/types/common.types.js").ControllerMethod;
-  completeAuction: import("../../shared/types/common.types.js").ControllerMethod;
-  reopenAuction: import("../../shared/types/common.types.js").ControllerMethod;
-}
+export type { IAuctionService, IAuctionController } from "./auction.interfaces.js";
