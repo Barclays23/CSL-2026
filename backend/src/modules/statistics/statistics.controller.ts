@@ -5,7 +5,11 @@ import { STATISTICS_MESSAGES } from "../../shared/constants/messages.constants.j
 import type { IStatisticsController, IStatisticsService, DashboardSummaryDTO, GroupStandingDTO, TopScorerDTO, TeamStatisticsDTO } from "./statistics.types.js";
 
 export class StatisticsController implements IStatisticsController {
-  constructor(private readonly _statisticsService: IStatisticsService) {}
+  constructor(private readonly _statisticsService: IStatisticsService) {
+    this.getDashboardStatistics = this.getDashboardStatistics.bind(this);
+    this.getGroupStandings = this.getGroupStandings.bind(this);
+    this.getTopScorers = this.getTopScorers.bind(this);
+  }
 
   async getDashboardStatistics(_request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
