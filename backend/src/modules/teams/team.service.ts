@@ -3,19 +3,8 @@ import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { ISettingsService } from "../settings/settings.types.js";
 import type { IPlayerRepository } from "../players/player.types.js";
-import type {
-  ITeamService,
-  TeamAuctionCardDTO,
-  TeamAuctionSummaryDTO,
-  TeamBriefDTO,
-  TeamCreateDTO,
-  TeamDTO,
-  TeamFields,
-  TeamListFilter,
-  TeamQueryDTO,
-  ITeamRepository,
-  TeamUpdateDTO,
-} from "./team.types.js";
+import type { ITeamService, ITeamRepository } from "./team.interfaces.js";
+import type { TeamAuctionCardDTO, TeamAuctionSummaryDTO, TeamBriefDTO, TeamCreateDTO, TeamDTO, TeamFields, TeamListFilter, TeamQueryDTO, TeamUpdateDTO } from "./team.types.js";
 
 export class TeamService implements ITeamService {
   constructor(
