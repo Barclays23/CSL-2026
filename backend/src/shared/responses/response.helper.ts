@@ -1,14 +1,15 @@
 import type { Response } from "express";
-import type { ApiResponse, Pagination } from "../types/common.types.js";
+import type { Pagination } from "../types/common.types.js";
+import type { ApiResponse } from "./response.types.js";
 
-export function sendSuccess<T>(
+export function sendSuccess<TData>(
   response: Response,
-  data: T,
+  data: TData,
   message: string,
-  statusCode: number = 200,
+  statusCode = 200,
   pagination?: Pagination,
-): Response<ApiResponse<T>> {
-  const payload: ApiResponse<T> = {
+): Response<ApiResponse<TData>> {
+  const payload: ApiResponse<TData> = {
     success: true,
     message,
     data,
