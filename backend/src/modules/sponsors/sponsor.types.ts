@@ -1,7 +1,52 @@
+import type { Types } from "mongoose";
 import type { Asset } from "../../shared/types/common.types.js";
+import type { SponsorCreateDTO, SponsorUpdateDTO, GetSponsorsQueryDTO } from "./sponsor.dto.js";
+
+export type SponsorStatus = "active" | "inactive";
 export interface SponsorFields {
-  name:string;logo:Asset|null;tier:string|null;website:string|null;contactPerson:string|null;
-  contactMobile:string|null;status:"active"|"inactive";notes:string|null;
+  name: string;
+  logo: Asset | null;
+  tier: string | null;
+  website: string | null;
+  contactPerson: string | null;
+  contactMobile: string | null;
+  status: SponsorStatus;
+  notes: string | null;
 }
-export type PublicSponsorDTO=Pick<SponsorFields,"name"|"logo"|"tier"|"website"|"status"> & {_id:string;};
-export type AdminSponsorDTO=PublicSponsorDTO & Pick<SponsorFields,"contactPerson"|"contactMobile"|"notes">;
+export interface SponsorEntity extends SponsorFields {
+  _id: Types.ObjectId;
+}
+export type PublicSponsorDTO = Pick<SponsorFields, "name" | "logo" | "tier" | "website" | "status"> & { _id: string };
+export type AdminSponsorDTO = PublicSponsorDTO & Pick<SponsorFields, "contactPerson" | "contactMobile" | "notes">;
+export type SponsorResponseDTO = PublicSponsorDTO | AdminSponsorDTO;
+export type SponsorCreateData = SponsorCreateDTO;
+export type SponsorUpdateData = SponsorUpdateDTO;
+export type SponsorQuery = GetSponsorsQueryDTO;
+export interface SponsorListFilter {
+  status?: SponsorStatus;
+  name?: { $regex: string; $options: "i" };
+}
+export interface SponsorListResult {
+  items: SponsorEntity[];
+  total: number;
+}
+export interface PaginatedSponsors {
+  items: SponsorResponseDTO[];
+  total: number;
+  page: number;
+  limit: number;
+}
+export interface ISponsorRepository {
+  findSponsors(filter: SponsorListFilter, page: number, limit: number, includePrivateFields: boolean): Promise<SponsorListResult>;
+  findSponsorById(sponsorId: string, includePrivateFields: boolean): Promise<SponsorEntity | null>;
+  createSponsor(data: SponsorCreateData): Promise<SponsorEntity>;
+  updateSponsor(sponsorId: string, data: SponsorUpdateData, includePrivateFields: boolean): Promise<SponsorEntity | null>;
+  deleteSponsor(sponsorId: string): Promise<boolean>;
+}
+export interface ISponsorService {
+  getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedSponsors>;
+  getSponsorById(sponsorId: string, isAdmin: boolean): Promise<SponsorResponseDTO>;
+  createSponsor(data: SponsorCreateData): Promise<AdminSponsorDTO>;
+  updateSponsor(sponsorId: string, data: SponsorUpdateData): Promise<AdminSponsorDTO>;
+  deleteSponsor(sponsorId: string): Promise<void>;
+}
