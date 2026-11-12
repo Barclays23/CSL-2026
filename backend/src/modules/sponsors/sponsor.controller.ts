@@ -7,7 +7,13 @@ import type { ISponsorController, ISponsorService, SponsorResponseDTO, AdminSpon
 import { getSponsorsQuerySchema, sponsorCreateSchema, sponsorUpdateSchema, type SponsorCreateDTO, type SponsorUpdateDTO, type GetSponsorsQueryDTO } from "./sponsor.dto.js";
 
 export class SponsorController implements ISponsorController {
-  constructor(private readonly _sponsorService: ISponsorService) {}
+  constructor(private readonly _sponsorService: ISponsorService) {
+    this.getSponsors = this.getSponsors.bind(this);
+    this.getSponsorById = this.getSponsorById.bind(this);
+    this.createSponsor = this.createSponsor.bind(this);
+    this.updateSponsor = this.updateSponsor.bind(this);
+    this.deleteSponsor = this.deleteSponsor.bind(this);
+  }
 
   async getSponsors(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
