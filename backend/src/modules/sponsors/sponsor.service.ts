@@ -1,18 +1,71 @@
 import { AppError } from "../../shared/errors/appError.js";
-import { SponsorRepository } from "./sponsor.repository.js";
-export class SponsorService {
-  constructor(private readonly _sponsorRepo:SponsorRepository){}
-  async list(query:Record<string,unknown>,admin:boolean){
-    const f:Record<string,unknown>={};if(admin&&query.status)f.status=query.status;else if(!admin)f.status="active";if(query.search)f.name={$regex:String(query.search),$options:"i"};
-    const r=await this._sponsorRepo.listSponsors(f,Number(query.page||1),Number(query.limit||50),admin);
-    return {items:r.items.map(s=>this.map(s as unknown as Record<string,unknown>,admin)),total:r.total,page:Number(query.page||1),limit:Number(query.limit||50)};
+import type { ISponsorRepository, AdminSponsorDTO, PublicSponsorDTO, SponsorEntity, SponsorListFilter, SponsorQuery, SponsorResponseDTO, PaginatedSponsors, SponsorCreateData, SponsorUpdateData, ISponsorService } from "./sponsor.types.js";
+
+export class SponsorService implements ISponsorService {
+  constructor(private readonly sponsorRepository: ISponsorRepository) {}
+
+  async getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedSponsors> {
+    const page = query.page;
+    const limit = query.limit;
+    const filter: SponsorListFilter = {};
+    if (isAdmin && query.status) filter.status = query.status;
+    else if (!isAdmin) filter.status = "active";
+    if (query.search) filter.name = { $regex: query.search, $options: "i" };
+
+    const result = await this.sponsorRepository.findSponsors(filter, page, limit, isAdmin);
+    return {
+      items: result.items.map((sponsor) => this.mapSponsorToResponseDTO(sponsor, isAdmin)),
+      total: result.total,
+      page,
+      limit,
+    };
   }
-  map(s:Record<string,unknown>,admin:boolean){const {_id,name,logo,tier,website,status,contactPerson,contactMobile,notes}=s;return admin?{_id:String(_id),name,logo,tier,website,status,contactPerson:contactPerson??null,contactMobile:contactMobile??null,notes:notes??null}:{_id:String(_id),name,logo,tier,website,status};}
-  async get(id:string,admin:boolean){const s=await this._sponsorRepo.findSponsor(id,admin) as unknown as Record<string,unknown>|null;if(!s||(!admin&&s.status!=="active"))throw new AppError("Sponsor not found",404,"NOT_FOUND");return this.map(s,admin);}
-  async save(data:Record<string,unknown>,id?:string){
-    const v=id?await this._sponsorRepo.updateSponsor(id,data,true):await this._sponsorRepo.create(data);
-    if(!v)throw new AppError("Sponsor not found",404,"NOT_FOUND");
-    return this.map(v as unknown as Record<string,unknown>,true);
+
+  async getSponsorById(sponsorId: string, isAdmin: boolean): Promise<SponsorResponseDTO> {
+    const sponsor = await this.sponsorRepository.findSponsorById(sponsorId, isAdmin);
+    if (!sponsor || (!isAdmin && sponsor.status !== "active")) {
+      throw new AppError("Sponsor not found", 404, "NOT_FOUND");
+    }
+    return this.mapSponsorToResponseDTO(sponsor, isAdmin);
   }
-  async remove(id:string){const r=await this._sponsorRepo.remove(id);if(!r)throw new AppError("Sponsor not found",404,"NOT_FOUND");return null;}
+
+  async createSponsor(data: SponsorCreateData): Promise<AdminSponsorDTO> {
+    const sponsor = await this.sponsorRepository.createSponsor(data);
+    return this.mapSponsorToAdminDTO(sponsor);
+  }
+
+  async updateSponsor(sponsorId: string, data: SponsorUpdateData): Promise<AdminSponsorDTO> {
+    const sponsor = await this.sponsorRepository.updateSponsor(sponsorId, data, true);
+    if (!sponsor) throw new AppError("Sponsor not found", 404, "NOT_FOUND");
+    return this.mapSponsorToAdminDTO(sponsor);
+  }
+
+  async deleteSponsor(sponsorId: string): Promise<void> {
+    const deleted = await this.sponsorRepository.deleteSponsor(sponsorId);
+    if (!deleted) throw new AppError("Sponsor not found", 404, "NOT_FOUND");
+  }
+
+  private mapSponsorToResponseDTO(sponsor: SponsorEntity, isAdmin: boolean): SponsorResponseDTO {
+    return isAdmin ? this.mapSponsorToAdminDTO(sponsor) : this.mapSponsorToPublicDTO(sponsor);
+  }
+
+  private mapSponsorToPublicDTO(sponsor: SponsorEntity): PublicSponsorDTO {
+    return {
+      _id: String(sponsor._id),
+      name: sponsor.name,
+      logo: sponsor.logo,
+      tier: sponsor.tier,
+      website: sponsor.website,
+      status: sponsor.status,
+    };
+  }
+
+  private mapSponsorToAdminDTO(sponsor: SponsorEntity): AdminSponsorDTO {
+    return {
+      ...this.mapSponsorToPublicDTO(sponsor),
+      contactPerson: sponsor.contactPerson,
+      contactMobile: sponsor.contactMobile,
+      notes: sponsor.notes,
+    };
+  }
 }
