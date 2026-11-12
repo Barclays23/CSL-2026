@@ -4,7 +4,7 @@ import { optionalAuthenticate } from "../../middlewares/optionalAuthenticate.mid
 import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { teamController } from "../../container/dependencies.js";
-import { teamCreateSchema, teamQuerySchema, teamUpdateSchema } from "./team.dto.js";
+import { teamCreateSchema, teamQuerySchema, teamUpdateSchema } from "./team.schema.js";
 
 
 
