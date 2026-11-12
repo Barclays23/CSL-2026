@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { IPlayerRepository } from "../players/player.types.js";
+import type { IPlayerRepository } from "../players/player.interfaces.js";
 import type { ITeamService, ITeamRepository } from "./team.interfaces.js";
 import type { TeamAuctionCardDTO, TeamAuctionSummaryDTO, TeamBriefDTO, TeamCreateDTO, TeamDTO, TeamFields, TeamListFilter, TeamQueryDTO, TeamUpdateDTO } from "./team.types.js";
 
