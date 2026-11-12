@@ -37,17 +37,17 @@ interface MutableTeamTotals {
 
 export class StatisticsService implements IStatisticsService {
   constructor(
-    private readonly statisticsRepository: IStatisticsRepository,
-    private readonly settingsService: ISettingsService,
-    private readonly playerRepository: PlayerRepositoryContract,
-    private readonly teamRepository: TeamRepositoryContract,
+    private readonly _statisticsRepository: IStatisticsRepository,
+    private readonly _settingsService: ISettingsService,
+    private readonly _playerRepository: PlayerRepositoryContract,
+    private readonly _teamRepository: TeamRepositoryContract,
   ) {}
 
   async getGroupStandings(): Promise<GroupStandingDTO[]> {
     const [completedGroupMatches, activeTeams, settings] = await Promise.all([
-      this.statisticsRepository.findCompletedGroupStageMatches(),
-      this.statisticsRepository.findActiveTeams(),
-      this.settingsService.getTournamentSettings(),
+      this._statisticsRepository.findCompletedGroupStageMatches(),
+      this._statisticsRepository.findActiveTeams(),
+      this._settingsService.getTournamentSettings(),
     ]);
 
     const standingByTeamId = new Map<string, MutableStanding>();
@@ -102,9 +102,9 @@ export class StatisticsService implements IStatisticsService {
 
   async getTopScorers(): Promise<TopScorerDTO[]> {
     const [completedMatches, players, teams] = await Promise.all([
-      this.statisticsRepository.findCompletedMatches(),
-      this.statisticsRepository.findPlayersForTournamentStatistics(),
-      this.statisticsRepository.findAllTeams(),
+      this._statisticsRepository.findCompletedMatches(),
+      this._statisticsRepository.findPlayersForTournamentStatistics(),
+      this._statisticsRepository.findAllTeams(),
     ]);
 
     const playerById = new Map<string, PlayerStatisticsEntity>(players.map((player) => [String(player._id), player]));
@@ -149,8 +149,8 @@ export class StatisticsService implements IStatisticsService {
 
   async getOverallTeamStatistics(): Promise<OverallTeamStatisticsDTO[]> {
     const [completedMatches, activeTeams] = await Promise.all([
-      this.statisticsRepository.findCompletedMatches(),
-      this.statisticsRepository.findActiveTeams(),
+      this._statisticsRepository.findCompletedMatches(),
+      this._statisticsRepository.findActiveTeams(),
     ]);
 
     const totalsByTeamId = new Map<string, MutableTeamTotals>();
@@ -191,7 +191,7 @@ export class StatisticsService implements IStatisticsService {
   async getTeamStatistics(teamId: string): Promise<TeamStatisticsDTO> {
     this.ensureValidTeamId(teamId);
     const [team, groupStandings, overallStatistics] = await Promise.all([
-      this.teamRepository.findTeamById(teamId),
+      this._teamRepository.findTeamById(teamId),
       this.getGroupStandings(),
       this.getOverallTeamStatistics(),
     ]);
@@ -250,15 +250,15 @@ export class StatisticsService implements IStatisticsService {
       overallTeamStatistics,
       upcomingMatchCount,
     ] = await Promise.all([
-      this.settingsService.getTournamentSettings(),
-      this.teamRepository.countActiveTeams(),
-      this.playerRepository.getPlayerAuctionCounts(),
-      this.statisticsRepository.findCompletedMatches(),
-      this.statisticsRepository.findUpcomingFixtureCards(4),
-      this.statisticsRepository.findRecentResultCards(4),
+      this._settingsService.getTournamentSettings(),
+      this._teamRepository.countActiveTeams(),
+      this._playerRepository.getPlayerAuctionCounts(),
+      this._statisticsRepository.findCompletedMatches(),
+      this._statisticsRepository.findUpcomingFixtureCards(4),
+      this._statisticsRepository.findRecentResultCards(4),
       this.getTopScorers(),
       this.getOverallTeamStatistics(),
-      this.statisticsRepository.countScheduledFixtures(),
+      this._statisticsRepository.countScheduledFixtures(),
     ]);
 
     return {
