@@ -1,15 +1,71 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { MatchService } from "./match.service.js";
-export class MatchController {
-  constructor(private readonly _matchService:MatchService){}
-  list:RequestHandler=asyncHandler(async(req,res)=>{const r=await this._matchService.list(req.query as Record<string,unknown>);sendSuccess(res,r.items,"Matches fetched",200,{page:r.page,limit:r.limit,total:r.total,totalPages:Math.ceil(r.total/r.limit)});});
-  get:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.get(String(req.params.id)),"Match fetched"));
-  create:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.create(req.body as Record<string,unknown>),"Match created",201));
-  update:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.update(String(req.params.id),req.body as Record<string,unknown>),"Match updated"));
-  remove:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.delete(String(req.params.id)),"Match deleted"));
-  addGoal:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.addGoal(String(req.params.id),req.body as Record<string,unknown>),"Goal added",201));
-  updateGoal:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.updateGoal(String(req.params.id),String(req.params.goalId),req.body as Record<string,unknown>),"Goal updated"));
-  deleteGoal:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._matchService.deleteGoal(String(req.params.id),String(req.params.goalId)),"Goal deleted"));
+import type { IMatchController, IMatchService } from "./match.types.js";
+import {
+  goalSchema,
+  matchCreateSchema,
+  matchQuerySchema,
+  matchUpdateSchema,
+} from "./match.dto.js";
+
+export class MatchController implements IMatchController {
+  constructor(private readonly matchService: IMatchService) {}
+
+  getMatches: RequestHandler = asyncHandler(async (request, response) => {
+    const query = matchQuerySchema.parse(request.query);
+    const result = await this.matchService.getMatches(query);
+    sendSuccess(response, result.items, "Matches fetched", 200, {
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / result.limit),
+    });
+  });
+
+  getMatchById: RequestHandler = asyncHandler(async (request, response) => {
+    const match = await this.matchService.getMatchById(String(request.params.id));
+    sendSuccess(response, match, "Match fetched");
+  });
+
+  createMatch: RequestHandler = asyncHandler(async (request, response) => {
+    const input = matchCreateSchema.parse(request.body);
+    const match = await this.matchService.createMatch(input);
+    sendSuccess(response, match, "Match created", 201);
+  });
+
+  updateMatch: RequestHandler = asyncHandler(async (request, response) => {
+    const input = matchUpdateSchema.parse(request.body);
+    const match = await this.matchService.updateMatch(String(request.params.id), input);
+    sendSuccess(response, match, "Match updated");
+  });
+
+  deleteMatch: RequestHandler = asyncHandler(async (request, response) => {
+    await this.matchService.deleteMatch(String(request.params.id));
+    sendSuccess(response, null, "Match deleted");
+  });
+
+  addGoalToMatch: RequestHandler = asyncHandler(async (request, response) => {
+    const input = goalSchema.parse(request.body);
+    const match = await this.matchService.addGoalToMatch(String(request.params.id), input);
+    sendSuccess(response, match, "Goal added", 201);
+  });
+
+  updateMatchGoal: RequestHandler = asyncHandler(async (request, response) => {
+    const input = goalSchema.parse(request.body);
+    const match = await this.matchService.updateMatchGoal(
+      String(request.params.id),
+      String(request.params.goalId),
+      input,
+    );
+    sendSuccess(response, match, "Goal updated");
+  });
+
+  deleteMatchGoal: RequestHandler = asyncHandler(async (request, response) => {
+    const match = await this.matchService.deleteMatchGoal(
+      String(request.params.id),
+      String(request.params.goalId),
+    );
+    sendSuccess(response, match, "Goal deleted");
+  });
 }
