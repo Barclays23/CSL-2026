@@ -33,9 +33,9 @@ export interface TeamBriefEntity {
 
 
 
-export type TeamCreateDTO = TeamCreateInput;
-export type TeamUpdateDTO = TeamUpdateInput;
-export type TeamQueryDTO = TeamQueryInput;
+
+
+
 
 export interface TeamListFilter {
   status?: TeamStatus;
@@ -72,3 +72,5 @@ export interface TeamAuctionStats {
 export type { ITeamRepository, ITeamService, ITeamController } from "./team.interfaces.js";
 
 export type { TeamBriefDTO, TeamDTO, TeamAuctionCardDTO, TeamAuctionTotalsDTO, TeamAuctionSummaryDTO } from "./team.dto.js";
+
+export type { TeamCreateDTO, TeamUpdateDTO, TeamQueryDTO } from "./team.dto.js";
