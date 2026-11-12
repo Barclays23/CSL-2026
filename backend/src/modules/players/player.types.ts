@@ -103,3 +103,25 @@ export interface PlayerRepositoryContract {
   updatePlayer(playerId: string, data: Partial<PlayerFields>): Promise<PlayerEntity | null>;
   deletePlayer(playerId: string): Promise<boolean>;
 }
+
+export interface IPlayerService {
+  getPlayers(query: PlayerQueryDTO, isAdmin: boolean): Promise<import("../../shared/types/common.types.js").PaginatedResult<PlayerResponseDTO>>;
+  getPlayerById(playerId: string, isAdmin: boolean): Promise<PlayerResponseDTO>;
+  createPlayer(input: PlayerCreateDTO): Promise<PlayerAdminDTO>;
+  updatePlayer(playerId: string, input: PlayerUpdateDTO): Promise<PlayerAdminDTO>;
+  assignPlayerToTeam(playerId: string, input: import("./player.dto.js").PlayerAssignmentInput): Promise<PlayerAdminDTO>;
+  markPlayerUnsold(playerId: string): Promise<PlayerAdminDTO>;
+  deactivatePlayer(playerId: string): Promise<PlayerAdminDTO>;
+  deletePlayer(playerId: string): Promise<void>;
+}
+
+export interface IPlayerController {
+  getPlayers: import("express").RequestHandler;
+  getPlayerById: import("express").RequestHandler;
+  createPlayer: import("express").RequestHandler;
+  updatePlayer: import("express").RequestHandler;
+  assignPlayerToTeam: import("express").RequestHandler;
+  markPlayerUnsold: import("express").RequestHandler;
+  deactivatePlayer: import("express").RequestHandler;
+  deletePlayer: import("express").RequestHandler;
+}
