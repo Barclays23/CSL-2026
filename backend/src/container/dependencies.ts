@@ -30,17 +30,17 @@ import { StatisticsController } from "../modules/statistics/statistics.controlle
 import { AuctionController } from "../modules/auction/auction.controller.js";
 import { UploadController } from "../modules/uploads/upload.controller.js";
 
-import type { IUserRepository, IUserService } from "../modules/users/user.types.js";
-import type { IAuthService, IAuthController } from "../modules/auth/auth.types.js";
-import type { ISettingsRepository, ISettingsService, ISettingsController } from "../modules/settings/settings.types.js";
-import type { IPlayerRepository, IPlayerService, IPlayerController } from "../modules/players/player.types.js";
-import type { ITeamRepository, ITeamService, ITeamController } from "../modules/teams/team.types.js";
-import type { IManagerRepository, IManagerService, IManagerController } from "../modules/managers/manager.types.js";
-import type { ISponsorRepository, ISponsorService, ISponsorController } from "../modules/sponsors/sponsor.types.js";
-import type { IMatchRepository, IMatchService, IMatchController } from "../modules/matches/match.types.js";
-import type { IStatisticsRepository, IStatisticsService, IStatisticsController } from "../modules/statistics/statistics.types.js";
-import type { IAuctionService, IAuctionController } from "../modules/auction/auction.types.js";
-import type { IUploadService, IUploadController } from "../modules/uploads/upload.types.js";
+import type { IUserRepository, IUserService } from "../modules/users/user.interfaces.js";
+import type { IAuthService, IAuthController } from "../modules/auth/auth.interfaces.js";
+import type { ISettingsRepository, ISettingsService, ISettingsController } from "../modules/settings/settings.interfaces.js";
+import type { IPlayerRepository, IPlayerService, IPlayerController } from "../modules/players/player.interfaces.js";
+import type { ITeamRepository, ITeamService, ITeamController } from "../modules/teams/team.interfaces.js";
+import type { IManagerRepository, IManagerService, IManagerController } from "../modules/managers/manager.interfaces.js";
+import type { ISponsorRepository, ISponsorService, ISponsorController } from "../modules/sponsors/sponsor.interfaces.js";
+import type { IMatchRepository, IMatchService, IMatchController } from "../modules/matches/match.interfaces.js";
+import type { IStatisticsRepository, IStatisticsService, IStatisticsController } from "../modules/statistics/statistics.interfaces.js";
+import type { IAuctionService, IAuctionController } from "../modules/auction/auction.interfaces.js";
+import type { IUploadService, IUploadController } from "../modules/uploads/upload.interfaces.js";
 
 
 

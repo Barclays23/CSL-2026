@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { PlayerPublicDTO, PlayerAdminDTO, PlayerResponseDTO, PlayerAuctionCountsDTO } from "./player.dto.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
 import type { PlayerCreateInput, PlayerQueryInput, PlayerUpdateInput } from "./player.dto.js";
@@ -55,30 +56,14 @@ export type PlayerStatisticsEntity = Pick<
   | "profilePic"
 >;
 
-export interface PlayerPublicDTO {
-  _id: string;
-  name: string;
-  position: PlayerPosition;
-  isIconPlayer: boolean;
-  teamRef: string | null;
-  team: TeamBriefDTO | null;
-  jerseyNo: number | null;
-  auctionPrice: number;
-  auctionStatus: AuctionStatus;
-  status: PlayerStatus;
-  profilePic: Asset | null;
-}
 
-export interface PlayerAdminDTO extends PlayerPublicDTO {
-  mobile: string;
-  email: string | null;
-  dateOfBirth: string | null;
-}
 
-export type PlayerResponseDTO = PlayerPublicDTO | PlayerAdminDTO;
-export type PlayerCreateDTO = PlayerCreateInput;
-export type PlayerUpdateDTO = PlayerUpdateInput;
-export type PlayerQueryDTO = PlayerQueryInput;
+
+
+
+
+
+
 
 export interface PlayerListFilter {
   name?: { $regex: string; $options: "i" };
@@ -88,55 +73,14 @@ export interface PlayerListFilter {
   teamRef?: Types.ObjectId | null;
 }
 
-export interface PlayerAuctionCountsDTO {
-  activeAuctionPlayers: number;
-  pendingPlayers: number;
-  soldPlayers: number;
-  unsoldPlayers: number;
-  totalAuctionSpend: number;
-}
 
-export interface PlayerAssignmentInput {
-  teamRef: string;
-  auctionPrice: number;
-  jerseyNo?: number | null;
-}
 
-export interface IPlayerRepository {
-  findPlayers(filter: PlayerListFilter, page: number, limit: number): Promise<{ items: PopulatedPlayerEntity[]; total: number }>;
-  findPlayerById(playerId: string): Promise<PlayerEntity | null>;
-  findPlayerWithTeamById(playerId: string): Promise<PopulatedPlayerEntity | null>;
-  findPlayerByMobile(mobile: string): Promise<PlayerEntity | null>;
-  findPlayerByEmail(email: string): Promise<PlayerEntity | null>;
-  findPlayerWithJerseyNumber(teamId: string, jerseyNo: number, excludePlayerId?: string): Promise<PlayerEntity | null>;
-  findSoldPlayersByTeam(teamId: string): Promise<PlayerEntity[]>;
-  countPlayers(filter: Partial<Pick<PlayerFields, "status" | "auctionStatus">>): Promise<number>;
-  countPlayerGoalReferences(playerId: string): Promise<number>;
-  getPlayerAuctionCounts(): Promise<PlayerAuctionCountsDTO>;
-  countInvalidSoldPlayers(): Promise<number>;
-  createPlayer(data: PlayerFields): Promise<PlayerEntity>;
-  updatePlayer(playerId: string, data: Partial<PlayerFields>): Promise<PlayerEntity | null>;
-  deletePlayer(playerId: string): Promise<boolean>;
-}
 
-export interface IPlayerService {
-  getPlayers(query: PlayerQueryDTO, isAdmin: boolean): Promise<import("../../shared/types/common.types.js").PaginatedResult<PlayerResponseDTO>>;
-  getPlayerById(playerId: string, isAdmin: boolean): Promise<PlayerResponseDTO>;
-  createPlayer(input: PlayerCreateDTO): Promise<PlayerAdminDTO>;
-  updatePlayer(playerId: string, input: PlayerUpdateDTO): Promise<PlayerAdminDTO>;
-  assignPlayerToTeam(playerId: string, input: import("./player.dto.js").PlayerAssignmentInput): Promise<PlayerAdminDTO>;
-  markPlayerUnsold(playerId: string): Promise<PlayerAdminDTO>;
-  deactivatePlayer(playerId: string): Promise<PlayerAdminDTO>;
-  deletePlayer(playerId: string): Promise<void>;
-}
 
-export interface IPlayerController {
-  getPlayers: import("../../shared/types/common.types.js").ControllerMethod;
-  getPlayerById: import("../../shared/types/common.types.js").ControllerMethod;
-  createPlayer: import("../../shared/types/common.types.js").ControllerMethod;
-  updatePlayer: import("../../shared/types/common.types.js").ControllerMethod;
-  assignPlayerToTeam: import("../../shared/types/common.types.js").ControllerMethod;
-  markPlayerUnsold: import("../../shared/types/common.types.js").ControllerMethod;
-  deactivatePlayer: import("../../shared/types/common.types.js").ControllerMethod;
-  deletePlayer: import("../../shared/types/common.types.js").ControllerMethod;
-}
+export type { IPlayerRepository, IPlayerService, IPlayerController } from "./player.interfaces.js";
+
+export type { PlayerPublicDTO, PlayerAdminDTO, PlayerResponseDTO, PlayerAuctionCountsDTO } from "./player.dto.js";
+
+export type { PlayerCreateDTO, PlayerUpdateDTO, PlayerQueryDTO } from "./player.dto.js";
+
+export type { PlayerAssignmentInput } from "./player.dto.js";

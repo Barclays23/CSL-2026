@@ -4,16 +4,19 @@ import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { MATCH_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type { IMatchController, IMatchService, MatchResponseDTO } from "./match.types.js";
+import type { IMatchController, IMatchService } from "./match.interfaces.js";
+import type { MatchResponseDTO } from "./match.types.js";
 import {
   goalSchema,
   matchCreateSchema,
   matchQuerySchema,
   matchUpdateSchema,
-  type GoalInput,
-  type MatchCreateInput,
-  type MatchQueryInput,
-  type MatchUpdateInput,
+} from "./match.schema.js";
+import type {
+  GoalInput,
+  MatchCreateInput,
+  MatchQueryInput,
+  MatchUpdateInput,
 } from "./match.dto.js";
 
 export class MatchController implements IMatchController {

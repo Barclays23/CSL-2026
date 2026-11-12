@@ -1,14 +1,8 @@
 import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "./match.model.js";
 import type { MatchRecord } from "./match.model.js";
-import type {
-  GoalFields,
-  MatchEntity,
-  MatchFields,
-  MatchListFilter,
-  IMatchRepository,
-  PopulatedMatchEntity,
-} from "./match.types.js";
+import type { IMatchRepository } from "./match.interfaces.js";
+import type { GoalFields, MatchEntity, MatchFields, MatchListFilter, PopulatedMatchEntity } from "./match.types.js";
 
 const populatedMatchPaths = [
   { path: "team1Ref", select: "name shortName logo groupName" },

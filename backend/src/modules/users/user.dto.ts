@@ -1,9 +1,19 @@
-import { z } from "zod";
+/** Input contract for creating the initial administrator account. */
+export interface CreateAdminUserDto {
+  name: string;
+  email: string;
+  password: string;
+}
+export type AdminUserCreateInput = CreateAdminUserDto;
 
-export const adminUserCreateSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  email: z.email().trim().toLowerCase(),
-  password: z.string().min(10).max(128),
-}).strict();
+import type { UserRole, UserStatus } from "./user.types.js";
 
-export type AdminUserCreateInput = z.infer<typeof adminUserCreateSchema>;
+export interface AdminUserDTO {
+  _id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+}
+
+export type AdminUserCreateDTO = Omit<CreateAdminUserDto, "password">;

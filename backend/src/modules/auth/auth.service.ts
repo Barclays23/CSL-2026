@@ -2,8 +2,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { appConfig } from "../../config/env.config.js";
 import { AppError } from "../../shared/errors/appError.js";
-import type { AdminUserDTO, IUserRepository } from "../users/user.types.js";
-import type { AuthSessionDTO, IAuthService, LoginCredentials } from "./auth.types.js";
+import type { IUserRepository } from "../users/user.interfaces.js";
+import type { AdminUserDTO } from "../users/user.dto.js";
+import type { IAuthService } from "./auth.interfaces.js";
+import type { AuthSessionDTO, LoginCredentials } from "./auth.types.js";
 
 export class AuthService implements IAuthService {
   constructor(private readonly _userRepository: IUserRepository) {}

@@ -9,7 +9,7 @@ import {
   playerCreateSchema,
   playerQuerySchema,
   playerUpdateSchema,
-} from "./player.dto.js";
+} from "./player.schema.js";
 
 
 

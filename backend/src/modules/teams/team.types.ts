@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { TeamBriefDTO, TeamDTO, TeamAuctionCardDTO, TeamAuctionTotalsDTO, TeamAuctionSummaryDTO } from "./team.dto.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { PlayerPublicDTO } from "../players/player.types.js";
 import type { TeamCreateInput, TeamQueryInput, TeamUpdateInput } from "./team.dto.js";
@@ -28,23 +29,13 @@ export interface TeamBriefEntity {
   groupName: string | null;
 }
 
-export interface TeamBriefDTO {
-  _id: string;
-  name: string;
-  shortName: string | null;
-  logo: Asset | null;
-  groupName: string | null;
-}
 
-export interface TeamDTO extends TeamFields {
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
-export type TeamCreateDTO = TeamCreateInput;
-export type TeamUpdateDTO = TeamUpdateInput;
-export type TeamQueryDTO = TeamQueryInput;
+
+
+
+
+
 
 export interface TeamListFilter {
   status?: TeamStatus;
@@ -72,52 +63,14 @@ export interface TeamAuctionStats {
   requiredGoalkeepers: number;
 }
 
-export interface TeamAuctionCardDTO {
-  team: TeamDTO;
-  players: PlayerPublicDTO[];
-  stats: TeamAuctionStats;
-}
 
-export interface TeamAuctionTotalsDTO {
-  activeAuctionPlayers: number;
-  pendingPlayers: number;
-  soldPlayers: number;
-  unsoldPlayers: number;
-  totalAuctionSpend: number;
-  activeTeams: number;
-}
 
-export interface TeamAuctionSummaryDTO {
-  totals: TeamAuctionTotalsDTO;
-  teams: TeamAuctionCardDTO[];
-}
 
-export interface ITeamRepository {
-  findTeams(filter: TeamListFilter, page: number, limit: number): Promise<{ items: TeamEntity[]; total: number }>;
-  findTeamById(teamId: string): Promise<TeamEntity | null>;
-  findTeamByName(name: string): Promise<TeamEntity | null>;
-  countActiveTeams(): Promise<number>;
-  findTeamReferenceCounts(teamId: string): Promise<TeamReferenceCounts>;
-  createTeam(data: TeamCreateDTO): Promise<TeamEntity>;
-  updateTeam(teamId: string, data: TeamUpdateDTO): Promise<TeamEntity | null>;
-  deleteTeam(teamId: string): Promise<boolean>;
-}
 
-export interface ITeamService {
-  getTeams(query: TeamQueryDTO, isAdmin: boolean): Promise<import("../../shared/types/common.types.js").PaginatedResult<TeamDTO>>;
-  getTeamById(teamId: string): Promise<TeamDTO>;
-  createTeam(input: TeamCreateDTO): Promise<TeamDTO>;
-  updateTeam(teamId: string, input: TeamUpdateDTO): Promise<TeamDTO>;
-  deleteTeam(teamId: string): Promise<void>;
-  getTeamAuctionSummary(): Promise<TeamAuctionSummaryDTO>;
-}
 
-export interface ITeamController {
-  getTeams: import("../../shared/types/common.types.js").ControllerMethod;
-  getTeamById: import("../../shared/types/common.types.js").ControllerMethod;
-  getTeamAuctionSummary: import("../../shared/types/common.types.js").ControllerMethod;
-  getTeamStatistics: import("../../shared/types/common.types.js").ControllerMethod;
-  createTeam: import("../../shared/types/common.types.js").ControllerMethod;
-  updateTeam: import("../../shared/types/common.types.js").ControllerMethod;
-  deleteTeam: import("../../shared/types/common.types.js").ControllerMethod;
-}
+
+export type { ITeamRepository, ITeamService, ITeamController } from "./team.interfaces.js";
+
+export type { TeamBriefDTO, TeamDTO, TeamAuctionCardDTO, TeamAuctionTotalsDTO, TeamAuctionSummaryDTO } from "./team.dto.js";
+
+export type { TeamCreateDTO, TeamUpdateDTO, TeamQueryDTO } from "./team.dto.js";

@@ -1,5 +1,6 @@
 import { SettingsModel } from "./settings.model.js";
-import type { SettingsEntity, SettingsFields, ISettingsRepository, AuctionState } from "./settings.types.js";
+import type { ISettingsRepository } from "./settings.interfaces.js";
+import type { SettingsEntity, SettingsFields, AuctionState } from "./settings.types.js";
 
 export class SettingsRepository implements ISettingsRepository {
   async getTournamentSettings(): Promise<SettingsEntity | null> {

@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { MatchPlayerBriefDTO, MatchGoalDTO, MatchResponseDTO } from "./match.dto.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { MatchCreateInput, MatchQueryInput, MatchUpdateInput, GoalInput } from "./match.dto.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
@@ -67,46 +68,17 @@ export interface PopulatedMatchEntity extends Omit<MatchEntity, "team1Ref" | "te
   goals: PopulatedGoalEntity[];
 }
 
-export interface MatchPlayerBriefDTO {
-  _id: string;
-  name: string;
-  position: "GK" | "DF" | "MF" | "FW";
-  jerseyNo: number | null;
-  profilePic: Asset | null;
-  teamRef: string | null;
-}
 
-export interface MatchGoalDTO {
-  _id: string;
-  scoringTeamRef: string | TeamBriefDTO;
-  goalType: GoalType;
-  scorerRef: string | MatchPlayerBriefDTO | null;
-  ownGoalPlayerRef: string | MatchPlayerBriefDTO | null;
-  createdAt: string;
-}
 
-export interface MatchResponseDTO {
-  _id: string;
-  matchNo: string;
-  stage: MatchStage;
-  groupName: string | null;
-  kickoffAt: string;
-  venue: string | null;
-  team1Ref: string | TeamBriefDTO;
-  team2Ref: string | TeamBriefDTO;
-  status: MatchStatus;
-  goals: MatchGoalDTO[];
-  penaltyShootout: { team1Score: number; team2Score: number } | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
-export type MatchCreateDTO = MatchCreateInput;
-export type MatchUpdateDTO = MatchUpdateInput;
-export type MatchQueryDTO = MatchQueryInput;
-export type GoalCreateDTO = GoalInput;
-export type GoalUpdateDTO = GoalInput;
+
+
+
+
+
+
+
+
 
 export interface MatchListFilter {
   stage?: MatchStage;
@@ -118,37 +90,8 @@ export interface MatchListFilter {
   $or?: MatchListFilter[];
 }
 
-export interface IMatchRepository {
-  findMatches(filter: MatchListFilter, page: number, limit: number): Promise<{ items: PopulatedMatchEntity[]; total: number }>;
-  findMatchById(matchId: string): Promise<MatchEntity | null>;
-  findMatchWithTeamsAndGoals(matchId: string): Promise<PopulatedMatchEntity | null>;
-  findMatchByNumber(matchNo: string): Promise<MatchEntity | null>;
-  createMatch(data: MatchFields): Promise<MatchEntity>;
-  updateMatch(matchId: string, data: Partial<MatchFields>): Promise<MatchEntity | null>;
-  deleteMatch(matchId: string): Promise<boolean>;
-  appendGoal(matchId: string, goal: GoalFields): Promise<PopulatedMatchEntity | null>;
-  updateMatchGoal(matchId: string, goalId: string, goal: GoalFields): Promise<PopulatedMatchEntity | null>;
-  removeMatchGoal(matchId: string, goalId: string): Promise<PopulatedMatchEntity | null>;
-}
+export type { IMatchRepository, IMatchService, IMatchController } from "./match.interfaces.js";
 
-export interface IMatchService {
-  getMatches(query: MatchQueryDTO): Promise<import("../../shared/types/common.types.js").PaginatedResult<MatchResponseDTO>>;
-  getMatchById(matchId: string): Promise<MatchResponseDTO>;
-  createMatch(input: MatchCreateDTO): Promise<MatchResponseDTO>;
-  updateMatch(matchId: string, input: MatchUpdateDTO): Promise<MatchResponseDTO>;
-  deleteMatch(matchId: string): Promise<void>;
-  addGoalToMatch(matchId: string, input: GoalCreateDTO): Promise<MatchResponseDTO>;
-  updateMatchGoal(matchId: string, goalId: string, input: GoalUpdateDTO): Promise<MatchResponseDTO>;
-  deleteMatchGoal(matchId: string, goalId: string): Promise<MatchResponseDTO>;
-}
+export type { MatchPlayerBriefDTO, MatchGoalDTO, MatchResponseDTO } from "./match.dto.js";
 
-export interface IMatchController {
-  getMatches: import("../../shared/types/common.types.js").ControllerMethod;
-  getMatchById: import("../../shared/types/common.types.js").ControllerMethod;
-  createMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  updateMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  deleteMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  addGoalToMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  updateMatchGoal: import("../../shared/types/common.types.js").ControllerMethod;
-  deleteMatchGoal: import("../../shared/types/common.types.js").ControllerMethod;
-}
+export type { MatchCreateDTO, MatchUpdateDTO, MatchQueryDTO, GoalCreateDTO, GoalUpdateDTO } from "./match.dto.js";

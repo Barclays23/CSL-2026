@@ -4,19 +4,17 @@ import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { MANAGER_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type {
-  IManagerController,
-  IManagerService,
-  ManagerResponseDTO,
-  AdminManagerDTO,
-} from "./manager.types.js";
+import type { IManagerController, IManagerService } from "./manager.interfaces.js";
+import type { ManagerResponseDTO, AdminManagerDTO } from "./manager.types.js";
 import {
   managerCreateSchema,
   managerQuerySchema,
   managerUpdateSchema,
-  type ManagerCreateInput,
-  type ManagerQueryInput,
-  type ManagerUpdateInput,
+} from "./manager.schema.js";
+import type {
+  ManagerCreateInput,
+  ManagerQueryInput,
+  ManagerUpdateInput,
 } from "./manager.dto.js";
 
 

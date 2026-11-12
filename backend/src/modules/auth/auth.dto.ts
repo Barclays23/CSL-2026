@@ -1,6 +1,15 @@
-import { z } from "zod";
-export const loginSchema = z.object({
-  email:z.email().transform(v=>v.trim().toLowerCase()),
-  password:z.string().min(1)
-}).strict();
-export type LoginInput = z.infer<typeof loginSchema>;
+/** Validated administrator login payload. */
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+export type LoginInput = LoginDto;
+
+import type { AdminUserDTO } from "../users/user.types.js";
+
+export interface AuthSessionDTO {
+  token: string;
+  user: AdminUserDTO;
+}
+
+export type LoginCredentials = LoginDto;

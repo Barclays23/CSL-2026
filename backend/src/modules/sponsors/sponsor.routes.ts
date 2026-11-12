@@ -4,7 +4,7 @@ import { optionalAuthenticate } from "../../middlewares/optionalAuthenticate.mid
 import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { sponsorController } from "../../container/dependencies.js";
-import { getSponsorsQuerySchema, sponsorCreateSchema, sponsorUpdateSchema } from "./sponsor.dto.js";
+import { getSponsorsQuerySchema, sponsorCreateSchema, sponsorUpdateSchema } from "./sponsor.schema.js";
 
 
 

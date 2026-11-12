@@ -2,14 +2,8 @@ import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "../matches/match.model.js";
 import { PlayerModel } from "./player.model.js";
 import type { PlayerRecord } from "./player.model.js";
-import type {
-  PlayerAuctionCountsDTO,
-  PlayerEntity,
-  PlayerFields,
-  PlayerListFilter,
-  IPlayerRepository,
-  PopulatedPlayerEntity,
-} from "./player.types.js";
+import type { IPlayerRepository } from "./player.interfaces.js";
+import type { PlayerAuctionCountsDTO, PlayerEntity, PlayerFields, PlayerListFilter, PopulatedPlayerEntity } from "./player.types.js";
 
 interface AuctionSpendAggregationResult {
   _id: null;

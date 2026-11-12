@@ -1,37 +1,47 @@
-import { z } from "zod";
+import type { Asset } from "../../shared/types/common.types.js";
+import type { ManagerStatus } from "./manager.types.js";
 
-const optionalEmail = z.union([z.email(), z.literal(""), z.null()])
-  .optional()
-  .transform((value) => typeof value === "string" && value.trim() ? value.trim().toLowerCase() : null);
+export interface CreateManagerDto {
+  name: string;
+  mobile: string;
+  email?: string | null;
+  dateOfBirth?: Date | null;
+  teamRef?: string | null;
+  role?: string | null;
+  profilePic?: Asset | null;
+  status: ManagerStatus;
+}
+export type UpdateManagerDto = Partial<CreateManagerDto>;
+export interface ManagerQueryDto {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: ManagerStatus;
+  teamRef?: string;
+}
+export type ManagerCreateInput = CreateManagerDto;
+export type ManagerUpdateInput = UpdateManagerDto;
+export type ManagerQueryInput = ManagerQueryDto;
+export type ManagerCreateDTO = CreateManagerDto;
+export type ManagerUpdateDTO = UpdateManagerDto;
+export type ManagerQueryDTO = ManagerQueryDto;
 
-const optionalDateOfBirth = z.coerce.date()
-  .nullable()
-  .optional()
-  .refine((value) => !value || value <= new Date(), "Date of birth cannot be in the future");
+import type { TeamBriefDTO } from "../teams/team.types.js";
 
-const managerFields = {
-  name: z.string().trim().min(2).max(80),
-  mobile: z.string().trim().min(7).max(20),
-  email: optionalEmail,
-  dateOfBirth: optionalDateOfBirth,
-  teamRef: z.string().regex(/^[a-f\d]{24}$/i).nullable().optional(),
-  role: z.string().trim().max(40).nullable().optional(),
-  profilePic: z.object({ url: z.url(), publicId: z.string().min(1) }).nullable().optional(),
-  status: z.enum(["active", "inactive"]).default("active"),
-};
+export interface PublicManagerDTO {
+  _id: string;
+  name: string;
+  teamRef: string | null;
+  team: TeamBriefDTO | null;
+  role: string | null;
+  profilePic: Asset | null;
+  status: ManagerStatus;
+}
 
-export const managerCreateSchema = z.object(managerFields).strict();
-export const managerUpdateSchema = z.object(managerFields).partial().strict()
-  .refine((value) => Object.keys(value).length > 0, "At least one manager field is required");
+export interface AdminManagerDTO extends PublicManagerDTO {
+  mobile: string;
+  email: string | null;
+  dateOfBirth: string | null;
+}
 
-export const managerQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().trim().max(100).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
-  teamRef: z.string().regex(/^[a-f\d]{24}$/i).optional(),
-}).strict();
-
-export type ManagerCreateInput = z.infer<typeof managerCreateSchema>;
-export type ManagerUpdateInput = z.infer<typeof managerUpdateSchema>;
-export type ManagerQueryInput = z.infer<typeof managerQuerySchema>;
+export type ManagerResponseDTO = PublicManagerDTO | AdminManagerDTO;

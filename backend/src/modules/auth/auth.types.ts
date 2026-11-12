@@ -1,7 +1,8 @@
 import type { AdminUserDTO } from "../users/user.types.js";
+import type { AuthSessionDTO } from "./auth.dto.js";
 import type { LoginInput } from "./auth.dto.js";
 
-export interface LoginCredentials extends LoginInput {}
+
 
 export interface JwtAdminPayload {
   sub: string;
@@ -11,18 +12,10 @@ export interface JwtAdminPayload {
   exp?: number;
 }
 
-export interface AuthSessionDTO {
-  token: string;
-  user: AdminUserDTO;
-}
 
-export interface IAuthService {
-  login(credentials: LoginCredentials): Promise<AuthSessionDTO>;
-  getCurrentAdmin(userId: string): Promise<AdminUserDTO>;
-}
 
-export interface IAuthController {
-  login: import("../../shared/types/common.types.js").ControllerMethod;
-  logout: import("../../shared/types/common.types.js").ControllerMethod;
-  getCurrentAdmin: import("../../shared/types/common.types.js").ControllerMethod;
-}
+export type { IAuthService, IAuthController } from "./auth.interfaces.js";
+
+export type { AuthSessionDTO } from "./auth.dto.js";
+
+export type { LoginCredentials } from "./auth.dto.js";

@@ -4,20 +4,18 @@ import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { TEAM_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type {
-  ITeamController,
-  ITeamService,
-  TeamDTO,
-  TeamAuctionSummaryDTO,
-} from "./team.types.js";
+import type { ITeamController, ITeamService } from "./team.interfaces.js";
+import type { TeamDTO, TeamAuctionSummaryDTO } from "./team.types.js";
 import type { IStatisticsService, TeamStatisticsDTO } from "../statistics/statistics.types.js";
 import {
   teamCreateSchema,
   teamQuerySchema,
   teamUpdateSchema,
-  type TeamCreateInput,
-  type TeamQueryInput,
-  type TeamUpdateInput,
+} from "./team.schema.js";
+import type {
+  TeamCreateInput,
+  TeamQueryInput,
+  TeamUpdateInput,
 } from "./team.dto.js";
 
 

@@ -1,6 +1,7 @@
 import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type { ISponsorRepository, AdminSponsorDTO, PublicSponsorDTO, SponsorEntity, SponsorListFilter, SponsorQuery, SponsorResponseDTO, SponsorCreateData, SponsorUpdateData, ISponsorService } from "./sponsor.types.js";
+import type { ISponsorRepository, ISponsorService } from "./sponsor.interfaces.js";
+import type { AdminSponsorDTO, PublicSponsorDTO, SponsorEntity, SponsorListFilter, SponsorQuery, SponsorResponseDTO, SponsorCreateData, SponsorUpdateData } from "./sponsor.types.js";
 
 export class SponsorService implements ISponsorService {
   constructor(private readonly _sponsorRepository: ISponsorRepository) {}

@@ -1,13 +1,8 @@
 import type { QueryFilter } from "mongoose";
 import { ManagerModel } from "./manager.model.js";
 import type { ManagerRecord } from "./manager.model.js";
-import type {
-  ManagerEntity,
-  ManagerFields,
-  ManagerListFilter,
-  IManagerRepository,
-  PopulatedManagerEntity,
-} from "./manager.types.js";
+import type { IManagerRepository } from "./manager.interfaces.js";
+import type { ManagerEntity, ManagerFields, ManagerListFilter, PopulatedManagerEntity } from "./manager.types.js";
 
 export class ManagerRepository implements IManagerRepository {
   async findManagers(
