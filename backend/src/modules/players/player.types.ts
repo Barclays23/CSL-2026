@@ -131,12 +131,12 @@ export interface IPlayerService {
 }
 
 export interface IPlayerController {
-  getPlayers: import("express").RequestHandler;
-  getPlayerById: import("express").RequestHandler;
-  createPlayer: import("express").RequestHandler;
-  updatePlayer: import("express").RequestHandler;
-  assignPlayerToTeam: import("express").RequestHandler;
-  markPlayerUnsold: import("express").RequestHandler;
-  deactivatePlayer: import("express").RequestHandler;
-  deletePlayer: import("express").RequestHandler;
+  getPlayers: import("../../shared/types/common.types.js").ControllerMethod;
+  getPlayerById: import("../../shared/types/common.types.js").ControllerMethod;
+  createPlayer: import("../../shared/types/common.types.js").ControllerMethod;
+  updatePlayer: import("../../shared/types/common.types.js").ControllerMethod;
+  assignPlayerToTeam: import("../../shared/types/common.types.js").ControllerMethod;
+  markPlayerUnsold: import("../../shared/types/common.types.js").ControllerMethod;
+  deactivatePlayer: import("../../shared/types/common.types.js").ControllerMethod;
+  deletePlayer: import("../../shared/types/common.types.js").ControllerMethod;
 }
