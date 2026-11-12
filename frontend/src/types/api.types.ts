@@ -10,7 +10,7 @@ export type Pagination = IPagination;
 export interface ApiResponse<TData> {
   success: boolean;
   message: string;
-  data?: TData;
+  data: TData;
   pagination?: IPagination;
 }
 
