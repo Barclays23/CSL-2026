@@ -2,15 +2,18 @@ import { cloudinary, cloudinaryReady } from "../../config/cloudinary.config.js";
 import { AppError } from "../../shared/errors/appError.js";
 import type { ImageUploadResult, ImageUploadFile, IUploadService } from "./upload.types.js";
 import type { UploadPurpose } from "./upload.dto.js";
+import { appConfig } from "../../config/env.config.js";
 
 
 
 const uploadFolderByPurpose: Record<UploadPurpose, string> = {
-  "player-profile": "players",
-  "team-logo": "teams/logos",
-  "team-poster": "teams/posters",
-  "manager-profile": "managers",
-  "sponsor-logo": "sponsors",
+  // eg: "purpose" : "cloudinary folder"
+  "user-profile": `${appConfig.CLOUDINARY_FOLDER}/users`,
+  "player-profile": `${appConfig.CLOUDINARY_FOLDER}/players`,
+  "team-logo": `${appConfig.CLOUDINARY_FOLDER}/teams/logos`,
+  "team-poster": `${appConfig.CLOUDINARY_FOLDER}/teams/posters`,
+  "manager-profile": `${appConfig.CLOUDINARY_FOLDER}/managers`,
+  "sponsor-logo": `${appConfig.CLOUDINARY_FOLDER}/sponsors`,
 };
 
 const supportedImageMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];

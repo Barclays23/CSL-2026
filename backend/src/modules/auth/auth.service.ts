@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { env } from "../../config/env.config.js";
+import { appConfig } from "../../config/env.config.js";
 import { AppError } from "../../shared/errors/appError.js";
 import type { AdminUserDTO, IUserRepository } from "../users/user.types.js";
 import type { AuthSessionDTO, IAuthService, LoginCredentials } from "./auth.types.js";
@@ -22,10 +22,10 @@ export class AuthService implements IAuthService {
 
     const token = jwt.sign(
       { role: user.role, email: user.email },
-      env.JWT_SECRET,
+      appConfig.JWT_SECRET,
       {
         subject: String(user._id),
-        expiresIn: env.JWT_EXPIRES_IN,
+        expiresIn: appConfig.JWT_EXPIRES_IN,
       },
     );
 

@@ -1,5 +1,5 @@
 import multer, { type Multer } from "multer";
-import { env } from "../config/env.config.js";
+import { appConfig } from "../config/env.config.js";
 
 const supportedImageMimeTypes: readonly string[] = [
   "image/jpeg",
@@ -11,7 +11,7 @@ const supportedImageMimeTypes: readonly string[] = [
 export const imageUpload: Multer = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: env.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
+    fileSize: appConfig.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
     files: 1,
   },
   fileFilter: (_request, file, callback): void => {

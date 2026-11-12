@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const uploadPurposeSchema = z.enum([
+  "user-profile",
   "player-profile",
   "team-logo",
   "team-poster",

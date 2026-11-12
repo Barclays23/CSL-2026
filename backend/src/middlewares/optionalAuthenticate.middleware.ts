@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-import { env } from "../config/env.config.js";
+import { appConfig } from "../config/env.config.js";
 import { UserRepository } from "../modules/users/user.repository.js";
 import type { JwtAdminPayload } from "../modules/auth/auth.types.js";
 
@@ -22,7 +22,7 @@ export const optionalAuthenticate: RequestHandler = async (request, _response, n
 
   let decodedToken: string | jwt.JwtPayload;
   try {
-    decodedToken = jwt.verify(token, env.JWT_SECRET);
+    decodedToken = jwt.verify(token, appConfig.JWT_SECRET);
   } catch {
     next();
     return;

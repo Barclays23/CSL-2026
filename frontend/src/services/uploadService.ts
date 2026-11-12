@@ -11,6 +11,8 @@ export type UploadPurpose =
   | "manager-profile"
   | "sponsor-logo";
 
+
+
 export function uploadImage(file: File, purpose: UploadPurpose) {
   return run(async () => {
     const problem = validatePhotoFile(file);
@@ -28,6 +30,7 @@ export function uploadImage(file: File, purpose: UploadPurpose) {
     const body = new FormData();
     body.append("file", file);
     body.append("purpose", purpose);
+    
     const response = await api.post<ApiResponse<Asset>>(UPLOAD_PATH, body);
     return response.data;
   });

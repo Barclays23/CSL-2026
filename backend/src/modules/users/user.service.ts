@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { env } from "../../config/env.config.js";
+import { appConfig } from "../../config/env.config.js";
 import { AppError } from "../../shared/errors/appError.js";
 import type { AdminUserDTO, IUserRepository, IUserService } from "./user.types.js";
 
@@ -12,21 +12,21 @@ export class UserService implements IUserService {
   ) {}
 
   async createInitialAdmin(): Promise<void> {
-    if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {
+    if (!appConfig.ADMIN_EMAIL || !appConfig.ADMIN_PASSWORD) {
       console.warn("ADMIN_EMAIL/ADMIN_PASSWORD not set; skipping admin seed");
       return;
     }
 
-    const normalizedEmail = env.ADMIN_EMAIL.trim().toLowerCase();
+    const normalizedEmail = appConfig.ADMIN_EMAIL.trim().toLowerCase();
     const existingAdmin = await this._userRepository.findUserByEmail(normalizedEmail);
     if (existingAdmin) {
       console.log("Admin already exists; seed skipped");
       return;
     }
 
-    const passwordHash = await bcrypt.hash(env.ADMIN_PASSWORD, 12);
+    const passwordHash = await bcrypt.hash(appConfig.ADMIN_PASSWORD, 12);
     await this._userRepository.createAdminUser({
-      name: env.ADMIN_NAME,
+      name: appConfig.ADMIN_NAME,
       email: normalizedEmail,
       passwordHash,
     });

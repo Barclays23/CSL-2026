@@ -9,7 +9,13 @@ import { matchRouter } from "./modules/matches/match.routes.js";
 import { statisticsRouter } from "./modules/statistics/statistics.routes.js";
 import { auctionRouter } from "./modules/auction/auction.routes.js";
 import { uploadRouter } from "./modules/uploads/upload.routes.js";
-export const apiRouter=Router();
+
+
+
+export const apiRouter = Router();
+
+
+
 apiRouter.use("/auth",authRouter);
 apiRouter.use("/settings",settingsRouter);
 apiRouter.use("/players",playerRouter);

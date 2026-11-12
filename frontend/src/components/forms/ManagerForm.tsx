@@ -26,6 +26,7 @@ export function ManagerForm({
 }) {
   const admin = manager && isAdminRecord(manager) ? manager : null;
   const [photo, setPhoto] = useState<Asset | null>(manager?.profilePic ?? null);
+  
   const form = useForm<ManagerFormValues>({
     resolver: zodResolver(managerFormSchema) as Resolver<ManagerFormValues>,
     defaultValues: {

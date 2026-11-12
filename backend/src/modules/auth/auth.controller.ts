@@ -3,7 +3,7 @@ import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { AUTH_MESSAGES } from "../../shared/constants/messages.constants.js";
 import { AUTH_COOKIE_NAME } from "../../shared/constants/app.constants.js";
-import { env } from "../../config/env.config.js";
+import { appConfig } from "../../config/env.config.js";
 import type { IAuthController, IAuthService, AuthSessionDTO } from "./auth.types.js";
 import type { AdminUserDTO } from "../users/user.types.js";
 import { loginSchema, type LoginInput } from "./auth.dto.js";
@@ -23,8 +23,8 @@ export class AuthController implements IAuthController {
       const session: AuthSessionDTO = await this._authService.login(credentials);
       response.cookie(AUTH_COOKIE_NAME, session.token, {
         httpOnly: true,
-        secure: env.COOKIE_SECURE,
-        sameSite: env.COOKIE_SAME_SITE,
+        secure: appConfig.COOKIE_SECURE,
+        sameSite: appConfig.COOKIE_SAME_SITE,
         path: "/",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -44,8 +44,8 @@ export class AuthController implements IAuthController {
     try {
       response.clearCookie(AUTH_COOKIE_NAME, {
         httpOnly: true,
-        secure: env.COOKIE_SECURE,
-        sameSite: env.COOKIE_SAME_SITE,
+        secure: appConfig.COOKIE_SECURE,
+        sameSite: appConfig.COOKIE_SAME_SITE,
         path: "/",
       });
       response

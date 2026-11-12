@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-import { env } from "../config/env.config.js";
+import { appConfig } from "../config/env.config.js";
 import { UserRepository } from "../modules/users/user.repository.js";
 import { AppError } from "../shared/errors/appError.js";
 import type { JwtAdminPayload } from "../modules/auth/auth.types.js";
@@ -23,7 +23,7 @@ export const authenticate: RequestHandler = async (request, _response, next) => 
 
   let decodedToken: string | jwt.JwtPayload;
   try {
-    decodedToken = jwt.verify(token, env.JWT_SECRET);
+    decodedToken = jwt.verify(token, appConfig.JWT_SECRET);
   } catch {
     next(new AppError("Invalid or expired session", 401, "INVALID_TOKEN"));
     return;
