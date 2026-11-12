@@ -10,7 +10,7 @@ export interface CreateMatchDto {
   venue?: string | null;
   team1Ref: string;
   team2Ref: string;
-  status?: MatchStatus;
+  status: MatchStatus;
   penaltyShootout?: PenaltyShootoutDto | null;
   notes?: string | null;
 }
