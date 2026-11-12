@@ -26,7 +26,7 @@ export class MatchController implements IMatchController {
     } catch (error: unknown) { next(error); }
   }
 
-  async getMatchById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async getMatchById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const matchId: string = request.params.id;
       const match: MatchResponseDTO = await this._matchService.getMatchById(matchId);
@@ -42,7 +42,7 @@ export class MatchController implements IMatchController {
     } catch (error: unknown) { next(error); }
   }
 
-  async updateMatch(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async updateMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const matchId: string = request.params.id;
       const input: MatchUpdateInput = matchUpdateSchema.parse(request.body);
@@ -51,7 +51,7 @@ export class MatchController implements IMatchController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deleteMatch(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deleteMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const matchId: string = request.params.id;
       await this._matchService.deleteMatch(matchId);
@@ -59,7 +59,7 @@ export class MatchController implements IMatchController {
     } catch (error: unknown) { next(error); }
   }
 
-  async addGoalToMatch(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async addGoalToMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const matchId: string = request.params.id;
       const input: GoalInput = goalSchema.parse(request.body);
@@ -68,7 +68,7 @@ export class MatchController implements IMatchController {
     } catch (error: unknown) { next(error); }
   }
 
-  async updateMatchGoal(request: Request<{ id: string; goalId: string }>, response: Response, next: NextFunction): Promise<void> {
+  async updateMatchGoal(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const matchId: string = request.params.id;
       const goalId: string = request.params.goalId;
@@ -78,7 +78,7 @@ export class MatchController implements IMatchController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deleteMatchGoal(request: Request<{ id: string; goalId: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deleteMatchGoal(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const matchId: string = request.params.id;
       const goalId: string = request.params.goalId;
