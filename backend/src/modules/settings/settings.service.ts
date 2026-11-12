@@ -25,7 +25,21 @@ export class SettingsService implements ISettingsService {
       });
     }
 
-    const updatedSettings = await this.settingsRepository.updateTournamentSettings(input);
+    const updateFields: Partial<import("./settings.types.js").SettingsFields> = { ...input };
+    const auctionRulesChanged =
+      input.maxActivePlayers !== undefined ||
+      input.maxActiveTeams !== undefined ||
+      input.maxPlayersPerTeam !== undefined ||
+      input.auctionBudgetPerTeam !== undefined ||
+      input.requiredIconPlayers !== undefined ||
+      input.requiredGoalkeepers !== undefined;
+
+    if (auctionRulesChanged && currentSettings.auctionState === "completed") {
+      updateFields.auctionState = "in_progress";
+      updateFields.auctionCompletedAt = null;
+    }
+
+    const updatedSettings = await this.settingsRepository.updateTournamentSettings(updateFields);
     if (!updatedSettings) throw new AppError("Settings not found", 404, "SETTINGS_NOT_FOUND");
     return updatedSettings;
   }
