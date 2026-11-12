@@ -1,0 +1,13 @@
+import { Router } from "express";
+import { authenticate } from "../../middlewares/authenticate.middleware.js";
+import { optionalAuthenticate } from "../../middlewares/optionalAuthenticate.middleware.js";
+import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { controllers } from "../../container/index.js";
+import { managerCreateSchema,managerUpdateSchema } from "./manager.dto.js";
+export const managerRouter=Router();
+managerRouter.get("/",optionalAuthenticate,controllers.managers.list);
+managerRouter.get("/:id",optionalAuthenticate,controllers.managers.get);
+managerRouter.post("/",authenticate,requireAdmin,validate(managerCreateSchema),controllers.managers.create);
+managerRouter.patch("/:id",authenticate,requireAdmin,validate(managerUpdateSchema),controllers.managers.update);
+managerRouter.delete("/:id",authenticate,requireAdmin,controllers.managers.remove);
