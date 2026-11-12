@@ -29,7 +29,8 @@ export interface IAuctionService {
 }
 
 export interface IAuctionController {
-  startAuction: import("express").RequestHandler;
-  completeAuction: import("express").RequestHandler;
-  reopenAuction: import("express").RequestHandler;
+  startAuction: import("../../shared/types/common.types.js").ControllerMethod;
+  completeAuction: import("../../shared/types/common.types.js").ControllerMethod;
+  reopenAuction: import("../../shared/types/common.types.js").ControllerMethod;
+  validateAuctionCompletion: import("../../shared/types/common.types.js").ControllerMethod;
 }
