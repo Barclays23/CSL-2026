@@ -3,7 +3,7 @@ import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { SPONSOR_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type { ISponsorController, ISponsorService, SponsorResponseDTO } from "./sponsor.types.js";
+import type { ISponsorController, ISponsorService, SponsorResponseDTO, AdminSponsorDTO } from "./sponsor.types.js";
 import { getSponsorsQuerySchema, sponsorCreateSchema, sponsorUpdateSchema, type SponsorCreateDTO, type SponsorUpdateDTO, type GetSponsorsQueryDTO } from "./sponsor.dto.js";
 
 export class SponsorController implements ISponsorController {
@@ -28,7 +28,7 @@ export class SponsorController implements ISponsorController {
   async createSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const input: SponsorCreateDTO = sponsorCreateSchema.parse(request.body);
-      const sponsor = await this._sponsorService.createSponsor(input);
+      const sponsor: AdminSponsorDTO = await this._sponsorService.createSponsor(input);
       response.status(HTTP_STATUS.CREATED).json(ApiResponse.success(SPONSOR_MESSAGES.SPONSOR_CREATED, sponsor));
     } catch (error: unknown) { next(error); }
   }
@@ -37,7 +37,7 @@ export class SponsorController implements ISponsorController {
     try {
       const sponsorId: string = request.params.id;
       const input: SponsorUpdateDTO = sponsorUpdateSchema.parse(request.body);
-      const sponsor = await this._sponsorService.updateSponsor(sponsorId, input);
+      const sponsor: AdminSponsorDTO = await this._sponsorService.updateSponsor(sponsorId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(SPONSOR_MESSAGES.SPONSOR_UPDATED, sponsor));
     } catch (error: unknown) { next(error); }
   }
