@@ -8,12 +8,12 @@ export interface CreatePlayerDto {
   email?: string | null;
   dateOfBirth?: Date | null;
   position: PlayerPosition;
-  isIconPlayer?: boolean;
+  isIconPlayer: boolean;
   teamRef?: string | null;
   jerseyNo?: number | null;
-  auctionPrice?: number;
-  auctionStatus?: AuctionStatus;
-  status?: PlayerStatus;
+  auctionPrice: number;
+  auctionStatus: AuctionStatus;
+  status: PlayerStatus;
   profilePic?: Asset | null;
 }
 
@@ -75,5 +75,4 @@ export interface PlayerAuctionCountsDTO {
   unsoldPlayers: number;
   totalAuctionSpend: number;
 }
-
-export type PlayerAssignmentInput = AssignPlayerDto;
+\n
