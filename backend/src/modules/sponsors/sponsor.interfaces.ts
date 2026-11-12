@@ -1,3 +1,4 @@
+import type { SponsorEntity, AdminSponsorDTO, SponsorResponseDTO, SponsorCreateData, SponsorUpdateData, SponsorQuery, SponsorListFilter, SponsorListResult } from "./sponsor.types.js";
 import type { Types } from "mongoose";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { Asset } from "../../shared/types/common.types.js";
