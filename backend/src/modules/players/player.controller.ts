@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { PLAYER_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { IPlayerController, IPlayerService, PlayerResponseDTO, PlayerAdminDTO } from "./player.types.js";
@@ -28,7 +29,7 @@ export class PlayerController implements IPlayerController {
 
   async getPlayerById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const playerId: string = request.params.id;
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
       const player: PlayerResponseDTO = await this._playerService.getPlayerById(playerId, Boolean(request.user));
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<PlayerResponseDTO>(PLAYER_MESSAGES.PLAYER_FETCHED, player));
     } catch (error: unknown) { next(error); }
@@ -44,7 +45,7 @@ export class PlayerController implements IPlayerController {
 
   async updatePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const playerId: string = request.params.id;
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
       const input: PlayerUpdateInput = playerUpdateSchema.parse(request.body);
       const player: PlayerAdminDTO = await this._playerService.updatePlayer(playerId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_UPDATED, player));
@@ -53,7 +54,7 @@ export class PlayerController implements IPlayerController {
 
   async assignPlayerToTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const playerId: string = request.params.id;
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
       const input: PlayerAssignmentInput = playerAssignmentSchema.parse(request.body);
       const player: PlayerAdminDTO = await this._playerService.assignPlayerToTeam(playerId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_ASSIGNED, player));
@@ -62,7 +63,7 @@ export class PlayerController implements IPlayerController {
 
   async markPlayerUnsold(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const playerId: string = request.params.id;
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
       const player: PlayerAdminDTO = await this._playerService.markPlayerUnsold(playerId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_MARKED_UNSOLD, player));
     } catch (error: unknown) { next(error); }
@@ -70,7 +71,7 @@ export class PlayerController implements IPlayerController {
 
   async deactivatePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const playerId: string = request.params.id;
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
       const player: PlayerAdminDTO = await this._playerService.deactivatePlayer(playerId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_DEACTIVATED, player));
     } catch (error: unknown) { next(error); }
@@ -78,7 +79,7 @@ export class PlayerController implements IPlayerController {
 
   async deletePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const playerId: string = request.params.id;
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
       await this._playerService.deletePlayer(playerId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(PLAYER_MESSAGES.PLAYER_DELETED, null));
     } catch (error: unknown) { next(error); }
