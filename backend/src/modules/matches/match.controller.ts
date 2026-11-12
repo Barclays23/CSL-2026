@@ -10,10 +10,12 @@ import {
   matchCreateSchema,
   matchQuerySchema,
   matchUpdateSchema,
-  type GoalInput,
-  type MatchCreateInput,
-  type MatchQueryInput,
-  type MatchUpdateInput,
+} from "./match.schema.js";
+import type {
+  GoalInput,
+  MatchCreateInput,
+  MatchQueryInput,
+  MatchUpdateInput,
 } from "./match.dto.js";
 
 export class MatchController implements IMatchController {
