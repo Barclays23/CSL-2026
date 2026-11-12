@@ -6,3 +6,4 @@ export interface AdminManager extends PublicManager { mobile: string; email: str
 export interface ManagerQuery { page?: number; limit?: number; search?: string; status?: ManagerStatus | ""; teamRef?: string; }
 export interface ManagerCreate { name: string; mobile: string; email?: string | null; dateOfBirth?: string | null; teamRef?: string | null; role?: string | null; profilePic?: Asset | null; status?: ManagerStatus; }
 export type ManagerUpdate = Partial<ManagerCreate>;
+export type ManagerWrite = ManagerCreate;

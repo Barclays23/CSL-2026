@@ -9,4 +9,5 @@ export interface Match { _id: string; matchNo: string; stage: MatchStage; groupN
 export interface MatchQuery { page?: number; limit?: number; stage?: MatchStage | ""; groupName?: string; status?: MatchStatus | ""; search?: string; }
 export interface MatchCreate { matchNo: string; stage: MatchStage; groupName?: string | null; kickoffAt: string; venue?: string | null; team1Ref: string; team2Ref: string; status?: MatchStatus; penaltyShootout?: PenaltyShootout | null; notes?: string | null; }
 export type MatchUpdate = Partial<MatchCreate>;
+export type MatchWrite = MatchCreate;
 export interface GoalWrite { scoringTeamRef: string; goalType: GoalType; scorerRef?: string | null; ownGoalPlayerRef?: string | null; }

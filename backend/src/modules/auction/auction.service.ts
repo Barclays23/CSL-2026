@@ -3,17 +3,16 @@ import { SettingsService } from "../settings/settings.service.js";
 import { TeamRepository } from "../teams/team.repository.js";
 import { PlayerRepository } from "../players/player.repository.js";
 import type { AuctionCompletionResult, AuctionStartResult, AuctionValidationIssue } from "./auction.types.js";
-
 export class AuctionService {
   constructor(private readonly settingsService: SettingsService, private readonly teamRepository: TeamRepository, private readonly playerRepository: PlayerRepository) {}
   async startAuction(): Promise<AuctionStartResult> {
     const settings = await this.settingsService.get();
     if (settings.auctionState === "completed") throw new AppError("Reopen the auction before starting it", 409, "AUCTION_COMPLETED");
-    await this.settingsService.updateSettings({ auctionState: "in_progress" } as never);
+    await this.settingsService.updateSettings({ auctionState: "in_progress", auctionCompletedAt: null });
     return { auctionState: "in_progress", auctionCompletedAt: null };
   }
   async reopenAuction(): Promise<AuctionStartResult> {
-    await this.settingsService.updateSettings({ auctionState: "in_progress" } as never);
+    await this.settingsService.updateSettings({ auctionState: "in_progress", auctionCompletedAt: null });
     return { auctionState: "in_progress", auctionCompletedAt: null };
   }
   async completeAuction(): Promise<AuctionCompletionResult> {
@@ -38,7 +37,7 @@ export class AuctionService {
     if (pendingPlayers) issues.push({ scope: "Auction", message: `${pendingPlayers} active player(s) are still pending` });
     if (issues.length) throw new AppError("Auction completion failed", 422, "AUCTION_VALIDATION_FAILED", { auction: issues.map((issue) => `${issue.scope}: ${issue.message}`).join("; ") });
     const completedAt = new Date();
-    await this.settingsService.updateSettings({ auctionCompletedAt: completedAt } as never);
+    await this.settingsService.updateSettings({ auctionState: "completed", auctionCompletedAt: completedAt });
     return { auctionState: "completed", auctionCompletedAt: completedAt };
   }
 }
