@@ -23,7 +23,7 @@ export class ManagerController implements IManagerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async getManagerById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async getManagerById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const managerId: string = request.params.id;
       const manager: ManagerResponseDTO = await this._managerService.getManagerById(managerId, Boolean(request.user));
@@ -39,7 +39,7 @@ export class ManagerController implements IManagerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async updateManager(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async updateManager(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const managerId: string = request.params.id;
       const input: ManagerUpdateInput = managerUpdateSchema.parse(request.body);
@@ -48,7 +48,7 @@ export class ManagerController implements IManagerController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deleteManager(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deleteManager(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const managerId: string = request.params.id;
       await this._managerService.deleteManager(managerId);
