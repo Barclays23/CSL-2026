@@ -32,5 +32,4 @@ export interface IAuctionController {
   startAuction: import("../../shared/types/common.types.js").ControllerMethod;
   completeAuction: import("../../shared/types/common.types.js").ControllerMethod;
   reopenAuction: import("../../shared/types/common.types.js").ControllerMethod;
-  validateAuctionCompletion: import("../../shared/types/common.types.js").ControllerMethod;
 }
