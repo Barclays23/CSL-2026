@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { MATCH_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { IMatchController, IMatchService, MatchResponseDTO } from "./match.types.js";
@@ -28,7 +29,7 @@ export class MatchController implements IMatchController {
 
   async getMatchById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const matchId: string = request.params.id;
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
       const match: MatchResponseDTO = await this._matchService.getMatchById(matchId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.MATCH_FETCHED, match));
     } catch (error: unknown) { next(error); }
@@ -44,7 +45,7 @@ export class MatchController implements IMatchController {
 
   async updateMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const matchId: string = request.params.id;
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
       const input: MatchUpdateInput = matchUpdateSchema.parse(request.body);
       const match: MatchResponseDTO = await this._matchService.updateMatch(matchId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.MATCH_UPDATED, match));
@@ -53,7 +54,7 @@ export class MatchController implements IMatchController {
 
   async deleteMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const matchId: string = request.params.id;
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
       await this._matchService.deleteMatch(matchId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(MATCH_MESSAGES.MATCH_DELETED, null));
     } catch (error: unknown) { next(error); }
@@ -61,7 +62,7 @@ export class MatchController implements IMatchController {
 
   async addGoalToMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const matchId: string = request.params.id;
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
       const input: GoalInput = goalSchema.parse(request.body);
       const match: MatchResponseDTO = await this._matchService.addGoalToMatch(matchId, input);
       response.status(HTTP_STATUS.CREATED).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.GOAL_CREATED, match));
@@ -70,8 +71,8 @@ export class MatchController implements IMatchController {
 
   async updateMatchGoal(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const matchId: string = request.params.id;
-      const goalId: string = request.params.goalId;
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const goalId: string = getRequiredRouteParam(request.params.goalId, "goalId");
       const input: GoalInput = goalSchema.parse(request.body);
       const match: MatchResponseDTO = await this._matchService.updateMatchGoal(matchId, goalId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.GOAL_UPDATED, match));
@@ -80,8 +81,8 @@ export class MatchController implements IMatchController {
 
   async deleteMatchGoal(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const matchId: string = request.params.id;
-      const goalId: string = request.params.goalId;
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const goalId: string = getRequiredRouteParam(request.params.goalId, "goalId");
       const match: MatchResponseDTO = await this._matchService.deleteMatchGoal(matchId, goalId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.GOAL_DELETED, match));
     } catch (error: unknown) { next(error); }
