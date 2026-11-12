@@ -2,16 +2,16 @@ import { AppError } from "../../shared/errors/appError.js";
 import type { ISettingsRepository, ISettingsService, SettingsEntity, SettingsUpdateDTO, AuctionState } from "./settings.types.js";
 
 export class SettingsService implements ISettingsService {
-  constructor(private readonly settingsRepository: ISettingsRepository) {}
+  constructor(private readonly _settingsRepository: ISettingsRepository) {}
 
   async getTournamentSettings(): Promise<SettingsEntity> {
-    const settings = await this.settingsRepository.getTournamentSettings();
+    const settings = await this._settingsRepository.getTournamentSettings();
     if (!settings) throw new AppError("Tournament settings are not initialized", 500, "SETTINGS_MISSING");
     return settings;
   }
 
   async initializeTournamentSettings(): Promise<SettingsEntity> {
-    return this.settingsRepository.initializeTournamentSettings();
+    return this._settingsRepository.initializeTournamentSettings();
   }
 
   async updateTournamentSettings(input: SettingsUpdateDTO): Promise<SettingsEntity> {
@@ -39,13 +39,13 @@ export class SettingsService implements ISettingsService {
       updateFields.auctionCompletedAt = null;
     }
 
-    const updatedSettings = await this.settingsRepository.updateTournamentSettings(updateFields);
+    const updatedSettings = await this._settingsRepository.updateTournamentSettings(updateFields);
     if (!updatedSettings) throw new AppError("Settings not found", 404, "SETTINGS_NOT_FOUND");
     return updatedSettings;
   }
 
   async updateAuctionLifecycle(state: AuctionState, completedAt: Date | null): Promise<SettingsEntity> {
-    const updatedSettings = await this.settingsRepository.updateAuctionLifecycle(state, completedAt);
+    const updatedSettings = await this._settingsRepository.updateAuctionLifecycle(state, completedAt);
     if (!updatedSettings) throw new AppError("Settings not found", 404, "SETTINGS_NOT_FOUND");
     return updatedSettings;
   }
