@@ -7,7 +7,7 @@ export interface CreateTeamDto {
   logo?: Asset | null;
   poster?: Asset | null;
   groupName?: string | null;
-  status?: TeamStatus;
+  status: TeamStatus;
 }
 export type UpdateTeamDto = Partial<CreateTeamDto>;
 export interface TeamQueryDto {
