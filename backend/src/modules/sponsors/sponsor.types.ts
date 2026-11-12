@@ -62,9 +62,9 @@ export interface ISponsorService {
 }
 
 export interface ISponsorController {
-  getSponsors: import("express").RequestHandler;
-  getSponsorById: import("express").RequestHandler;
-  createSponsor: import("express").RequestHandler;
-  updateSponsor: import("express").RequestHandler;
-  deleteSponsor: import("express").RequestHandler;
+  getSponsors: import("../../shared/types/common.types.js").ControllerMethod;
+  getSponsorById: import("../../shared/types/common.types.js").ControllerMethod;
+  createSponsor: import("../../shared/types/common.types.js").ControllerMethod;
+  updateSponsor: import("../../shared/types/common.types.js").ControllerMethod;
+  deleteSponsor: import("../../shared/types/common.types.js").ControllerMethod;
 }
