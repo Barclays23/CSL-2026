@@ -19,7 +19,6 @@ const brief = (t: Row) => ({
 
 
 export class StatisticsService {
-<<<<<<< HEAD
   constructor(private readonly _statisticsRepo:StatisticsRepository,private readonly _settingsService:SettingsService,private readonly _playerRepo:PlayerRepository,private readonly _teamRepo:TeamRepository){}
   async getTopScorers(){
     const [rows,people,teams]=await Promise.all([this._statisticsRepo.topScorerRows(),this._statisticsRepo.teamScorers(),this._statisticsRepo.activeTeams()]);
@@ -63,105 +62,6 @@ export class StatisticsService {
         const goals=Array.isArray(raw.goals)?raw.goals as Row[]:[];
         const gf=goals.filter(g=>idOf(g.scoringTeamRef)===String(t._id)).length;
         const ga=goals.length-gf;played++;goalsFor+=gf;goalsAgainst+=ga;if(ga===0)cleanSheets++;
-=======
-  constructor(
-    private readonly _statisticRepo: StatisticsRepository,
-    private readonly _settingsService: SettingsService,
-    private readonly _playerRepo: PlayerRepository,
-    private readonly _teamsRepo: TeamRepository,
-  ) {}
-
-  async getTopScorers() {
-    const [rows, people, teams] = await Promise.all([
-      this._statisticRepo.topScorerRows(),
-      this._statisticRepo.teamScorers(),
-      this._statisticRepo.activeTeams(),
-    ]);
-    const byId = new Map(
-      (people as unknown as Row[]).map((p) => [String(p._id), p]),
-    );
-    const teamMap = new Map(
-      (teams as unknown as Row[]).map((t) => [String(t._id), t]),
-    );
-    const result: Row[] = [];
-    let previousGoals = -1,
-      rank = 0;
-    for (const r of rows as unknown as Row[]) {
-      const goals = Number(r.goals);
-      if (goals !== previousGoals) rank = result.length + 1;
-      previousGoals = goals;
-      const p = byId.get(String(r._id));
-      if (!p) continue;
-      const tm = teamMap.get(String(p.teamRef));
-      result.push({
-        rank,
-        player: {
-          _id: String(p._id),
-          name: p.name,
-          position: p.position,
-          isIconPlayer: Boolean(p.isIconPlayer),
-          teamRef: p.teamRef ? String(p.teamRef) : null,
-          jerseyNo: p.jerseyNo ?? null,
-          auctionPrice: Number(p.auctionPrice ?? 0),
-          auctionStatus: p.auctionStatus ?? "pending",
-          status: p.status ?? "inactive",
-          profilePic: p.profilePic ?? null,
-        },
-        team: tm ? brief(tm) : null,
-        goals,
-      });
-    }
-    return result;
-  }
-
-  private async groupStandingsData() {
-    const [matches, teams, settings] = await Promise.all([
-      this._statisticRepo.completedGroupMatches(),
-      this._statisticRepo.activeTeams(),
-      this._settingsService.get(),
-    ]);
-    const rows = new Map<string, Row>();
-    for (const t of teams as unknown as Row[])
-      rows.set(String(t._id), {
-        team: brief(t),
-        played: 0,
-        won: 0,
-        drawn: 0,
-        lost: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-        goalDifference: 0,
-        points: 0,
-      });
-    for (const raw of matches as unknown as Row[]) {
-      const goals = Array.isArray(raw.goals) ? (raw.goals as Row[]) : [];
-      const a = idOf(raw.team1Ref),
-        b = idOf(raw.team2Ref);
-      const ga = goals.filter((g) => idOf(g.scoringTeamRef) === a).length,
-        gb = goals.filter((g) => idOf(g.scoringTeamRef) === b).length;
-      const ra = rows.get(a),
-        rb = rows.get(b);
-      if (!ra || !rb) continue;
-      ra.played = Number(ra.played) + 1;
-      rb.played = Number(rb.played) + 1;
-      ra.goalsFor = Number(ra.goalsFor) + ga;
-      ra.goalsAgainst = Number(ra.goalsAgainst) + gb;
-      rb.goalsFor = Number(rb.goalsFor) + gb;
-      rb.goalsAgainst = Number(rb.goalsAgainst) + ga;
-      if (ga > gb) {
-        ra.won = Number(ra.won) + 1;
-        rb.lost = Number(rb.lost) + 1;
-        ra.points = Number(ra.points) + Number(settings.pointsRule.win);
-      } else if (gb > ga) {
-        rb.won = Number(rb.won) + 1;
-        ra.lost = Number(ra.lost) + 1;
-        rb.points = Number(rb.points) + Number(settings.pointsRule.win);
-      } else {
-        ra.drawn = Number(ra.drawn) + 1;
-        rb.drawn = Number(rb.drawn) + 1;
-        ra.points = Number(ra.points) + Number(settings.pointsRule.draw);
-        rb.points = Number(rb.points) + Number(settings.pointsRule.draw);
->>>>>>> 521523e (some changes)
       }
     }
     const groups = new Map<string, Row[]>();
@@ -215,7 +115,6 @@ export class StatisticsService {
       return { team: brief(t), played, goalsFor, goalsAgainst, cleanSheets };
     });
   }
-<<<<<<< HEAD
   async getTeamStatistics(teamId:string){
     const [standingGroups,overall]=await Promise.all([this.groupStandingsData(),this.getOverallTeamStatistics()]);
     const groupRow=standingGroups.flatMap(g=>g.rows as Row[]).find(r=>idOf((r.team as Row)._id)===teamId);
@@ -227,12 +126,6 @@ export class StatisticsService {
     const [settings,activeTeams,auction,completed,upcoming,recent,topScorers,overall,upcomingCount]=await Promise.all([
       this._settingsService.get(),this._teamRepo.countActive(),this._playerRepo.auctionCounts(),this._statisticsRepo.completedMatches(),
       this._statisticsRepo.upcomingFixtures(),this._statisticsRepo.recentResults(),this.getTopScorers(),this.getOverallTeamStatistics(),this._statisticsRepo.upcomingCount()
-=======
-  async getTeamStatistics(teamId: string) {
-    const [standingGroups, overall] = await Promise.all([
-      this.groupStandingsData(),
-      this.getOverallTeamStatistics(),
->>>>>>> 521523e (some changes)
     ]);
     const groupRow = standingGroups
       .flatMap((g) => g.rows as Row[])
