@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { PlayerService } from "./player._playerService.js";
+import { PlayerService } from "./player.service.js";
 export class PlayerController {
   constructor(private readonly _playerService:PlayerService){}
   list:RequestHandler=asyncHandler(async(req,res)=>{const r=await this._playerService.list(req.query as Record<string,unknown>,Boolean(req.user));sendSuccess(res,r.items,"Players fetched",200,{page:r.page,limit:r.limit,total:r.total,totalPages:Math.ceil(r.total/r.limit)});});
