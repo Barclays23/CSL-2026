@@ -1,3 +1,4 @@
+import type { TeamEntity, TeamDTO, TeamCreateDTO, TeamUpdateDTO, TeamQueryDTO, TeamListFilter, TeamReferenceCounts, TeamAuctionSummaryDTO } from "./team.types.js";
 import type { Types } from "mongoose";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { PlayerPublicDTO } from "../players/player.types.js";
