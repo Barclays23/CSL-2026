@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { PublicSponsorDTO, AdminSponsorDTO, SponsorResponseDTO } from "./sponsor.dto.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { SponsorCreateDTO, SponsorUpdateDTO, GetSponsorsQueryDTO } from "./sponsor.dto.js";
@@ -22,9 +23,9 @@ export interface SponsorEntity extends SponsorFields {
   updatedAt: Date;
 }
 
-export type PublicSponsorDTO = Pick<SponsorFields, "name" | "logo" | "tier" | "website" | "status"> & { _id: string };
-export type AdminSponsorDTO = PublicSponsorDTO & Pick<SponsorFields, "contactPerson" | "contactMobile" | "notes">;
-export type SponsorResponseDTO = PublicSponsorDTO | AdminSponsorDTO;
+
+
+
 export type SponsorCreateData = SponsorCreateDTO;
 export type SponsorUpdateData = SponsorUpdateDTO;
 export type SponsorQuery = GetSponsorsQueryDTO;
@@ -40,3 +41,5 @@ export interface SponsorListResult {
 }
 
 export type { ISponsorRepository, ISponsorService, ISponsorController } from "./sponsor.interfaces.js";
+
+export type { PublicSponsorDTO, AdminSponsorDTO, SponsorResponseDTO } from "./sponsor.dto.js";
