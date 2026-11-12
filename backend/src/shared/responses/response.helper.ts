@@ -1,5 +1,18 @@
 import type { Response } from "express";
-export interface Pagination { page: number; limit: number; total: number; totalPages: number; }
-export function sendSuccess<T>(res: Response, data: T, message: string, status = 200, pagination?: Pagination) {
-  return res.status(status).json({ success: true, message, data, ...(pagination ? { pagination } : {}) });
+import type { ApiResponse, Pagination } from "../types/common.types.js";
+
+export function sendSuccess<T>(
+  response: Response,
+  data: T,
+  message: string,
+  statusCode: number = 200,
+  pagination?: Pagination,
+): Response<ApiResponse<T>> {
+  const payload: ApiResponse<T> = {
+    success: true,
+    message,
+    data,
+    ...(pagination ? { pagination } : {}),
+  };
+  return response.status(statusCode).json(payload);
 }
