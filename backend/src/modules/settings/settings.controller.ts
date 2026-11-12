@@ -9,7 +9,8 @@ import type {
   SettingsEntity,
 } from "./settings.types.js";
 import { mapSettingsEntityToResponseDTO } from "./settings.mapper.js";
-import { settingsUpdateSchema, type SettingsUpdateInput } from "./settings.dto.js";
+import { settingsUpdateSchema } from "./settings.schema.js";
+import type { SettingsUpdateInput } from "./settings.dto.js";
 
 
 
