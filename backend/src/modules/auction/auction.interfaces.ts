@@ -1,3 +1,4 @@
+import type { AuctionCompletionValidationResult } from "./auction.types.js";
 import type { AuctionState } from "../settings/settings.types.js";
 import type { SettingsEntity } from "../settings/settings.types.js";
 
