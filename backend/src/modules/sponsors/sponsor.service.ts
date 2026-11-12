@@ -2,7 +2,7 @@ import { AppError } from "../../shared/errors/appError.js";
 import type { ISponsorRepository, AdminSponsorDTO, PublicSponsorDTO, SponsorEntity, SponsorListFilter, SponsorQuery, SponsorResponseDTO, PaginatedSponsors, SponsorCreateData, SponsorUpdateData, ISponsorService } from "./sponsor.types.js";
 
 export class SponsorService implements ISponsorService {
-  constructor(private readonly sponsorRepository: ISponsorRepository) {}
+  constructor(private readonly _sponsorRepository: ISponsorRepository) {}
 
   async getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedSponsors> {
     const page = query.page;
@@ -12,7 +12,7 @@ export class SponsorService implements ISponsorService {
     else if (!isAdmin) filter.status = "active";
     if (query.search) filter.name = { $regex: query.search, $options: "i" };
 
-    const result = await this.sponsorRepository.findSponsors(filter, page, limit, isAdmin);
+    const result = await this._sponsorRepository.findSponsors(filter, page, limit, isAdmin);
     return {
       items: result.items.map((sponsor) => this.mapSponsorToResponseDTO(sponsor, isAdmin)),
       pagination: {
@@ -25,7 +25,7 @@ export class SponsorService implements ISponsorService {
   }
 
   async getSponsorById(sponsorId: string, isAdmin: boolean): Promise<SponsorResponseDTO> {
-    const sponsor = await this.sponsorRepository.findSponsorById(sponsorId, isAdmin);
+    const sponsor = await this._sponsorRepository.findSponsorById(sponsorId, isAdmin);
     if (!sponsor || (!isAdmin && sponsor.status !== "active")) {
       throw new AppError("Sponsor not found", 404, "NOT_FOUND");
     }
@@ -33,18 +33,18 @@ export class SponsorService implements ISponsorService {
   }
 
   async createSponsor(data: SponsorCreateData): Promise<AdminSponsorDTO> {
-    const sponsor = await this.sponsorRepository.createSponsor(data);
+    const sponsor = await this._sponsorRepository.createSponsor(data);
     return this.mapSponsorToAdminDTO(sponsor);
   }
 
   async updateSponsor(sponsorId: string, data: SponsorUpdateData): Promise<AdminSponsorDTO> {
-    const sponsor = await this.sponsorRepository.updateSponsor(sponsorId, data, true);
+    const sponsor = await this._sponsorRepository.updateSponsor(sponsorId, data, true);
     if (!sponsor) throw new AppError("Sponsor not found", 404, "NOT_FOUND");
     return this.mapSponsorToAdminDTO(sponsor);
   }
 
   async deleteSponsor(sponsorId: string): Promise<void> {
-    const deleted = await this.sponsorRepository.deleteSponsor(sponsorId);
+    const deleted = await this._sponsorRepository.deleteSponsor(sponsorId);
     if (!deleted) throw new AppError("Sponsor not found", 404, "NOT_FOUND");
   }
 
