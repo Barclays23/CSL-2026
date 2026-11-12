@@ -1,3 +1,4 @@
+import type { ManagerFields, ManagerEntity, PopulatedManagerEntity, AdminManagerDTO, ManagerResponseDTO, ManagerCreateDTO, ManagerUpdateDTO, ManagerQueryDTO, ManagerListFilter } from "./manager.types.js";
 import type { Types } from "mongoose";
 import type { Asset, PaginatedResult } from "../../shared/types/common.types.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
