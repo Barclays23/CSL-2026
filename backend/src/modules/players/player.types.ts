@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { PlayerPublicDTO, PlayerAdminDTO, PlayerResponseDTO, PlayerAuctionCountsDTO } from "./player.dto.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
 import type { PlayerCreateInput, PlayerQueryInput, PlayerUpdateInput } from "./player.dto.js";
@@ -55,27 +56,11 @@ export type PlayerStatisticsEntity = Pick<
   | "profilePic"
 >;
 
-export interface PlayerPublicDTO {
-  _id: string;
-  name: string;
-  position: PlayerPosition;
-  isIconPlayer: boolean;
-  teamRef: string | null;
-  team: TeamBriefDTO | null;
-  jerseyNo: number | null;
-  auctionPrice: number;
-  auctionStatus: AuctionStatus;
-  status: PlayerStatus;
-  profilePic: Asset | null;
-}
 
-export interface PlayerAdminDTO extends PlayerPublicDTO {
-  mobile: string;
-  email: string | null;
-  dateOfBirth: string | null;
-}
 
-export type PlayerResponseDTO = PlayerPublicDTO | PlayerAdminDTO;
+
+
+
 export type PlayerCreateDTO = PlayerCreateInput;
 export type PlayerUpdateDTO = PlayerUpdateInput;
 export type PlayerQueryDTO = PlayerQueryInput;
@@ -88,13 +73,7 @@ export interface PlayerListFilter {
   teamRef?: Types.ObjectId | null;
 }
 
-export interface PlayerAuctionCountsDTO {
-  activeAuctionPlayers: number;
-  pendingPlayers: number;
-  soldPlayers: number;
-  unsoldPlayers: number;
-  totalAuctionSpend: number;
-}
+
 
 export interface PlayerAssignmentInput {
   teamRef: string;
@@ -103,3 +82,5 @@ export interface PlayerAssignmentInput {
 }
 
 export type { IPlayerRepository, IPlayerService, IPlayerController } from "./player.interfaces.js";
+
+export type { PlayerPublicDTO, PlayerAdminDTO, PlayerResponseDTO, PlayerAuctionCountsDTO } from "./player.dto.js";
