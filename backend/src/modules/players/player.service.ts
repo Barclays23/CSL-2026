@@ -6,6 +6,8 @@ import { TeamRepository } from "../teams/team.repository.js";
 import { SettingsService } from "../settings/settings.service.js";
 type Row=Record<string,unknown>;
 const brief=(v:unknown):Row|null=>v&&typeof v==="object"&&"_id" in v?({_id:String((v as Row)._id),name:(v as Row).name,shortName:(v as Row).shortName??null,logo:(v as Row).logo??null,groupName:(v as Row).groupName??null}):null;
+const nullableId=(v:unknown)=>v===null||v===undefined||v===""?null:String(v);
+const nullableNumber=(v:unknown)=>v===null||v===undefined||v===""?null:Number(v);
 export class PlayerService {
   constructor(private readonly players:PlayerRepository,private readonly teams:TeamRepository,private readonly settings:SettingsService){}
   async list(query:Row,isAdmin:boolean){
@@ -38,7 +40,7 @@ export class PlayerService {
       const inactive=await this.players.create({...data,mobile:normalizeMobile(String(data.mobile)),email,teamRef:null,jerseyNo:null,auctionPrice:0,auctionStatus:"pending"});
       return this.publicMap(inactive,true);
     }
-    const status=String(data.status??"active"),auctionStatus=String(data.auctionStatus??"pending");
+    const auctionStatus=String(data.auctionStatus??"pending");
     if(auctionStatus==="sold"){
       if(settings.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before marking a player sold",409,"AUCTION_NOT_IN_PROGRESS");
       if(!data.teamRef||Number(data.auctionPrice)<=0)throw new AppError("Sold players require a team and auction price",422,"INVALID_SOLD_PLAYER");
@@ -51,7 +53,7 @@ export class PlayerService {
       teamRef:auctionStatus==="sold"?data.teamRef:null,
       jerseyNo:auctionStatus==="sold"?(data.jerseyNo??null):null,
       auctionPrice:auctionStatus==="sold"?Number(data.auctionPrice):0,
-      auctionStatus,status
+      auctionStatus
     });
     const populated=await this.players.findPlayerPopulated(String(player._id)) as unknown as Row;
     return this.publicMap(populated,true);
@@ -70,13 +72,20 @@ export class PlayerService {
       return this.publicMap(inactive,true);
     }
     const settings=await this.settings.get();
-    const sensitive=["teamRef","jerseyNo","auctionPrice","auctionStatus","isIconPlayer","position","status"];
-    if(settings.auctionState==="completed"&&sensitive.some(k=>k in data))throw new AppError("Reopen the auction before changing auction-related player data",409,"AUCTION_COMPLETED");
+    const auctionChanged=
+      ("teamRef" in data&&nullableId(data.teamRef)!==nullableId(current.teamRef))||
+      ("jerseyNo" in data&&nullableNumber(data.jerseyNo)!==nullableNumber(current.jerseyNo))||
+      ("auctionPrice" in data&&Number(data.auctionPrice)!==Number(current.auctionPrice))||
+      ("auctionStatus" in data&&data.auctionStatus!==current.auctionStatus)||
+      ("isIconPlayer" in data&&Boolean(data.isIconPlayer)!==Boolean(current.isIconPlayer))||
+      ("position" in data&&data.position!==current.position)||
+      ("status" in data&&data.status!==current.status);
+    if(settings.auctionState==="completed"&&auctionChanged)throw new AppError("Reopen the auction before changing auction-related player data",409,"AUCTION_COMPLETED");
     if(data.status==="active"&&current.status==="inactive"&&(await this.players.count({status:"active"}))>=Number(settings.maxActivePlayers))throw new AppError("Maximum active player limit reached",422,"PLAYER_LIMIT");
     if(merged.auctionStatus==="sold"){
-      if(settings.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before marking a player sold",409,"AUCTION_NOT_IN_PROGRESS");
+      if(auctionChanged&&settings.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before changing auction assignments",409,"AUCTION_NOT_IN_PROGRESS");
       if(!merged.teamRef||Number(merged.auctionPrice)<=0)throw new AppError("Sold players require a team and auction price",422,"INVALID_SOLD_PLAYER");
-      await this.validateAssignment(String(merged.teamRef),id,Number(merged.auctionPrice),Boolean(merged.isIconPlayer),String(merged.position),merged.jerseyNo as number|null|undefined);
+      if(auctionChanged)await this.validateAssignment(String(merged.teamRef),id,Number(merged.auctionPrice),Boolean(merged.isIconPlayer),String(merged.position),merged.jerseyNo as number|null|undefined);
     }else if(merged.auctionStatus==="pending"||merged.auctionStatus==="unsold"){
       merged.teamRef=null;merged.jerseyNo=null;merged.auctionPrice=0;
     }
