@@ -1,8 +1,10 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
-import type { ISettingsService } from "../settings/settings.types.js";
-import type { IPlayerRepository, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
-import type { TeamBriefDTO, TeamEntity, ITeamRepository } from "../teams/team.types.js";
+import type { ISettingsService } from "../settings/settings.interfaces.js";
+import type { IPlayerRepository } from "../players/player.interfaces.js";
+import type { PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
+import type { ITeamRepository } from "../teams/team.interfaces.js";
+import type { TeamBriefDTO, TeamEntity } from "../teams/team.types.js";
 import type { MatchEntity, MatchPlayerBriefDTO, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
 import type { IStatisticsRepository, IStatisticsService } from "./statistics.interfaces.js";
 import type { DashboardSummaryDTO, GroupStandingDTO, OverallTeamStatisticsDTO, StandingRowDTO, TeamStatisticsDTO, TopScorerDTO } from "./statistics.types.js";
