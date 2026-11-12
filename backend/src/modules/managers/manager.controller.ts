@@ -1,11 +1,11 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import type { ManagerService } from "./manager.service.js";
+import type { IManagerController, IManagerService } from "./manager.types.js";
 import { managerCreateSchema, managerQuerySchema, managerUpdateSchema } from "./manager.dto.js";
 
-export class ManagerController {
-  constructor(private readonly managerService: ManagerService) {}
+export class ManagerController implements IManagerController {
+  constructor(private readonly managerService: IManagerService) {}
 
   getManagers: RequestHandler = asyncHandler(async (request, response) => {
     const query = managerQuerySchema.parse(request.query);
