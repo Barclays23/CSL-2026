@@ -25,7 +25,7 @@ export class AuthService implements IAuthService {
       env.JWT_SECRET,
       {
         subject: String(user._id),
-        expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"],
+        expiresIn: env.JWT_EXPIRES_IN,
       },
     );
 
