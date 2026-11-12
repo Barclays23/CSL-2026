@@ -1,4 +1,4 @@
-import { Types, type FilterQuery } from "mongoose";
+import type { FilterQuery } from "mongoose";
 import { ManagerModel } from "./manager.model.js";
 import type { ManagerRecord } from "./manager.model.js";
 import type {
@@ -15,11 +15,7 @@ export class ManagerRepository implements ManagerRepositoryContract {
     page: number,
     limit: number,
   ): Promise<{ items: PopulatedManagerEntity[]; total: number }> {
-    const mongoFilter: FilterQuery<ManagerRecord> = {
-      ...filter,
-      ...(filter.teamRef ? { teamRef: filter.teamRef } : {}),
-    };
-
+    const mongoFilter: FilterQuery<ManagerRecord> = filter;
     const [items, total] = await Promise.all([
       ManagerModel.find(mongoFilter)
         .sort({ name: 1 })
@@ -30,7 +26,6 @@ export class ManagerRepository implements ManagerRepositoryContract {
         .exec(),
       ManagerModel.countDocuments(mongoFilter).exec(),
     ]);
-
     return { items, total };
   }
 
