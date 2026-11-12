@@ -36,7 +36,15 @@ export interface MatchEntity extends MatchFields {
   updatedAt: Date;
 }
 
-export interface PlayerBriefEntity {
+export interface MatchTeamReferenceEntity {
+  _id: Types.ObjectId;
+  name: string;
+  shortName: string | null;
+  logo: Asset | null;
+  groupName: string | null;
+}
+
+export interface MatchPlayerReferenceEntity {
   _id: Types.ObjectId;
   name: string;
   position: "GK" | "DF" | "MF" | "FW";
@@ -45,19 +53,53 @@ export interface PlayerBriefEntity {
   teamRef: Types.ObjectId | null;
 }
 
-export interface GoalDTO {
-  _id: string;
-  scoringTeamRef: string | TeamBriefDTO;
-  goalType: GoalType;
-  scorerRef: string | PlayerBriefEntity | null;
-  ownGoalPlayerRef: string | PlayerBriefEntity | null;
+export interface PopulatedGoalEntity extends Omit<GoalFields, "_id" | "scoringTeamRef" | "scorerRef" | "ownGoalPlayerRef"> {
+  _id: Types.ObjectId;
+  scoringTeamRef: Types.ObjectId | MatchTeamReferenceEntity;
+  scorerRef: Types.ObjectId | MatchPlayerReferenceEntity | null;
+  ownGoalPlayerRef: Types.ObjectId | MatchPlayerReferenceEntity | null;
   createdAt: Date;
 }
 
 export interface PopulatedMatchEntity extends Omit<MatchEntity, "team1Ref" | "team2Ref" | "goals"> {
-  team1Ref: Types.ObjectId | TeamBriefDTO;
-  team2Ref: Types.ObjectId | TeamBriefDTO;
-  goals: GoalDTO[];
+  team1Ref: Types.ObjectId | MatchTeamReferenceEntity;
+  team2Ref: Types.ObjectId | MatchTeamReferenceEntity;
+  goals: PopulatedGoalEntity[];
+}
+
+export interface MatchPlayerBriefDTO {
+  _id: string;
+  name: string;
+  position: "GK" | "DF" | "MF" | "FW";
+  jerseyNo: number | null;
+  profilePic: Asset | null;
+  teamRef: string | null;
+}
+
+export interface MatchGoalDTO {
+  _id: string;
+  scoringTeamRef: string | TeamBriefDTO;
+  goalType: GoalType;
+  scorerRef: string | MatchPlayerBriefDTO | null;
+  ownGoalPlayerRef: string | MatchPlayerBriefDTO | null;
+  createdAt: string;
+}
+
+export interface MatchResponseDTO {
+  _id: string;
+  matchNo: string;
+  stage: MatchStage;
+  groupName: string | null;
+  kickoffAt: string;
+  venue: string | null;
+  team1Ref: string | TeamBriefDTO;
+  team2Ref: string | TeamBriefDTO;
+  status: MatchStatus;
+  goals: MatchGoalDTO[];
+  penaltyShootout: { team1Score: number; team2Score: number } | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type MatchCreateDTO = MatchCreateInput;
@@ -70,7 +112,10 @@ export interface MatchListFilter {
   stage?: MatchStage;
   groupName?: string;
   status?: MatchStatus;
-  $or?: Array<{ matchNo?: { $regex: string; $options: "i" }; team1Ref?: { $in: Types.ObjectId[] }; team2Ref?: { $in: Types.ObjectId[] } }>;
+  matchNo?: { $regex: string; $options: "i" };
+  team1Ref?: { $in: Types.ObjectId[] };
+  team2Ref?: { $in: Types.ObjectId[] };
+  $or?: MatchListFilter[];
 }
 
 export interface MatchRepositoryContract {
@@ -82,6 +127,28 @@ export interface MatchRepositoryContract {
   updateMatch(matchId: string, data: Partial<MatchFields>): Promise<MatchEntity | null>;
   deleteMatch(matchId: string): Promise<boolean>;
   appendGoal(matchId: string, goal: GoalFields): Promise<PopulatedMatchEntity | null>;
-  updateMatchGoal(matchId: string, goalId: string, goal: Partial<GoalFields>): Promise<PopulatedMatchEntity | null>;
+  updateMatchGoal(matchId: string, goalId: string, goal: GoalFields): Promise<PopulatedMatchEntity | null>;
   removeMatchGoal(matchId: string, goalId: string): Promise<PopulatedMatchEntity | null>;
+}
+
+export interface IMatchService {
+  getMatches(query: MatchQueryDTO): Promise<import("../../shared/types/common.types.js").PaginatedResult<MatchResponseDTO>>;
+  getMatchById(matchId: string): Promise<MatchResponseDTO>;
+  createMatch(input: MatchCreateDTO): Promise<MatchResponseDTO>;
+  updateMatch(matchId: string, input: MatchUpdateDTO): Promise<MatchResponseDTO>;
+  deleteMatch(matchId: string): Promise<void>;
+  addGoalToMatch(matchId: string, input: GoalCreateDTO): Promise<MatchResponseDTO>;
+  updateMatchGoal(matchId: string, goalId: string, input: GoalUpdateDTO): Promise<MatchResponseDTO>;
+  deleteMatchGoal(matchId: string, goalId: string): Promise<MatchResponseDTO>;
+}
+
+export interface IMatchController {
+  getMatches: import("express").RequestHandler;
+  getMatchById: import("express").RequestHandler;
+  createMatch: import("express").RequestHandler;
+  updateMatch: import("express").RequestHandler;
+  deleteMatch: import("express").RequestHandler;
+  addGoalToMatch: import("express").RequestHandler;
+  updateMatchGoal: import("express").RequestHandler;
+  deleteMatchGoal: import("express").RequestHandler;
 }
