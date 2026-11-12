@@ -9,7 +9,7 @@ export interface CreateManagerDto {
   teamRef?: string | null;
   role?: string | null;
   profilePic?: Asset | null;
-  status?: ManagerStatus;
+  status: ManagerStatus;
 }
 export type UpdateManagerDto = Partial<CreateManagerDto>;
 export interface ManagerQueryDto {
