@@ -1,18 +1,17 @@
-import type { QueryFilter, Types } from "mongoose";
+import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "../matches/match.model.js";
 import { PlayerModel, type PlayerRecord } from "./player.model.js";
 import type { PlayerFilter, PlayerListRecord } from "./player.types.js";
 type PlayerWriteData = Omit<Partial<PlayerRecord>, "teamRef"> & { teamRef?: string | Types.ObjectId | null };
-const toMongoPlayerData = (data: PlayerWriteData): Partial<PlayerRecord> => ({
-  ...data,
-  ...(data.teamRef === undefined ? {} : { teamRef: data.teamRef === null ? null : new Types.ObjectId(String(data.teamRef)) }),
-});
+const toMongoPlayerData = (data: PlayerWriteData): Partial<PlayerRecord> => {
+  const { teamRef, ...fields } = data;
+  return { ...fields, ...(teamRef === undefined ? {} : { teamRef: teamRef === null ? null : new Types.ObjectId(String(teamRef)) }) };
+};
 export class PlayerRepository {
   async listPlayers(filter: PlayerFilter, page: number, limit: number): Promise<{ items: PlayerListRecord[]; total: number }> {
     const mongoFilter: QueryFilter<PlayerRecord> = filter;
     const [items, total] = await Promise.all([
-      PlayerModel.find(mongoFilter).sort({ name: 1 }).skip((page - 1) * limit).limit(limit)
-        .populate({ path: "teamRef", select: "name shortName logo groupName" }).lean<PlayerListRecord[]>().exec(),
+      PlayerModel.find(mongoFilter).sort({ name: 1 }).skip((page - 1) * limit).limit(limit).populate({ path: "teamRef", select: "name shortName logo groupName" }).lean<PlayerListRecord[]>().exec(),
       PlayerModel.countDocuments(mongoFilter).exec(),
     ]);
     return { items, total };
@@ -20,12 +19,8 @@ export class PlayerRepository {
   async findPlayerPopulated(playerId: string): Promise<PlayerListRecord | null> {
     return PlayerModel.findById(playerId).populate({ path: "teamRef", select: "name shortName logo groupName" }).lean<PlayerListRecord>().exec();
   }
-  async findById(playerId: string): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> {
-    return PlayerModel.findById(playerId).lean().exec() as Promise<(PlayerRecord & { _id: Types.ObjectId }) | null>;
-  }
-  async findOne(filter: QueryFilter<PlayerRecord>): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> {
-    return PlayerModel.findOne(filter).lean().exec() as Promise<(PlayerRecord & { _id: Types.ObjectId }) | null>;
-  }
+  async findById(playerId: string): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> { return PlayerModel.findById(playerId).lean().exec() as Promise<(PlayerRecord & { _id: Types.ObjectId }) | null>; }
+  async findOne(filter: QueryFilter<PlayerRecord>): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> { return PlayerModel.findOne(filter).lean().exec() as Promise<(PlayerRecord & { _id: Types.ObjectId }) | null>; }
   async findByMobile(mobile: string): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> { return this.findOne({ mobile }); }
   async findDuplicateJersey(teamRef: string, jerseyNo: number, excludeId?: string): Promise<boolean> {
     const filter: QueryFilter<PlayerRecord> = { teamRef: new Types.ObjectId(teamRef), jerseyNo, ...(excludeId ? { _id: { $ne: new Types.ObjectId(excludeId) } } : {}) };
@@ -35,27 +30,16 @@ export class PlayerRepository {
     return PlayerModel.find({ teamRef: new Types.ObjectId(teamRef), status: "active", auctionStatus: "sold" }).sort({ name: 1 }).lean().exec() as Promise<Array<PlayerRecord & { _id: Types.ObjectId }>>;
   }
   async count(filter: QueryFilter<PlayerRecord> = {}): Promise<number> { return PlayerModel.countDocuments(filter).exec(); }
-  async create(data: PlayerWriteData): Promise<PlayerRecord & { _id: Types.ObjectId }> {
-    const document = await PlayerModel.create(toMongoPlayerData(data));
-    return document.toObject() as PlayerRecord & { _id: Types.ObjectId };
-  }
-  async update(playerId: string, data: PlayerWriteData): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> {
-    return PlayerModel.findByIdAndUpdate(playerId, { $set: toMongoPlayerData(data) }, { new: true, runValidators: true }).lean().exec() as Promise<(PlayerRecord & { _id: Types.ObjectId }) | null>;
-  }
-  async remove(playerId: string): Promise<boolean> {
-    const result = await PlayerModel.findByIdAndDelete(playerId).select("_id").lean().exec();
-    return result !== null;
-  }
+  async create(data: PlayerWriteData): Promise<PlayerRecord & { _id: Types.ObjectId }> { const created = await PlayerModel.create(toMongoPlayerData(data)); return created.toObject() as PlayerRecord & { _id: Types.ObjectId }; }
+  async update(playerId: string, data: PlayerWriteData): Promise<(PlayerRecord & { _id: Types.ObjectId }) | null> { return PlayerModel.findByIdAndUpdate(playerId, { $set: toMongoPlayerData(data) }, { new: true, runValidators: true }).lean().exec() as Promise<(PlayerRecord & { _id: Types.ObjectId }) | null>; }
+  async remove(playerId: string): Promise<boolean> { return (await PlayerModel.findByIdAndDelete(playerId).select("_id").lean().exec()) !== null; }
   async countGoalReferences(playerId: string): Promise<number> {
-    const [normalGoals, ownGoals] = await Promise.all([
-      MatchModel.countDocuments({ "goals.scorerRef": playerId }).exec(), MatchModel.countDocuments({ "goals.ownGoalPlayerRef": playerId }).exec(),
-    ]);
+    const [normalGoals, ownGoals] = await Promise.all([MatchModel.countDocuments({ "goals.scorerRef": playerId }).exec(), MatchModel.countDocuments({ "goals.ownGoalPlayerRef": playerId }).exec()]);
     return normalGoals + ownGoals;
   }
   async auctionCounts(): Promise<{ activeAuctionPlayers: number; pendingPlayers: number; soldPlayers: number; unsoldPlayers: number; totalAuctionSpend: number }> {
     const [activeAuctionPlayers, pendingPlayers, soldPlayers, unsoldPlayers, spend] = await Promise.all([
-      this.count({ status: "active" }), this.count({ status: "active", auctionStatus: "pending" }),
-      this.count({ status: "active", auctionStatus: "sold" }), this.count({ status: "active", auctionStatus: "unsold" }),
+      this.count({ status: "active" }), this.count({ status: "active", auctionStatus: "pending" }), this.count({ status: "active", auctionStatus: "sold" }), this.count({ status: "active", auctionStatus: "unsold" }),
       PlayerModel.aggregate<{ total: number }>([{ $match: { status: "active", auctionStatus: "sold" } }, { $group: { _id: null, total: { $sum: "$auctionPrice" } } }]).exec(),
     ]);
     return { activeAuctionPlayers, pendingPlayers, soldPlayers, unsoldPlayers, totalAuctionSpend: spend[0]?.total ?? 0 };
