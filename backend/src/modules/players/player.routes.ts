@@ -10,4 +10,6 @@ playerRouter.get("/",optionalAuthenticate,validate(playerQuerySchema,"query"),co
 playerRouter.get("/:id",optionalAuthenticate,controllers.players.get);
 playerRouter.post("/",authenticate,requireAdmin,validate(playerCreateSchema),controllers.players.create);
 playerRouter.patch("/:id",authenticate,requireAdmin,validate(playerUpdateSchema),controllers.players.update);
+playerRouter.patch("/:id/assign",authenticate,requireAdmin,controllers.players.assign);
+playerRouter.patch("/:id/unsold",authenticate,requireAdmin,controllers.players.unsold);
 playerRouter.delete("/:id",authenticate,requireAdmin,controllers.players.remove);
