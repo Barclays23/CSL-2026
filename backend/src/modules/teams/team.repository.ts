@@ -1,4 +1,4 @@
-import { Types, type FilterQuery } from "mongoose";
+import { Types, type QueryFilter } from "mongoose";
 import { TeamModel } from "./team.model.js";
 import type { TeamRecord } from "./team.model.js";
 import { PlayerModel } from "../players/player.model.js";
@@ -20,7 +20,7 @@ export class TeamRepository implements TeamRepositoryContract {
     page: number,
     limit: number,
   ): Promise<{ items: TeamEntity[]; total: number }> {
-    const mongoFilter: FilterQuery<TeamRecord> = filter;
+    const mongoFilter: QueryFilter<TeamRecord> = filter;
     const [items, total] = await Promise.all([
       TeamModel.find(mongoFilter)
         .sort({ name: 1 })

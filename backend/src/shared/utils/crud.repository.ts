@@ -1,5 +1,5 @@
 import type {
-  FilterQuery,
+  QueryFilter,
   HydratedDocument,
   Model,
   PipelineStage,
@@ -15,7 +15,7 @@ export abstract class CrudRepository<TEntity extends object> {
   protected constructor(protected readonly model: Model<TEntity>) {}
 
   async findManyRecords(
-    filter: FilterQuery<TEntity> = {},
+    filter: QueryFilter<TEntity> = {},
     page = 1,
     limit = 50,
     sort: Record<string, SortOrder> = { createdAt: -1 },
@@ -31,11 +31,11 @@ export abstract class CrudRepository<TEntity extends object> {
     return this.model.findById(id).exec();
   }
 
-  async findOneRecord(filter: FilterQuery<TEntity>): Promise<HydratedDocument<TEntity> | null> {
+  async findOneRecord(filter: QueryFilter<TEntity>): Promise<HydratedDocument<TEntity> | null> {
     return this.model.findOne(filter).exec();
   }
 
-  async countRecords(filter: FilterQuery<TEntity> = {}): Promise<number> {
+  async countRecords(filter: QueryFilter<TEntity> = {}): Promise<number> {
     return this.model.countDocuments(filter).exec();
   }
 

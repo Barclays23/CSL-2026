@@ -1,4 +1,4 @@
-import type { FilterQuery } from "mongoose";
+import type { QueryFilter } from "mongoose";
 import { ManagerModel } from "./manager.model.js";
 import type { ManagerRecord } from "./manager.model.js";
 import type {
@@ -15,7 +15,7 @@ export class ManagerRepository implements ManagerRepositoryContract {
     page: number,
     limit: number,
   ): Promise<{ items: PopulatedManagerEntity[]; total: number }> {
-    const mongoFilter: FilterQuery<ManagerRecord> = filter;
+    const mongoFilter: QueryFilter<ManagerRecord> = filter;
     const [items, total] = await Promise.all([
       ManagerModel.find(mongoFilter)
         .sort({ name: 1 })

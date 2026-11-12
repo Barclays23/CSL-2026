@@ -22,16 +22,16 @@ export function getPlayerById(id: string) {
   );
 }
 
-export function createPlayer(data: PlayerWrite) {
-  return run(() =>
+export function createPlayer(data: PlayerWrite): Promise<ApiResponse<AdminPlayer>> {
+  return run<ApiResponse<AdminPlayer>>(() =>
     USE_MOCK_API
       ? previewRepository.createPlayer(data)
       : api.post<ApiResponse<AdminPlayer>>("/players", data).then((response) => response.data),
   );
 }
 
-export function updatePlayer(id: string, data: PlayerWrite) {
-  return run(() =>
+export function updatePlayer(id: string, data: PlayerWrite): Promise<ApiResponse<AdminPlayer>> {
+  return run<ApiResponse<AdminPlayer>>(() =>
     USE_MOCK_API
       ? previewRepository.updatePlayer(id, data)
       : api.patch<ApiResponse<AdminPlayer>>(`/players/${id}`, data).then((response) => response.data),
@@ -42,8 +42,8 @@ export function updatePlayer(id: string, data: PlayerWrite) {
  * The backend must handle status=inactive as one service operation:
  * clear teamRef/jerseyNo, zero auctionPrice, and reset auctionStatus=pending.
  */
-export function deactivatePlayer(id: string) {
-  return run(() =>
+export function deactivatePlayer(id: string): Promise<ApiResponse<AdminPlayer>> {
+  return run<ApiResponse<AdminPlayer>>(() =>
     USE_MOCK_API
       ? previewRepository.deactivatePlayer(id)
       : api
@@ -51,6 +51,7 @@ export function deactivatePlayer(id: string) {
           .then((response) => response.data),
   );
 }
+
 
 export function deletePlayer(id: string) {
   return run(() =>

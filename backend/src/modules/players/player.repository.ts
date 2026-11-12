@@ -1,4 +1,4 @@
-import { Types, type FilterQuery } from "mongoose";
+import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "../matches/match.model.js";
 import { PlayerModel } from "./player.model.js";
 import type { PlayerRecord } from "./player.model.js";
@@ -22,7 +22,7 @@ export class PlayerRepository implements PlayerRepositoryContract {
     page: number,
     limit: number,
   ): Promise<{ items: PopulatedPlayerEntity[]; total: number }> {
-    const mongoFilter: FilterQuery<PlayerRecord> = filter;
+    const mongoFilter: QueryFilter<PlayerRecord> = filter;
     const [items, total] = await Promise.all([
       PlayerModel.find(mongoFilter)
         .sort({ name: 1 })
@@ -60,7 +60,7 @@ export class PlayerRepository implements PlayerRepositoryContract {
     jerseyNo: number,
     excludePlayerId?: string,
   ): Promise<PlayerEntity | null> {
-    const filter: FilterQuery<PlayerRecord> = {
+    const filter: QueryFilter<PlayerRecord> = {
       teamRef: new Types.ObjectId(teamId),
       jerseyNo,
       ...(excludePlayerId ? { _id: { $ne: new Types.ObjectId(excludePlayerId) } } : {}),

@@ -12,16 +12,16 @@ export function getSponsors(params: SponsorQuery = {}) {
   );
 }
 
-export function createSponsor(data: SponsorWrite) {
-  return run(() =>
+export function createSponsor(data: SponsorWrite): Promise<ApiResponse<AdminSponsor>> {
+  return run<ApiResponse<AdminSponsor>>(() =>
     USE_MOCK_API
       ? previewRepository.createSponsor(data)
       : api.post<ApiResponse<AdminSponsor>>("/sponsors", data).then((response) => response.data),
   );
 }
 
-export function updateSponsor(id: string, data: SponsorWrite) {
-  return run(() =>
+export function updateSponsor(id: string, data: SponsorWrite): Promise<ApiResponse<AdminSponsor>> {
+  return run<ApiResponse<AdminSponsor>>(() =>
     USE_MOCK_API
       ? previewRepository.updateSponsor(id, data)
       : api.patch<ApiResponse<AdminSponsor>>(`/sponsors/${id}`, data).then((response) => response.data),

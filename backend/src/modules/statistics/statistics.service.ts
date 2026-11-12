@@ -9,6 +9,7 @@ import type {
   GroupStandingDTO,
   IStatisticsService,
   OverallTeamStatisticsDTO,
+  StandingRowDTO,
   TeamStatisticsDTO,
   TopScorerDTO,
 } from "./statistics.types.js";

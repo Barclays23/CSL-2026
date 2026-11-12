@@ -1,4 +1,4 @@
-import type { FilterQuery } from "mongoose";
+import type { QueryFilter } from "mongoose";
 import { SponsorModel } from "./sponsor.model.js";
 import type { SponsorRecord } from "./sponsor.model.js";
 import type {
@@ -17,7 +17,7 @@ export class SponsorRepository implements ISponsorRepository {
     limit: number,
     includePrivateFields: boolean,
   ): Promise<SponsorListResult> {
-    const mongoFilter: FilterQuery<SponsorRecord> = filter;
+    const mongoFilter: QueryFilter<SponsorRecord> = filter;
     let sponsorQuery = SponsorModel.find(mongoFilter)
       .sort({ name: 1 })
       .skip((page - 1) * limit)

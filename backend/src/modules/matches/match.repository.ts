@@ -1,4 +1,4 @@
-import { Types, type FilterQuery } from "mongoose";
+import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "./match.model.js";
 import type { MatchRecord } from "./match.model.js";
 import type {
@@ -24,7 +24,7 @@ export class MatchRepository implements MatchRepositoryContract {
     page: number,
     limit: number,
   ): Promise<{ items: PopulatedMatchEntity[]; total: number }> {
-    const mongoFilter: FilterQuery<MatchRecord> = filter;
+    const mongoFilter: QueryFilter<MatchRecord> = filter;
     const [items, total] = await Promise.all([
       MatchModel.find(mongoFilter)
         .sort({ kickoffAt: 1 })
