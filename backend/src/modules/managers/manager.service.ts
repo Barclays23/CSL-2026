@@ -1,10 +1,12 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
-import type { TeamRepository } from "../teams/team.repository.js";
+import type { TeamRepositoryContract } from "../teams/team.types.js";
 import type {
   AdminManagerDTO,
+  IManagerService,
   ManagerCreateDTO,
+  ManagerFields,
   ManagerListFilter,
   ManagerQueryDTO,
   ManagerRepositoryContract,
@@ -15,10 +17,10 @@ import type {
 } from "./manager.types.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 
-export class ManagerService {
+export class ManagerService implements IManagerService {
   constructor(
     private readonly managerRepository: ManagerRepositoryContract,
-    private readonly teamRepository: TeamRepository,
+    private readonly teamRepository: TeamRepositoryContract,
   ) {}
 
   async getManagers(query: ManagerQueryDTO, isAdmin: boolean): Promise<PaginatedResult<ManagerResponseDTO>> {
@@ -38,7 +40,7 @@ export class ManagerService {
   }
 
   async getManagerById(managerId: string, isAdmin: boolean): Promise<ManagerResponseDTO> {
-    if (!Types.ObjectId.isValid(managerId)) throw new AppError("Invalid manager ID", 400, "INVALID_ID");
+    this.ensureValidManagerId(managerId);
     const manager = await this.managerRepository.findManagerWithTeamById(managerId);
     if (!manager || (!isAdmin && manager.status !== "active")) {
       throw new AppError("Manager not found", 404, "NOT_FOUND");
@@ -51,8 +53,8 @@ export class ManagerService {
     const email = normalizeEmail(input.email);
     await this.ensureManagerContactDetailsAreUnique(mobile, email);
 
-    const teamRef = input.teamRef ? await this.validateActiveTeam(input.teamRef) : null;
-    const manager = await this.managerRepository.createManager({
+    const teamRef = input.teamRef ? await this.getActiveTeamId(input.teamRef) : null;
+    const managerFields: ManagerFields = {
       name: input.name.trim(),
       mobile,
       email,
@@ -61,38 +63,39 @@ export class ManagerService {
       role: input.role?.trim() || null,
       profilePic: input.profilePic ?? null,
       status: input.status,
-    });
+    };
 
-    const populatedManager = await this.managerRepository.findManagerWithTeamById(String(manager._id));
+    const createdManager = await this.managerRepository.createManager(managerFields);
+    const populatedManager = await this.managerRepository.findManagerWithTeamById(String(createdManager._id));
     if (!populatedManager) throw new AppError("Created manager could not be retrieved", 500, "MANAGER_CREATE_FAILED");
     return this.mapManagerToAdminDTO(populatedManager);
   }
 
   async updateManager(managerId: string, input: ManagerUpdateDTO): Promise<AdminManagerDTO> {
-    if (!Types.ObjectId.isValid(managerId)) throw new AppError("Invalid manager ID", 400, "INVALID_ID");
-    const existing = await this.managerRepository.findManagerById(managerId);
-    if (!existing) throw new AppError("Manager not found", 404, "NOT_FOUND");
+    this.ensureValidManagerId(managerId);
+    const existingManager = await this.managerRepository.findManagerById(managerId);
+    if (!existingManager) throw new AppError("Manager not found", 404, "NOT_FOUND");
 
-    const updateData: Partial<import("./manager.types.js").ManagerFields> = {};
+    const updateData: Partial<ManagerFields> = {};
     if (input.name !== undefined) updateData.name = input.name.trim();
     if (input.mobile !== undefined) {
       const mobile = normalizeMobile(input.mobile);
-      if (mobile !== existing.mobile) await this.ensureManagerMobileIsUnique(mobile);
+      if (mobile !== existingManager.mobile) await this.ensureManagerMobileIsUnique(mobile);
       updateData.mobile = mobile;
     }
     if (input.email !== undefined) {
       const email = normalizeEmail(input.email);
-      if (email && email !== existing.email) await this.ensureManagerEmailIsUnique(email);
+      if (email && email !== existingManager.email) await this.ensureManagerEmailIsUnique(email);
       updateData.email = email;
     }
     if (input.dateOfBirth !== undefined) updateData.dateOfBirth = input.dateOfBirth;
-    if (input.teamRef !== undefined) updateData.teamRef = input.teamRef ? await this.validateActiveTeam(input.teamRef) : null;
+    if (input.teamRef !== undefined) updateData.teamRef = input.teamRef ? await this.getActiveTeamId(input.teamRef) : null;
     if (input.role !== undefined) updateData.role = input.role?.trim() || null;
     if (input.profilePic !== undefined) updateData.profilePic = input.profilePic;
     if (input.status !== undefined) updateData.status = input.status;
 
-    const updated = await this.managerRepository.updateManager(managerId, updateData);
-    if (!updated) throw new AppError("Manager not found", 404, "NOT_FOUND");
+    const updatedManager = await this.managerRepository.updateManager(managerId, updateData);
+    if (!updatedManager) throw new AppError("Manager not found", 404, "NOT_FOUND");
 
     const populatedManager = await this.managerRepository.findManagerWithTeamById(managerId);
     if (!populatedManager) throw new AppError("Updated manager could not be retrieved", 500, "MANAGER_UPDATE_FAILED");
@@ -100,7 +103,7 @@ export class ManagerService {
   }
 
   async deleteManager(managerId: string): Promise<void> {
-    if (!Types.ObjectId.isValid(managerId)) throw new AppError("Invalid manager ID", 400, "INVALID_ID");
+    this.ensureValidManagerId(managerId);
     const deleted = await this.managerRepository.deleteManager(managerId);
     if (!deleted) throw new AppError("Manager not found", 404, "NOT_FOUND");
   }
@@ -122,8 +125,8 @@ export class ManagerService {
     }
   }
 
-  private async validateActiveTeam(teamId: string): Promise<Types.ObjectId> {
-    const team = await this.teamRepository.findById(teamId);
+  private async getActiveTeamId(teamId: string): Promise<Types.ObjectId> {
+    const team = await this.teamRepository.findTeamById(teamId);
     if (!team || team.status !== "active") throw new AppError("Select an active team", 422, "INVALID_TEAM");
     return new Types.ObjectId(teamId);
   }
@@ -158,5 +161,9 @@ export class ManagerService {
       email: manager.email,
       dateOfBirth: manager.dateOfBirth?.toISOString() ?? null,
     };
+  }
+
+  private ensureValidManagerId(managerId: string): void {
+    if (!Types.ObjectId.isValid(managerId)) throw new AppError("Invalid manager ID", 400, "INVALID_ID");
   }
 }
