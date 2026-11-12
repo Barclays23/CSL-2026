@@ -1,15 +1,14 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { PlayerAuctionCountsDTO, PlayerRepositoryContract, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
+import type { PlayerRepositoryContract, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
 import type { TeamBriefDTO, TeamEntity, TeamRepositoryContract } from "../teams/team.types.js";
-import type { MatchEntity, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
+import type { MatchEntity, MatchPlayerBriefDTO, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
 import type {
   DashboardSummaryDTO,
   GroupStandingDTO,
   IStatisticsService,
   OverallTeamStatisticsDTO,
-  StandingRowDTO,
   TeamStatisticsDTO,
   TopScorerDTO,
 } from "./statistics.types.js";
@@ -51,12 +50,10 @@ export class StatisticsService implements IStatisticsService {
     ]);
 
     const standingByTeamId = new Map<string, MutableStanding>();
-    const teamById = new Map<string, TeamBriefDTO>();
 
     for (const team of activeTeams) {
       const briefTeam = this.mapTeamToBriefDTO(team);
       const teamId = String(team._id);
-      teamById.set(teamId, briefTeam);
       standingByTeamId.set(teamId, {
         team: briefTeam,
         played: 0,
@@ -415,7 +412,7 @@ export class StatisticsService implements IStatisticsService {
 
   private mapMatchPlayerReference(
     reference: Types.ObjectId | MatchPlayerReferenceEntity | null,
-  ): string | import("../matches/match.types.js").MatchPlayerBriefDTO | null {
+  ): string | MatchPlayerBriefDTO | null {
     if (!reference) return null;
     if (reference instanceof Types.ObjectId) return String(reference);
     return {
