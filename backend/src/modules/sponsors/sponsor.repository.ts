@@ -1,6 +1,7 @@
 import type { FilterQuery } from "mongoose";
 import { SponsorModel } from "./sponsor.model.js";
 import type { SponsorRecord } from "./sponsor.model.js";
+import type { SponsorRecord } from "./sponsor.model.js";
 import type { ISponsorRepository, SponsorCreateData, SponsorEntity, SponsorListFilter, SponsorListResult, SponsorUpdateData } from "./sponsor.types.js";
 
 export class SponsorRepository implements ISponsorRepository {
