@@ -23,7 +23,6 @@ export class UserService implements IUserService {
     await this.userRepository.createAdminUser({
       name: env.ADMIN_NAME,
       email: normalizedEmail,
-      password: env.ADMIN_PASSWORD,
       passwordHash,
     });
     console.log("Administrator account created");
