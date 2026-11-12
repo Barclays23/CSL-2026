@@ -21,3 +21,11 @@ export interface SponsorQueryDto {
 export type SponsorCreateDTO = CreateSponsorDto;
 export type SponsorUpdateDTO = UpdateSponsorDto;
 export type GetSponsorsQueryDTO = SponsorQueryDto;
+
+import type { SponsorFields } from "./sponsor.types.js";
+
+export type PublicSponsorDTO = Pick<SponsorFields, "name" | "logo" | "tier" | "website" | "status"> & { _id: string };
+
+export type AdminSponsorDTO = PublicSponsorDTO & Pick<SponsorFields, "contactPerson" | "contactMobile" | "notes">;
+
+export type SponsorResponseDTO = PublicSponsorDTO | AdminSponsorDTO;
