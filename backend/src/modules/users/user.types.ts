@@ -30,13 +30,4 @@ export interface AdminUserDTO {
 
 export type AdminUserCreateDTO = Omit<AdminUserCreateInput, "password">;
 
-export interface IUserRepository {
-  findUserByEmail(email: string): Promise<UserEntity | null>;
-  findUserById(userId: string): Promise<SafeUserEntity | null>;
-  createAdminUser(data: AdminUserCreateDTO & { passwordHash: string }): Promise<SafeUserEntity>;
-}
-
-export interface IUserService {
-  createInitialAdmin(): Promise<void>;
-  getAdminUserById(userId: string): Promise<AdminUserDTO>;
-}
+export type { IUserRepository, IUserService } from "./user.interfaces.js";
