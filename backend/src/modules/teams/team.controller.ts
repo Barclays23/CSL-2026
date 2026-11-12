@@ -15,9 +15,11 @@ import {
   teamCreateSchema,
   teamQuerySchema,
   teamUpdateSchema,
-  type TeamCreateInput,
-  type TeamQueryInput,
-  type TeamUpdateInput,
+} from "./team.schema.js";
+import type {
+  TeamCreateInput,
+  TeamQueryInput,
+  TeamUpdateInput,
 } from "./team.dto.js";
 
 
