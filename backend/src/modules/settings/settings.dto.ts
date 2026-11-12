@@ -14,3 +14,13 @@ export interface UpdateSettingsDto {
 }
 export type SettingsUpdateInput = UpdateSettingsDto;
 export type SettingsUpdateDTO = UpdateSettingsDto;
+
+import type { SettingsFields } from "./settings.types.js";
+
+export interface SettingsResponseDTO extends Omit<SettingsFields, "startDate" | "endDate" | "auctionCompletedAt"> {
+  _id: string;
+  startDate: string;
+  endDate: string;
+  auctionCompletedAt: string | null;
+  updatedAt: string;
+}
