@@ -7,9 +7,9 @@ type Row=Record<string,unknown>;
 const idOf=(v:unknown)=>String(v && typeof v==="object" && "_id" in v ? (v as Row)._id : v);
 const brief=(t:Row)=>({_id:String(t._id),name:t.name,shortName:t.shortName??null,logo:t.logo??null,groupName:t.groupName??null});
 export class StatisticsService {
-  constructor(private readonly repo:StatisticsRepository,private readonly settings:SettingsService,private readonly players:PlayerRepository,private readonly teams:TeamRepository){}
+  constructor(private readonly _statisticsRepo:StatisticsRepository,private readonly _settingsService:SettingsService,private readonly _playerRepo:PlayerRepository,private readonly _teamRepo:TeamRepository){}
   async getTopScorers(){
-    const [rows,people,teams]=await Promise.all([this.repo.topScorerRows(),this.repo.teamScorers(),this.repo.activeTeams()]);
+    const [rows,people,teams]=await Promise.all([this._statisticsRepo.topScorerRows(),this._statisticsRepo.teamScorers(),this._statisticsRepo.activeTeams()]);
     const byId=new Map((people as unknown as Row[]).map(p=>[String(p._id),p]));
     const teamMap=new Map((teams as unknown as Row[]).map(t=>[String(t._id),t]));
     const result:Row[]=[];let previousGoals=-1,rank=0;
@@ -21,7 +21,7 @@ export class StatisticsService {
     return result;
   }
   private async groupStandingsData(){
-    const [matches,teams,settings]=await Promise.all([this.repo.completedGroupMatches(),this.repo.activeTeams(),this.settings.get()]);
+    const [matches,teams,settings]=await Promise.all([this._statisticsRepo.completedGroupMatches(),this._statisticsRepo.activeTeams(),this._settingsService.get()]);
     const rows=new Map<string,Row>();
     for(const t of teams as unknown as Row[])rows.set(String(t._id),{team:brief(t),played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0,goalDifference:0,points:0});
     for(const raw of matches as unknown as Row[]){
@@ -42,7 +42,7 @@ export class StatisticsService {
   }
   async getStandings(){return this.groupStandingsData();}
   async getOverallTeamStatistics(){
-    const [matches,teams]=await Promise.all([this.repo.completedMatches(),this.repo.activeTeams()]);
+    const [matches,teams]=await Promise.all([this._statisticsRepo.completedMatches(),this._statisticsRepo.activeTeams()]);
     return (teams as unknown as Row[]).map(t=>{
       let played=0,goalsFor=0,goalsAgainst=0,cleanSheets=0;
       for(const raw of matches as unknown as Row[]){
@@ -63,8 +63,8 @@ export class StatisticsService {
   }
   async getDashboardStatistics(){
     const [settings,activeTeams,auction,completed,upcoming,recent,topScorers,overall,upcomingCount]=await Promise.all([
-      this.settings.get(),this.teams.countActive(),this.players.auctionCounts(),this.repo.completedMatches(),
-      this.repo.upcomingFixtures(),this.repo.recentResults(),this.getTopScorers(),this.getOverallTeamStatistics(),this.repo.upcomingCount()
+      this._settingsService.get(),this._teamRepo.countActive(),this._playerRepo.auctionCounts(),this._statisticsRepo.completedMatches(),
+      this._statisticsRepo.upcomingFixtures(),this._statisticsRepo.recentResults(),this.getTopScorers(),this.getOverallTeamStatistics(),this._statisticsRepo.upcomingCount()
     ]);
     const matches=completed as unknown as Row[];
     const totalGoals=matches.reduce((n,m)=>n+(Array.isArray(m.goals)?m.goals.length:0),0);
