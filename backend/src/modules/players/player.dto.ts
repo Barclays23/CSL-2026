@@ -1,60 +1,45 @@
-import { z } from "zod";
+import type { Asset } from "../../shared/types/common.types.js";
+import type { PlayerPosition, PlayerStatus, AuctionStatus } from "./player.types.js";
 
-const objectIdSchema = z.string().regex(/^[a-f\\d]{24}$/i, "Invalid ID");
-const optionalEmailSchema = z.union([z.email(), z.literal(""), z.null()])
-  .optional()
-  .transform((value) => typeof value === "string" && value.trim() ? value.trim().toLowerCase() : null);
-const assetSchema = z.object({ url: z.url(), publicId: z.string().min(1) });
+/** Validated request payloads passed from the controller to the service. */
+export interface CreatePlayerDto {
+  name: string;
+  mobile: string;
+  email?: string | null;
+  dateOfBirth?: Date | null;
+  position: PlayerPosition;
+  isIconPlayer?: boolean;
+  teamRef?: string | null;
+  jerseyNo?: number | null;
+  auctionPrice?: number;
+  auctionStatus?: AuctionStatus;
+  status?: PlayerStatus;
+  profilePic?: Asset | null;
+}
 
-export const playerCreateSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  mobile: z.string().trim().min(7).max(20),
-  email: optionalEmailSchema,
-  dateOfBirth: z.coerce.date().nullable().optional(),
-  position: z.enum(["GK", "DF", "MF", "FW"]),
-  isIconPlayer: z.boolean().default(false),
-  teamRef: objectIdSchema.nullable().optional(),
-  jerseyNo: z.coerce.number().int().min(1).nullable().optional(),
-  auctionPrice: z.coerce.number().min(0).default(0),
-  auctionStatus: z.enum(["pending", "sold", "unsold"]).default("pending"),
-  status: z.enum(["active", "inactive"]).default("active"),
-  profilePic: assetSchema.nullable().optional(),
-}).strict().superRefine((value, context) => {
-  if (value.dateOfBirth && value.dateOfBirth > new Date()) {
-    context.addIssue({ code: "custom", path: ["dateOfBirth"], message: "Date of birth cannot be in the future" });
-  }
-});
+export type UpdatePlayerDto = Partial<CreatePlayerDto>;
 
-export const playerUpdateSchema = playerCreateSchema.partial().strict()
-  .refine((value) => Object.keys(value).length > 0, "At least one player field is required")
-  .superRefine((value, context) => {
-    if (value.dateOfBirth && value.dateOfBirth > new Date()) {
-      context.addIssue({ code: "custom", path: ["dateOfBirth"], message: "Date of birth cannot be in the future" });
-    }
-  });
+export interface AssignPlayerDto {
+  teamRef: string;
+  auctionPrice: number;
+  jerseyNo?: number | null;
+}
 
-export const playerAssignmentSchema = z.object({
-  teamRef: objectIdSchema,
-  auctionPrice: z.coerce.number().positive(),
-  jerseyNo: z.coerce.number().int().min(1).nullable().optional(),
-}).strict();
+export interface PlayerQueryDto {
+  page: number;
+  limit: number;
+  search?: string;
+  position?: PlayerPosition;
+  status?: PlayerStatus;
+  auctionStatus?: AuctionStatus;
+  teamRef?: string | "unassigned";
+}
 
-const optionalFilter = <T extends string>(values: readonly [T, ...T[]]) =>
-  z.union([z.enum(values), z.literal("")]).optional().transform((value) => value || undefined);
-
-export const playerQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(10),
-  search: z.string().trim().max(100).optional(),
-  position: optionalFilter(["GK", "DF", "MF", "FW"]),
-  status: optionalFilter(["active", "inactive"]),
-  auctionStatus: optionalFilter(["pending", "sold", "unsold"]),
-  teamRef: z.union([objectIdSchema, z.literal("unassigned"), z.literal("")])
-    .optional()
-    .transform((value) => value || undefined),
-}).strict();
-
-export type PlayerCreateInput = z.infer<typeof playerCreateSchema>;
-export type PlayerUpdateInput = z.infer<typeof playerUpdateSchema>;
-export type PlayerAssignmentInput = z.infer<typeof playerAssignmentSchema>;
-export type PlayerQueryInput = z.infer<typeof playerQuerySchema>;
+/** Backward-compatible names used by existing services/controllers. */
+export type PlayerCreateInput = CreatePlayerDto;
+export type PlayerUpdateInput = UpdatePlayerDto;
+export type PlayerAssignmentInput = AssignPlayerDto;
+export type PlayerQueryInput = PlayerQueryDto;
+export type PlayerCreateDTO = CreatePlayerDto;
+export type PlayerUpdateDTO = UpdatePlayerDto;
+export type PlayerQueryDTO = PlayerQueryDto;
