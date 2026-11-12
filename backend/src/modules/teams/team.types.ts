@@ -102,3 +102,22 @@ export interface TeamRepositoryContract {
   updateTeam(teamId: string, data: TeamUpdateDTO): Promise<TeamEntity | null>;
   deleteTeam(teamId: string): Promise<boolean>;
 }
+
+export interface ITeamService {
+  getTeams(query: TeamQueryDTO, isAdmin: boolean): Promise<import("../../shared/types/common.types.js").PaginatedResult<TeamDTO>>;
+  getTeamById(teamId: string): Promise<TeamDTO>;
+  createTeam(input: TeamCreateDTO): Promise<TeamDTO>;
+  updateTeam(teamId: string, input: TeamUpdateDTO): Promise<TeamDTO>;
+  deleteTeam(teamId: string): Promise<void>;
+  getTeamAuctionSummary(): Promise<TeamAuctionSummaryDTO>;
+}
+
+export interface ITeamController {
+  getTeams: import("express").RequestHandler;
+  getTeamById: import("express").RequestHandler;
+  getTeamAuctionSummary: import("express").RequestHandler;
+  getTeamStatistics: import("express").RequestHandler;
+  createTeam: import("express").RequestHandler;
+  updateTeam: import("express").RequestHandler;
+  deleteTeam: import("express").RequestHandler;
+}
