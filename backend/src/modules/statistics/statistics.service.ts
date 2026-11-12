@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { PlayerAuctionCountsDTO, PlayerEntity, PlayerRepositoryContract, PlayerPublicDTO } from "../players/player.types.js";
+import type { PlayerAuctionCountsDTO, PlayerRepositoryContract, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
 import type { TeamBriefDTO, TeamEntity, TeamRepositoryContract } from "../teams/team.types.js";
 import type { MatchEntity, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
 import type {
@@ -109,7 +109,7 @@ export class StatisticsService implements IStatisticsService {
       this.statisticsRepository.findAllTeams(),
     ]);
 
-    const playerById = new Map<string, PlayerEntity>(players.map((player) => [String(player._id), player]));
+    const playerById = new Map<string, PlayerStatisticsEntity>(players.map((player) => [String(player._id), player]));
     const teamById = new Map<string, TeamBriefDTO>(teams.map((team) => [String(team._id), this.mapTeamToBriefDTO(team)]));
     const goalCountByPlayerId = new Map<string, number>();
     const scoringTeamByPlayerId = new Map<string, string>();
@@ -125,7 +125,7 @@ export class StatisticsService implements IStatisticsService {
 
     const rankedScorers = [...goalCountByPlayerId.entries()]
       .map(([playerId, goals]) => ({ playerId, goals, player: playerById.get(playerId) }))
-      .filter((entry): entry is { playerId: string; goals: number; player: PlayerEntity } => entry.player !== undefined)
+      .filter((entry): entry is { playerId: string; goals: number; player: PlayerStatisticsEntity } => entry.player !== undefined)
       .sort((first, second) => second.goals - first.goals || first.player.name.localeCompare(second.player.name));
 
     let previousGoals = -1;
@@ -359,7 +359,7 @@ export class StatisticsService implements IStatisticsService {
     };
   }
 
-  private mapPlayerToPublicDTO(player: PlayerEntity, scoringTeam: TeamBriefDTO | null): PlayerPublicDTO {
+  private mapPlayerToPublicDTO(player: PlayerStatisticsEntity, scoringTeam: TeamBriefDTO | null): PlayerPublicDTO {
     const teamRef = scoringTeam?._id ?? (player.teamRef ? String(player.teamRef) : null);
     return {
       _id: String(player._id),
