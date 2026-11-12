@@ -29,7 +29,7 @@ export class TeamController implements ITeamController {
     } catch (error: unknown) { next(error); }
   }
 
-  async getTeamById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async getTeamById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const teamId: string = request.params.id;
       const team: TeamDTO = await this._teamService.getTeamById(teamId);
@@ -44,7 +44,7 @@ export class TeamController implements ITeamController {
     } catch (error: unknown) { next(error); }
   }
 
-  async getTeamStatistics(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async getTeamStatistics(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const teamId: string = request.params.id;
       const statistics: TeamStatisticsDTO = await this._statisticsService.getTeamStatistics(teamId);
@@ -60,7 +60,7 @@ export class TeamController implements ITeamController {
     } catch (error: unknown) { next(error); }
   }
 
-  async updateTeam(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async updateTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const teamId: string = request.params.id;
       const input: TeamUpdateInput = teamUpdateSchema.parse(request.body);
@@ -69,7 +69,7 @@ export class TeamController implements ITeamController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deleteTeam(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deleteTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const teamId: string = request.params.id;
       await this._teamService.deleteTeam(teamId);
