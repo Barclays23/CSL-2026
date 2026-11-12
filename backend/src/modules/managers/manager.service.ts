@@ -33,9 +33,12 @@ export class ManagerService implements IManagerService {
     const result = await this.managerRepository.findManagers(filter, query.page, query.limit);
     return {
       items: result.items.map((manager) => this.mapManagerToResponseDTO(manager, isAdmin)),
-      total: result.total,
-      page: query.page,
-      limit: query.limit,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   }
 
