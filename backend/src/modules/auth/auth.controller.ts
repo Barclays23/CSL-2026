@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { AuthService } from "./_authService.service.js";
+import { AuthService } from "./auth.service.js";
 import { env } from "../../config/env.config.js";
 export class AuthController {
   constructor(private readonly _authService:AuthService){}
