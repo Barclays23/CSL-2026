@@ -2,12 +2,20 @@ import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
 import { AppError } from "../../shared/errors/appError.js";
-import { UploadService } from "./upload.service.js";
-export class UploadController {
-  constructor(private readonly _uploadService:UploadService){}
-  upload:RequestHandler=asyncHandler(async(req,res)=>{
-    if(!req.file)throw new AppError("An image file is required",400,"FILE_REQUIRED");
-    const asset=await this._uploadService.upload(req.file.buffer,req.file.mimetype,String(req.body.purpose||""));
-    sendSuccess(res,asset,"Image uploaded successfully",201);
+import type { IUploadController, IUploadService } from "./upload.types.js";
+import { imageUploadSchema } from "./upload.dto.js";
+
+export class UploadController implements IUploadController {
+  constructor(private readonly uploadService: IUploadService) {}
+
+  uploadImage: RequestHandler = asyncHandler(async (request, response) => {
+    if (!request.file) throw new AppError("An image file is required", 400, "FILE_REQUIRED");
+    const { purpose } = imageUploadSchema.parse(request.body);
+    const uploadedAsset = await this.uploadService.uploadImage({
+      buffer: request.file.buffer,
+      mimetype: request.file.mimetype,
+      size: request.file.size,
+    }, purpose);
+    sendSuccess(response, uploadedAsset, "Image uploaded successfully", 201);
   });
 }
