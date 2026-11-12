@@ -1,42 +1,52 @@
-import type { RequestHandler } from "express";
-import { asyncHandler } from "../../shared/utils/asyncHandler.js";
-import { sendSuccess } from "../../shared/responses/response.helper.js";
-import type { IManagerController, IManagerService } from "./manager.types.js";
-import { managerCreateSchema, managerQuerySchema, managerUpdateSchema } from "./manager.dto.js";
+import type { Request, Response, NextFunction } from "express";
+import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
+import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { MANAGER_MESSAGES } from "../../shared/constants/messages.constants.js";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
+import type { IManagerController, IManagerService, ManagerResponseDTO } from "./manager.types.js";
+import { managerCreateSchema, managerQuerySchema, managerUpdateSchema, type ManagerCreateInput, type ManagerQueryInput, type ManagerUpdateInput } from "./manager.dto.js";
 
 export class ManagerController implements IManagerController {
-  constructor(private readonly managerService: IManagerService) {}
+  constructor(private readonly _managerService: IManagerService) {}
 
-  getManagers: RequestHandler = asyncHandler(async (request, response) => {
-    const query = managerQuerySchema.parse(request.query);
-    const result = await this.managerService.getManagers(query, Boolean(request.user));
-    sendSuccess(response, result.items, "Managers fetched", 200, {
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-      totalPages: Math.ceil(result.total / result.limit),
-    });
-  });
+  async getManagers(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const query: ManagerQueryInput = managerQuerySchema.parse(request.query);
+      const result: PaginatedResult<ManagerResponseDTO> = await this._managerService.getManagers(query, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<ManagerResponseDTO[]>(MANAGER_MESSAGES.MANAGERS_FETCHED, result.items, result.pagination));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getManagerById: RequestHandler = asyncHandler(async (request, response) => {
-    const manager = await this.managerService.getManagerById(String(request.params.id), Boolean(request.user));
-    sendSuccess(response, manager, "Manager fetched");
-  });
+  async getManagerById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const managerId: string = request.params.id;
+      const manager: ManagerResponseDTO = await this._managerService.getManagerById(managerId, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<ManagerResponseDTO>(MANAGER_MESSAGES.MANAGER_FETCHED, manager));
+    } catch (error: unknown) { next(error); }
+  }
 
-  createManager: RequestHandler = asyncHandler(async (request, response) => {
-    const input = managerCreateSchema.parse(request.body);
-    const manager = await this.managerService.createManager(input);
-    sendSuccess(response, manager, "Manager created", 201);
-  });
+  async createManager(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const input: ManagerCreateInput = managerCreateSchema.parse(request.body);
+      const manager = await this._managerService.createManager(input);
+      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success(MANAGER_MESSAGES.MANAGER_CREATED, manager));
+    } catch (error: unknown) { next(error); }
+  }
 
-  updateManager: RequestHandler = asyncHandler(async (request, response) => {
-    const input = managerUpdateSchema.parse(request.body);
-    const manager = await this.managerService.updateManager(String(request.params.id), input);
-    sendSuccess(response, manager, "Manager updated");
-  });
+  async updateManager(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const managerId: string = request.params.id;
+      const input: ManagerUpdateInput = managerUpdateSchema.parse(request.body);
+      const manager = await this._managerService.updateManager(managerId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success(MANAGER_MESSAGES.MANAGER_UPDATED, manager));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deleteManager: RequestHandler = asyncHandler(async (request, response) => {
-    await this.managerService.deleteManager(String(request.params.id));
-    sendSuccess(response, null, "Manager deleted");
-  });
+  async deleteManager(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const managerId: string = request.params.id;
+      await this._managerService.deleteManager(managerId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(MANAGER_MESSAGES.MANAGER_DELETED, null));
+    } catch (error: unknown) { next(error); }
+  }
 }
