@@ -28,16 +28,16 @@ export interface PlayerEntity extends PlayerFields {
   updatedAt: Date;
 }
 
-export interface PopulatedPlayerEntity extends Omit<PlayerEntity, "teamRef"> {
-  teamRef: Types.ObjectId | TeamBriefEntity | null;
-}
-
 export interface TeamBriefEntity {
   _id: Types.ObjectId;
   name: string;
   shortName: string | null;
   logo: Asset | null;
   groupName: string | null;
+}
+
+export interface PopulatedPlayerEntity extends Omit<PlayerEntity, "teamRef"> {
+  teamRef: Types.ObjectId | TeamBriefEntity | null;
 }
 
 export interface PlayerPublicDTO {
@@ -95,11 +95,11 @@ export interface PlayerRepositoryContract {
   findPlayerByEmail(email: string): Promise<PlayerEntity | null>;
   findPlayerWithJerseyNumber(teamId: string, jerseyNo: number, excludePlayerId?: string): Promise<PlayerEntity | null>;
   findSoldPlayersByTeam(teamId: string): Promise<PlayerEntity[]>;
-  countPlayers(filter: Partial<Pick<PlayerEntity, "status" | "auctionStatus">>): Promise<number>;
+  countPlayers(filter: Partial<Pick<PlayerFields, "status" | "auctionStatus">>): Promise<number>;
   countPlayerGoalReferences(playerId: string): Promise<number>;
   getPlayerAuctionCounts(): Promise<PlayerAuctionCountsDTO>;
   countInvalidSoldPlayers(): Promise<number>;
-  createPlayer(data: PlayerCreateDTO & { mobile: string; email: string | null; teamRef: Types.ObjectId | null; jerseyNo: number | null; auctionPrice: number; auctionStatus: AuctionStatus }): Promise<PlayerEntity>;
-  updatePlayer(playerId: string, data: Partial<PlayerEntity>): Promise<PlayerEntity | null>;
+  createPlayer(data: PlayerFields): Promise<PlayerEntity>;
+  updatePlayer(playerId: string, data: Partial<PlayerFields>): Promise<PlayerEntity | null>;
   deletePlayer(playerId: string): Promise<boolean>;
 }
