@@ -74,11 +74,11 @@ export interface PopulatedMatchEntity extends Omit<MatchEntity, "team1Ref" | "te
 
 
 
-export type MatchCreateDTO = MatchCreateInput;
-export type MatchUpdateDTO = MatchUpdateInput;
-export type MatchQueryDTO = MatchQueryInput;
-export type GoalCreateDTO = GoalInput;
-export type GoalUpdateDTO = GoalInput;
+
+
+
+
+
 
 export interface MatchListFilter {
   stage?: MatchStage;
@@ -93,3 +93,5 @@ export interface MatchListFilter {
 export type { IMatchRepository, IMatchService, IMatchController } from "./match.interfaces.js";
 
 export type { MatchPlayerBriefDTO, MatchGoalDTO, MatchResponseDTO } from "./match.dto.js";
+
+export type { MatchCreateDTO, MatchUpdateDTO, MatchQueryDTO, GoalCreateDTO, GoalUpdateDTO } from "./match.dto.js";
