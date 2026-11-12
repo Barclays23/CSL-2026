@@ -26,7 +26,7 @@ export function createPlayer(data: PlayerWrite) {
   return run(() =>
     USE_MOCK_API
       ? previewRepository.createPlayer(data)
-      : api.post<ApiResponse<PublicPlayer | AdminPlayer>>("/players", data).then((response) => response.data),
+      : api.post<ApiResponse<AdminPlayer>>("/players", data).then((response) => response.data),
   );
 }
 
@@ -34,7 +34,7 @@ export function updatePlayer(id: string, data: PlayerWrite) {
   return run(() =>
     USE_MOCK_API
       ? previewRepository.updatePlayer(id, data)
-      : api.patch<ApiResponse<PublicPlayer | AdminPlayer>>(`/players/${id}`, data).then((response) => response.data),
+      : api.patch<ApiResponse<AdminPlayer>>(`/players/${id}`, data).then((response) => response.data),
   );
 }
 
