@@ -2,13 +2,13 @@ import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
 import type { ITeamController, ITeamService } from "./team.types.js";
-import type { StatisticsService } from "../statistics/statistics.service.js";
+import type { IStatisticsService } from "../statistics/statistics.types.js";
 import { teamCreateSchema, teamQuerySchema, teamUpdateSchema } from "./team.dto.js";
 
 export class TeamController implements ITeamController {
   constructor(
     private readonly teamService: ITeamService,
-    private readonly statisticsService: StatisticsService,
+    private readonly statisticsService: IStatisticsService,
   ) {}
 
   getTeams: RequestHandler = asyncHandler(async (request, response) => {
