@@ -1,3 +1,4 @@
+import type { GoalFields, MatchFields, MatchEntity, PopulatedMatchEntity, MatchResponseDTO, MatchCreateDTO, MatchUpdateDTO, MatchQueryDTO, GoalCreateDTO, GoalUpdateDTO, MatchListFilter } from "./match.types.js";
 import type { Types } from "mongoose";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { MatchCreateInput, MatchQueryInput, MatchUpdateInput, GoalInput } from "./match.dto.js";
