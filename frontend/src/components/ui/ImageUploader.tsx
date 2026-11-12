@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
-import { uploadImage } from "@/services/uploadService";
+import { uploadImage, type UploadPurpose } from "@/services/uploadService";
 import type { Asset } from "@/types/api.types";
 import { errorMessage } from "@/utils/errorHandler";
 
@@ -13,7 +13,7 @@ export function ImageUploader({
 }: {
   label: string;
   value?: Asset | null;
-  purpose: string;
+  purpose: UploadPurpose;
   onChange: (asset: Asset | null) => void;
 }) {
   const [uploading, setUploading] = useState(false);
@@ -29,7 +29,7 @@ export function ImageUploader({
           {uploading ? "Uploading…" : value ? "Replace image" : "Upload image"}
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/svg+xml"
+            accept="image/jpeg,image/png,image/webp"
             className="sr-only"
             disabled={uploading}
             onChange={async (event) => {

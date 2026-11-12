@@ -212,6 +212,8 @@ export function createSeed(): Database {
       requiredIconPlayers: 1,
       requiredGoalkeepers: 1,
       pointsRule: { win: 3, draw: 1, loss: 0 },
+      auctionState: "in_progress",
+      auctionCompletedAt: null,
       updatedAt: "2026-11-01T08:00:00.000Z",
     },
     user: {
