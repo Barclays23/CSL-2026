@@ -14,6 +14,8 @@ import type {
   MatchQueryDTO,
   MatchRepositoryContract,
   MatchResponseDTO,
+  MatchGoalDTO,
+  MatchPlayerBriefDTO,
   MatchUpdateDTO,
   MatchTeamReferenceEntity,
   MatchPlayerReferenceEntity,
@@ -326,7 +328,7 @@ export class MatchService implements IMatchService {
     };
   }
 
-  private mapGoalToResponseDTO(goal: PopulatedGoalEntity) {
+  private mapGoalToResponseDTO(goal: PopulatedGoalEntity): MatchGoalDTO {
     return {
       _id: String(goal._id),
       scoringTeamRef: this.mapTeamReference(goal.scoringTeamRef),
@@ -337,7 +339,7 @@ export class MatchService implements IMatchService {
     };
   }
 
-  private mapTeamReference(reference: Types.ObjectId | MatchTeamReferenceEntity) {
+  private mapTeamReference(reference: Types.ObjectId | MatchTeamReferenceEntity): string | TeamBriefDTO {
     if (reference instanceof Types.ObjectId) return String(reference);
     const team: TeamBriefDTO = {
       _id: String(reference._id),
@@ -349,7 +351,7 @@ export class MatchService implements IMatchService {
     return team;
   }
 
-  private mapPlayerReference(reference: Types.ObjectId | MatchPlayerReferenceEntity | null) {
+  private mapPlayerReference(reference: Types.ObjectId | MatchPlayerReferenceEntity | null): string | MatchPlayerBriefDTO | null {
     if (!reference) return null;
     if (reference instanceof Types.ObjectId) return String(reference);
 
