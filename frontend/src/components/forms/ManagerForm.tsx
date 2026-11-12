@@ -84,7 +84,7 @@ export function ManagerForm({
           <option value="inactive">Inactive</option>
         </Select>
       </FormField>
-      <ImageUploader label="Profile picture" purpose="manager" value={photo} onChange={setPhoto} />
+      <ImageUploader label="Profile picture" purpose="manager-profile" value={photo} onChange={setPhoto} />
       <Button type="submit" disabled={submitting}>
         {submitting ? "Saving…" : "Save manager"}
       </Button>
