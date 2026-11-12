@@ -4,6 +4,8 @@ export interface PointsRule {
   loss: number;
 }
 
+export type AuctionState = "not_started" | "in_progress" | "completed";
+
 export interface Settings {
   _id: string;
   singletonKey: "CSL_CURRENT";
@@ -17,7 +19,12 @@ export interface Settings {
   requiredIconPlayers: number;
   requiredGoalkeepers: number;
   pointsRule: PointsRule;
+  auctionState: AuctionState;
+  auctionCompletedAt: string | null;
   updatedAt: string;
 }
 
-export type SettingsUpdate = Omit<Settings, "_id" | "singletonKey" | "updatedAt">;
+export type SettingsUpdate = Omit<
+  Settings,
+  "_id" | "singletonKey" | "updatedAt" | "auctionState" | "auctionCompletedAt"
+>;
