@@ -23,8 +23,10 @@ export interface SafeUserEntity extends Omit<UserEntity, "passwordHash"> {}
 
 
 
-export type AdminUserCreateDTO = Omit<AdminUserCreateInput, "password">;
+
 
 export type { IUserRepository, IUserService } from "./user.interfaces.js";
 
 export type { AdminUserDTO } from "./user.dto.js";
+
+export type { AdminUserCreateDTO } from "./user.dto.js";
