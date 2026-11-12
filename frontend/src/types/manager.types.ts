@@ -37,3 +37,5 @@ export interface ManagerWrite {
   profilePic?: Asset | null;
   status: PersonStatus;
 }
+
+export type ManagerResponse = PublicManager | AdminManager;
