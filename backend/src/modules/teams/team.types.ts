@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { TeamBriefDTO, TeamDTO, TeamAuctionCardDTO, TeamAuctionTotalsDTO, TeamAuctionSummaryDTO } from "./team.dto.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { PlayerPublicDTO } from "../players/player.types.js";
 import type { TeamCreateInput, TeamQueryInput, TeamUpdateInput } from "./team.dto.js";
@@ -28,19 +29,9 @@ export interface TeamBriefEntity {
   groupName: string | null;
 }
 
-export interface TeamBriefDTO {
-  _id: string;
-  name: string;
-  shortName: string | null;
-  logo: Asset | null;
-  groupName: string | null;
-}
 
-export interface TeamDTO extends TeamFields {
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
+
 
 export type TeamCreateDTO = TeamCreateInput;
 export type TeamUpdateDTO = TeamUpdateInput;
@@ -72,24 +63,12 @@ export interface TeamAuctionStats {
   requiredGoalkeepers: number;
 }
 
-export interface TeamAuctionCardDTO {
-  team: TeamDTO;
-  players: PlayerPublicDTO[];
-  stats: TeamAuctionStats;
-}
 
-export interface TeamAuctionTotalsDTO {
-  activeAuctionPlayers: number;
-  pendingPlayers: number;
-  soldPlayers: number;
-  unsoldPlayers: number;
-  totalAuctionSpend: number;
-  activeTeams: number;
-}
 
-export interface TeamAuctionSummaryDTO {
-  totals: TeamAuctionTotalsDTO;
-  teams: TeamAuctionCardDTO[];
-}
+
+
+
 
 export type { ITeamRepository, ITeamService, ITeamController } from "./team.interfaces.js";
+
+export type { TeamBriefDTO, TeamDTO, TeamAuctionCardDTO, TeamAuctionTotalsDTO, TeamAuctionSummaryDTO } from "./team.dto.js";
