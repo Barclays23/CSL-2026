@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { AUCTION_MESSAGES } from "../../shared/constants/messages.constants.js";
-import type { IAuctionController, IAuctionService, AuctionCompletionValidationResult } from "./auction.types.js";
+import type { IAuctionController, IAuctionService } from "./auction.types.js";
 import { mapSettingsEntityToResponseDTO } from "../settings/settings.mapper.js";
 import type { SettingsResponseDTO, SettingsEntity } from "../settings/settings.types.js";
 
@@ -11,7 +11,6 @@ export class AuctionController implements IAuctionController {
     this.startAuction = this.startAuction.bind(this);
     this.completeAuction = this.completeAuction.bind(this);
     this.reopenAuction = this.reopenAuction.bind(this);
-    this.validateAuctionCompletion = this.validateAuctionCompletion.bind(this);
   }
 
   async startAuction(_request: Request, response: Response, next: NextFunction): Promise<void> {
@@ -38,10 +37,4 @@ export class AuctionController implements IAuctionController {
     } catch (error: unknown) { next(error); }
   }
 
-  async validateAuctionCompletion(_request: Request, response: Response, next: NextFunction): Promise<void> {
-    try {
-      const validation: AuctionCompletionValidationResult = await this._auctionService.validateAuctionCompletion();
-      response.status(HTTP_STATUS.OK).json(ApiResponse.success<AuctionCompletionValidationResult>(AUCTION_MESSAGES.AUCTION_VALIDATION_FETCHED, validation));
-    } catch (error: unknown) { next(error); }
-  }
 }
