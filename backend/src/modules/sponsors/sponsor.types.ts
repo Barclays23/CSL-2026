@@ -26,9 +26,9 @@ export interface SponsorEntity extends SponsorFields {
 
 
 
-export type SponsorCreateData = SponsorCreateDTO;
-export type SponsorUpdateData = SponsorUpdateDTO;
-export type SponsorQuery = GetSponsorsQueryDTO;
+
+
+
 
 export interface SponsorListFilter {
   status?: SponsorStatus;
@@ -43,3 +43,5 @@ export interface SponsorListResult {
 export type { ISponsorRepository, ISponsorService, ISponsorController } from "./sponsor.interfaces.js";
 
 export type { PublicSponsorDTO, AdminSponsorDTO, SponsorResponseDTO } from "./sponsor.dto.js";
+
+export type { SponsorCreateData, SponsorUpdateData, SponsorQuery } from "./sponsor.dto.js";
