@@ -124,14 +124,11 @@ export class PlayerService implements IPlayerService {
     const currentPlayer = await this.playerRepository.findPlayerById(playerId);
     if (!currentPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    await this.ensureUpdatedPlayerContactDetailsAreUnique(playerId, currentPlayer, input);
+    await this.ensureUpdatedPlayerContactDetailsAreUnique(playerId, input);
 
     if (input.status === "inactive") {
       const profileUpdates = this.buildPlayerProfileUpdates(input);
-      if (Object.keys(profileUpdates).length > 0) {
-        await this.playerRepository.updatePlayer(playerId, profileUpdates);
-      }
-      return this.deactivatePlayer(playerId);
+      return this.deactivatePlayerWithProfileUpdates(playerId, profileUpdates);
     }
 
     const settings = await this.settingsService.getTournamentSettings();
@@ -233,16 +230,19 @@ export class PlayerService implements IPlayerService {
   }
 
   async deactivatePlayer(playerId: string): Promise<PlayerAdminDTO> {
+    return this.deactivatePlayerWithProfileUpdates(playerId, {});
+  }
+
+  private async deactivatePlayerWithProfileUpdates(
+    playerId: string,
+    profileUpdates: Partial<PlayerFields>,
+  ): Promise<PlayerAdminDTO> {
     this.ensureValidPlayerId(playerId);
     const player = await this.playerRepository.findPlayerById(playerId);
     if (!player) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    const settings = await this.settingsService.getTournamentSettings();
-    if (settings.auctionState === "completed") {
-      await this.settingsService.updateAuctionLifecycle("in_progress", null);
-    }
-
     const deactivatedPlayer = await this.playerRepository.updatePlayer(playerId, {
+      ...profileUpdates,
       status: "inactive",
       teamRef: null,
       jerseyNo: null,
@@ -250,6 +250,11 @@ export class PlayerService implements IPlayerService {
       auctionStatus: "pending",
     });
     if (!deactivatedPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
+
+    const settings = await this.settingsService.getTournamentSettings();
+    if (settings.auctionState === "completed") {
+      await this.settingsService.updateAuctionLifecycle("in_progress", null);
+    }
 
     const populatedPlayer = await this.playerRepository.findPlayerWithTeamById(playerId);
     if (!populatedPlayer) throw new AppError("Deactivated player could not be retrieved", 500, "PLAYER_UPDATE_FAILED");
@@ -319,7 +324,6 @@ export class PlayerService implements IPlayerService {
 
   private async ensureUpdatedPlayerContactDetailsAreUnique(
     playerId: string,
-    currentPlayer: PlayerEntity,
     input: PlayerUpdateDTO,
   ): Promise<void> {
     if (input.mobile !== undefined) {
@@ -338,7 +342,6 @@ export class PlayerService implements IPlayerService {
       }
     }
 
-    void currentPlayer;
   }
 
   private buildPlayerUpdateFields(input: PlayerUpdateDTO, current: PlayerEntity): Partial<PlayerFields> {
