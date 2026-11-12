@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
 import { appConfig } from "../../config/env.config.js";
 import { AppError } from "../../shared/errors/appError.js";
-import type { AdminUserDTO, IUserRepository, IUserService } from "./user.types.js";
+import type { IUserRepository, IUserService } from "./user.interfaces.js";
+import type { AdminUserDTO } from "./user.types.js";
 
 
 
