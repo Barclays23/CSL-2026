@@ -1,4 +1,5 @@
 import type { Request } from "express";
+import type { Types } from "mongoose";
 
 export type UserRole = "admin";
 export type RecordStatus = "active" | "inactive";
@@ -31,15 +32,16 @@ export interface Pagination {
   totalPages: number;
 }
 
-export interface PaginationInput {
+export interface PaginationQuery {
   page: number;
   limit: number;
-  skip: number;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  pagination?: Pagination;
+export interface PaginatedResult<TEntity> {
+  items: TEntity[];
+  total: number;
+  page: number;
+  limit: number;
 }
+
+export type MongoId = Types.ObjectId;
