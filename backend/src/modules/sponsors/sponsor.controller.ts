@@ -1,16 +1,19 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { SponsorService } from "./sponsor.service.js";
-import { getSponsorsQuerySchema, sponsorCreateSchema, sponsorUpdateSchema } from "./sponsor.dto.js";
+import type { ISponsorController, ISponsorService } from "./sponsor.types.js";
+import {
+  getSponsorsQuerySchema,
+  sponsorCreateSchema,
+  sponsorUpdateSchema,
+} from "./sponsor.dto.js";
 
-export class SponsorController {
-  constructor(private readonly sponsorService: SponsorService) {}
+export class SponsorController implements ISponsorController {
+  constructor(private readonly sponsorService: ISponsorService) {}
 
   getSponsors: RequestHandler = asyncHandler(async (request, response) => {
     const query = getSponsorsQuerySchema.parse(request.query);
-    const isAdmin = Boolean(request.user);
-    const result = await this.sponsorService.getSponsors(query, isAdmin);
+    const result = await this.sponsorService.getSponsors(query, Boolean(request.user));
     sendSuccess(response, result.items, "Sponsors fetched", 200, {
       page: result.page,
       limit: result.limit,
@@ -25,14 +28,14 @@ export class SponsorController {
   });
 
   createSponsor: RequestHandler = asyncHandler(async (request, response) => {
-    const data = sponsorCreateSchema.parse(request.body);
-    const sponsor = await this.sponsorService.createSponsor(data);
+    const input = sponsorCreateSchema.parse(request.body);
+    const sponsor = await this.sponsorService.createSponsor(input);
     sendSuccess(response, sponsor, "Sponsor created", 201);
   });
 
   updateSponsor: RequestHandler = asyncHandler(async (request, response) => {
-    const data = sponsorUpdateSchema.parse(request.body);
-    const sponsor = await this.sponsorService.updateSponsor(String(request.params.id), data);
+    const input = sponsorUpdateSchema.parse(request.body);
+    const sponsor = await this.sponsorService.updateSponsor(String(request.params.id), input);
     sendSuccess(response, sponsor, "Sponsor updated");
   });
 
