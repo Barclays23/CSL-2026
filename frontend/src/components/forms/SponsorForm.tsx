@@ -78,7 +78,7 @@ export function SponsorForm({
           <option value="inactive">Inactive</option>
         </Select>
       </FormField>
-      <ImageUploader label="Logo" purpose="sponsor" value={logo} onChange={setLogo} />
+      <ImageUploader label="Logo" purpose="sponsor-logo" value={logo} onChange={setLogo} />
       <Button type="submit" disabled={submitting}>
         {submitting ? "Saving…" : "Save sponsor"}
       </Button>
