@@ -3,7 +3,7 @@ import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { MANAGER_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type { IManagerController, IManagerService, ManagerResponseDTO } from "./manager.types.js";
+import type { IManagerController, IManagerService, ManagerResponseDTO, AdminManagerDTO } from "./manager.types.js";
 import { managerCreateSchema, managerQuerySchema, managerUpdateSchema, type ManagerCreateInput, type ManagerQueryInput, type ManagerUpdateInput } from "./manager.dto.js";
 
 export class ManagerController implements IManagerController {
@@ -28,7 +28,7 @@ export class ManagerController implements IManagerController {
   async createManager(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const input: ManagerCreateInput = managerCreateSchema.parse(request.body);
-      const manager = await this._managerService.createManager(input);
+      const manager: AdminManagerDTO = await this._managerService.createManager(input);
       response.status(HTTP_STATUS.CREATED).json(ApiResponse.success(MANAGER_MESSAGES.MANAGER_CREATED, manager));
     } catch (error: unknown) { next(error); }
   }
@@ -37,7 +37,7 @@ export class ManagerController implements IManagerController {
     try {
       const managerId: string = request.params.id;
       const input: ManagerUpdateInput = managerUpdateSchema.parse(request.body);
-      const manager = await this._managerService.updateManager(managerId, input);
+      const manager: AdminManagerDTO = await this._managerService.updateManager(managerId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(MANAGER_MESSAGES.MANAGER_UPDATED, manager));
     } catch (error: unknown) { next(error); }
   }
