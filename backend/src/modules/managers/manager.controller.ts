@@ -7,7 +7,13 @@ import type { IManagerController, IManagerService, ManagerResponseDTO, AdminMana
 import { managerCreateSchema, managerQuerySchema, managerUpdateSchema, type ManagerCreateInput, type ManagerQueryInput, type ManagerUpdateInput } from "./manager.dto.js";
 
 export class ManagerController implements IManagerController {
-  constructor(private readonly _managerService: IManagerService) {}
+  constructor(private readonly _managerService: IManagerService) {
+    this.getManagers = this.getManagers.bind(this);
+    this.getManagerById = this.getManagerById.bind(this);
+    this.createManager = this.createManager.bind(this);
+    this.updateManager = this.updateManager.bind(this);
+    this.deleteManager = this.deleteManager.bind(this);
+  }
 
   async getManagers(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
