@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
+import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { SPONSOR_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
