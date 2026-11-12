@@ -57,6 +57,6 @@ export interface ISettingsService {
 }
 
 export interface ISettingsController {
-  getTournamentSettings: import("express").RequestHandler;
-  updateTournamentSettings: import("express").RequestHandler;
+  getTournamentSettings: import("../../shared/types/common.types.js").ControllerMethod;
+  updateTournamentSettings: import("../../shared/types/common.types.js").ControllerMethod;
 }

@@ -22,7 +22,7 @@ export interface IAuthService {
 }
 
 export interface IAuthController {
-  login: import("express").RequestHandler;
-  logout: import("express").RequestHandler;
-  getCurrentAdmin: import("express").RequestHandler;
+  login: import("../../shared/types/common.types.js").ControllerMethod;
+  logout: import("../../shared/types/common.types.js").ControllerMethod;
+  getCurrentAdmin: import("../../shared/types/common.types.js").ControllerMethod;
 }

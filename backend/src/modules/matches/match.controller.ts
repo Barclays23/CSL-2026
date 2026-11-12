@@ -1,71 +1,90 @@
-import type { RequestHandler } from "express";
-import { asyncHandler } from "../../shared/utils/asyncHandler.js";
-import { sendSuccess } from "../../shared/responses/response.helper.js";
-import type { IMatchController, IMatchService } from "./match.types.js";
-import {
-  goalSchema,
-  matchCreateSchema,
-  matchQuerySchema,
-  matchUpdateSchema,
-} from "./match.dto.js";
+import type { Request, Response, NextFunction } from "express";
+import { ApiResponse } from "../../utils/apiResponse.utils.js";
+import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
+import { MATCH_MESSAGES } from "../../shared/constants/messages.constants.js";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
+import type { IMatchController, IMatchService, MatchResponseDTO } from "./match.types.js";
+import { goalSchema, matchCreateSchema, matchQuerySchema, matchUpdateSchema, type GoalInput, type MatchCreateInput, type MatchQueryInput, type MatchUpdateInput } from "./match.dto.js";
 
 export class MatchController implements IMatchController {
-  constructor(private readonly matchService: IMatchService) {}
+  constructor(private readonly _matchService: IMatchService) {
+    this.getMatches = this.getMatches.bind(this);
+    this.getMatchById = this.getMatchById.bind(this);
+    this.createMatch = this.createMatch.bind(this);
+    this.updateMatch = this.updateMatch.bind(this);
+    this.deleteMatch = this.deleteMatch.bind(this);
+    this.addGoalToMatch = this.addGoalToMatch.bind(this);
+    this.updateMatchGoal = this.updateMatchGoal.bind(this);
+    this.deleteMatchGoal = this.deleteMatchGoal.bind(this);
+  }
 
-  getMatches: RequestHandler = asyncHandler(async (request, response) => {
-    const query = matchQuerySchema.parse(request.query);
-    const result = await this.matchService.getMatches(query);
-    sendSuccess(response, result.items, "Matches fetched", 200, {
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-      totalPages: Math.ceil(result.total / result.limit),
-    });
-  });
+  async getMatches(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const query: MatchQueryInput = matchQuerySchema.parse(request.query);
+      const result: PaginatedResult<MatchResponseDTO> = await this._matchService.getMatches(query);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO[]>(MATCH_MESSAGES.MATCHES_FETCHED, result.items, result.pagination));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getMatchById: RequestHandler = asyncHandler(async (request, response) => {
-    const match = await this.matchService.getMatchById(String(request.params.id));
-    sendSuccess(response, match, "Match fetched");
-  });
+  async getMatchById(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const match: MatchResponseDTO = await this._matchService.getMatchById(matchId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.MATCH_FETCHED, match));
+    } catch (error: unknown) { next(error); }
+  }
 
-  createMatch: RequestHandler = asyncHandler(async (request, response) => {
-    const input = matchCreateSchema.parse(request.body);
-    const match = await this.matchService.createMatch(input);
-    sendSuccess(response, match, "Match created", 201);
-  });
+  async createMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const input: MatchCreateInput = matchCreateSchema.parse(request.body);
+      const match: MatchResponseDTO = await this._matchService.createMatch(input);
+      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.MATCH_CREATED, match));
+    } catch (error: unknown) { next(error); }
+  }
 
-  updateMatch: RequestHandler = asyncHandler(async (request, response) => {
-    const input = matchUpdateSchema.parse(request.body);
-    const match = await this.matchService.updateMatch(String(request.params.id), input);
-    sendSuccess(response, match, "Match updated");
-  });
+  async updateMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const input: MatchUpdateInput = matchUpdateSchema.parse(request.body);
+      const match: MatchResponseDTO = await this._matchService.updateMatch(matchId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.MATCH_UPDATED, match));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deleteMatch: RequestHandler = asyncHandler(async (request, response) => {
-    await this.matchService.deleteMatch(String(request.params.id));
-    sendSuccess(response, null, "Match deleted");
-  });
+  async deleteMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      await this._matchService.deleteMatch(matchId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(MATCH_MESSAGES.MATCH_DELETED, null));
+    } catch (error: unknown) { next(error); }
+  }
 
-  addGoalToMatch: RequestHandler = asyncHandler(async (request, response) => {
-    const input = goalSchema.parse(request.body);
-    const match = await this.matchService.addGoalToMatch(String(request.params.id), input);
-    sendSuccess(response, match, "Goal added", 201);
-  });
+  async addGoalToMatch(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const input: GoalInput = goalSchema.parse(request.body);
+      const match: MatchResponseDTO = await this._matchService.addGoalToMatch(matchId, input);
+      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.GOAL_CREATED, match));
+    } catch (error: unknown) { next(error); }
+  }
 
-  updateMatchGoal: RequestHandler = asyncHandler(async (request, response) => {
-    const input = goalSchema.parse(request.body);
-    const match = await this.matchService.updateMatchGoal(
-      String(request.params.id),
-      String(request.params.goalId),
-      input,
-    );
-    sendSuccess(response, match, "Goal updated");
-  });
+  async updateMatchGoal(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const goalId: string = getRequiredRouteParam(request.params.goalId, "goalId");
+      const input: GoalInput = goalSchema.parse(request.body);
+      const match: MatchResponseDTO = await this._matchService.updateMatchGoal(matchId, goalId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.GOAL_UPDATED, match));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deleteMatchGoal: RequestHandler = asyncHandler(async (request, response) => {
-    const match = await this.matchService.deleteMatchGoal(
-      String(request.params.id),
-      String(request.params.goalId),
-    );
-    sendSuccess(response, match, "Goal deleted");
-  });
+  async deleteMatchGoal(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const matchId: string = getRequiredRouteParam(request.params.id, "id");
+      const goalId: string = getRequiredRouteParam(request.params.goalId, "goalId");
+      const match: MatchResponseDTO = await this._matchService.deleteMatchGoal(matchId, goalId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<MatchResponseDTO>(MATCH_MESSAGES.GOAL_DELETED, match));
+    } catch (error: unknown) { next(error); }
+  }
 }

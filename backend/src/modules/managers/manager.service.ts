@@ -19,8 +19,8 @@ import type { PaginatedResult } from "../../shared/types/common.types.js";
 
 export class ManagerService implements IManagerService {
   constructor(
-    private readonly managerRepository: ManagerRepositoryContract,
-    private readonly teamRepository: TeamRepositoryContract,
+    private readonly _managerRepository: ManagerRepositoryContract,
+    private readonly _teamRepository: TeamRepositoryContract,
   ) {}
 
   async getManagers(query: ManagerQueryDTO, isAdmin: boolean): Promise<PaginatedResult<ManagerResponseDTO>> {
@@ -30,18 +30,21 @@ export class ManagerService implements IManagerService {
     else if (!isAdmin) filter.status = "active";
     if (query.teamRef) filter.teamRef = new Types.ObjectId(query.teamRef);
 
-    const result = await this.managerRepository.findManagers(filter, query.page, query.limit);
+    const result = await this._managerRepository.findManagers(filter, query.page, query.limit);
     return {
       items: result.items.map((manager) => this.mapManagerToResponseDTO(manager, isAdmin)),
-      total: result.total,
-      page: query.page,
-      limit: query.limit,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   }
 
   async getManagerById(managerId: string, isAdmin: boolean): Promise<ManagerResponseDTO> {
     this.ensureValidManagerId(managerId);
-    const manager = await this.managerRepository.findManagerWithTeamById(managerId);
+    const manager = await this._managerRepository.findManagerWithTeamById(managerId);
     if (!manager || (!isAdmin && manager.status !== "active")) {
       throw new AppError("Manager not found", 404, "NOT_FOUND");
     }
@@ -65,15 +68,15 @@ export class ManagerService implements IManagerService {
       status: input.status,
     };
 
-    const createdManager = await this.managerRepository.createManager(managerFields);
-    const populatedManager = await this.managerRepository.findManagerWithTeamById(String(createdManager._id));
+    const createdManager = await this._managerRepository.createManager(managerFields);
+    const populatedManager = await this._managerRepository.findManagerWithTeamById(String(createdManager._id));
     if (!populatedManager) throw new AppError("Created manager could not be retrieved", 500, "MANAGER_CREATE_FAILED");
     return this.mapManagerToAdminDTO(populatedManager);
   }
 
   async updateManager(managerId: string, input: ManagerUpdateDTO): Promise<AdminManagerDTO> {
     this.ensureValidManagerId(managerId);
-    const existingManager = await this.managerRepository.findManagerById(managerId);
+    const existingManager = await this._managerRepository.findManagerById(managerId);
     if (!existingManager) throw new AppError("Manager not found", 404, "NOT_FOUND");
 
     const updateData: Partial<ManagerFields> = {};
@@ -94,17 +97,17 @@ export class ManagerService implements IManagerService {
     if (input.profilePic !== undefined) updateData.profilePic = input.profilePic;
     if (input.status !== undefined) updateData.status = input.status;
 
-    const updatedManager = await this.managerRepository.updateManager(managerId, updateData);
+    const updatedManager = await this._managerRepository.updateManager(managerId, updateData);
     if (!updatedManager) throw new AppError("Manager not found", 404, "NOT_FOUND");
 
-    const populatedManager = await this.managerRepository.findManagerWithTeamById(managerId);
+    const populatedManager = await this._managerRepository.findManagerWithTeamById(managerId);
     if (!populatedManager) throw new AppError("Updated manager could not be retrieved", 500, "MANAGER_UPDATE_FAILED");
     return this.mapManagerToAdminDTO(populatedManager);
   }
 
   async deleteManager(managerId: string): Promise<void> {
     this.ensureValidManagerId(managerId);
-    const deleted = await this.managerRepository.deleteManager(managerId);
+    const deleted = await this._managerRepository.deleteManager(managerId);
     if (!deleted) throw new AppError("Manager not found", 404, "NOT_FOUND");
   }
 
@@ -114,19 +117,19 @@ export class ManagerService implements IManagerService {
   }
 
   private async ensureManagerMobileIsUnique(mobile: string): Promise<void> {
-    if (await this.managerRepository.findManagerByMobile(mobile)) {
+    if (await this._managerRepository.findManagerByMobile(mobile)) {
       throw new AppError("Mobile already exists", 409, "DUPLICATE_MOBILE", { mobile: "Mobile already exists" });
     }
   }
 
   private async ensureManagerEmailIsUnique(email: string): Promise<void> {
-    if (await this.managerRepository.findManagerByEmail(email)) {
+    if (await this._managerRepository.findManagerByEmail(email)) {
       throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
     }
   }
 
   private async getActiveTeamId(teamId: string): Promise<Types.ObjectId> {
-    const team = await this.teamRepository.findTeamById(teamId);
+    const team = await this._teamRepository.findTeamById(teamId);
     if (!team || team.status !== "active") throw new AppError("Select an active team", 422, "INVALID_TEAM");
     return new Types.ObjectId(teamId);
   }

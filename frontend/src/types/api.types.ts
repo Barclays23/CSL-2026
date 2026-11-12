@@ -1,15 +1,17 @@
-export interface Pagination {
+export interface IPagination {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
 }
 
-export interface ApiResponse<T> {
+export type Pagination = IPagination;
+
+export interface ApiResponse<TData> {
   success: boolean;
   message: string;
-  data: T;
-  pagination?: Pagination;
+  data: TData;
+  pagination?: IPagination;
 }
 
 export interface ApiErrorResponse {

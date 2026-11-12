@@ -93,7 +93,7 @@ export interface IStatisticsService {
 }
 
 export interface IStatisticsController {
-  getDashboardStatistics: import("express").RequestHandler;
-  getGroupStandings: import("express").RequestHandler;
-  getTopScorers: import("express").RequestHandler;
+  getDashboardStatistics: import("../../shared/types/common.types.js").ControllerMethod;
+  getGroupStandings: import("../../shared/types/common.types.js").ControllerMethod;
+  getTopScorers: import("../../shared/types/common.types.js").ControllerMethod;
 }

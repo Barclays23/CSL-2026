@@ -22,9 +22,9 @@ import type {
 
 export class PlayerService implements IPlayerService {
   constructor(
-    private readonly playerRepository: PlayerRepositoryContract,
-    private readonly teamRepository: TeamRepositoryContract,
-    private readonly settingsService: ISettingsService,
+    private readonly _playerRepository: PlayerRepositoryContract,
+    private readonly _teamRepository: TeamRepositoryContract,
+    private readonly _settingsService: ISettingsService,
   ) {}
 
   async getPlayers(
@@ -40,18 +40,21 @@ export class PlayerService implements IPlayerService {
     if (query.teamRef === "unassigned") filter.teamRef = null;
     else if (query.teamRef) filter.teamRef = new Types.ObjectId(query.teamRef);
 
-    const result = await this.playerRepository.findPlayers(filter, query.page, query.limit);
+    const result = await this._playerRepository.findPlayers(filter, query.page, query.limit);
     return {
       items: result.items.map((player) => this.mapPlayerToResponseDTO(player, isAdmin)),
-      total: result.total,
-      page: query.page,
-      limit: query.limit,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   }
 
   async getPlayerById(playerId: string, isAdmin: boolean): Promise<PlayerResponseDTO> {
     this.ensureValidPlayerId(playerId);
-    const player = await this.playerRepository.findPlayerWithTeamById(playerId);
+    const player = await this._playerRepository.findPlayerWithTeamById(playerId);
     if (!player || (!isAdmin && player.status !== "active")) {
       throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
     }
@@ -59,13 +62,13 @@ export class PlayerService implements IPlayerService {
   }
 
   async createPlayer(input: PlayerCreateDTO): Promise<PlayerAdminDTO> {
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     const mobile = normalizeMobile(input.mobile);
     const email = normalizeEmail(input.email);
 
     await this.ensurePlayerContactDetailsAreUnique(mobile, email);
 
-    if (input.status !== "inactive" && await this.playerRepository.countPlayers({ status: "active" }) >= settings.maxActivePlayers) {
+    if (input.status !== "inactive" && await this._playerRepository.countPlayers({ status: "active" }) >= settings.maxActivePlayers) {
       throw new AppError("Maximum active player limit reached", 422, "PLAYER_LIMIT");
     }
 
@@ -113,15 +116,15 @@ export class PlayerService implements IPlayerService {
       profilePic: input.profilePic ?? null,
     };
 
-    const createdPlayer = await this.playerRepository.createPlayer(playerFields);
-    const populatedPlayer = await this.playerRepository.findPlayerWithTeamById(String(createdPlayer._id));
+    const createdPlayer = await this._playerRepository.createPlayer(playerFields);
+    const populatedPlayer = await this._playerRepository.findPlayerWithTeamById(String(createdPlayer._id));
     if (!populatedPlayer) throw new AppError("Created player could not be retrieved", 500, "PLAYER_CREATE_FAILED");
     return this.mapPlayerToAdminDTO(populatedPlayer);
   }
 
   async updatePlayer(playerId: string, input: PlayerUpdateDTO): Promise<PlayerAdminDTO> {
     this.ensureValidPlayerId(playerId);
-    const currentPlayer = await this.playerRepository.findPlayerById(playerId);
+    const currentPlayer = await this._playerRepository.findPlayerById(playerId);
     if (!currentPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
     await this.ensureUpdatedPlayerContactDetailsAreUnique(playerId, input);
@@ -131,11 +134,11 @@ export class PlayerService implements IPlayerService {
       return this.deactivatePlayerWithProfileUpdates(playerId, profileUpdates);
     }
 
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     const updateFields: Partial<PlayerFields> = this.buildPlayerUpdateFields(input, currentPlayer);
 
     if (input.status === "active" && currentPlayer.status === "inactive") {
-      const activePlayerCount = await this.playerRepository.countPlayers({ status: "active" });
+      const activePlayerCount = await this._playerRepository.countPlayers({ status: "active" });
       if (activePlayerCount >= settings.maxActivePlayers) {
         throw new AppError("Maximum active player limit reached", 422, "PLAYER_LIMIT");
       }
@@ -167,19 +170,19 @@ export class PlayerService implements IPlayerService {
       updateFields.auctionPrice = 0;
     }
 
-    const updatedPlayer = await this.playerRepository.updatePlayer(playerId, updateFields);
+    const updatedPlayer = await this._playerRepository.updatePlayer(playerId, updateFields);
     if (!updatedPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
-    const populatedPlayer = await this.playerRepository.findPlayerWithTeamById(playerId);
+    const populatedPlayer = await this._playerRepository.findPlayerWithTeamById(playerId);
     if (!populatedPlayer) throw new AppError("Updated player could not be retrieved", 500, "PLAYER_UPDATE_FAILED");
     return this.mapPlayerToAdminDTO(populatedPlayer);
   }
 
   async assignPlayerToTeam(playerId: string, input: PlayerAssignmentInput): Promise<PlayerAdminDTO> {
     this.ensureValidPlayerId(playerId);
-    const player = await this.playerRepository.findPlayerById(playerId);
+    const player = await this._playerRepository.findPlayerById(playerId);
     if (!player || player.status !== "active") throw new AppError("Active player not found", 404, "PLAYER_NOT_FOUND");
 
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     if (settings.auctionState !== "in_progress") {
       throw new AppError("Start or reopen the auction before making assignments", 409, "AUCTION_NOT_IN_PROGRESS");
     }
@@ -193,7 +196,7 @@ export class PlayerService implements IPlayerService {
       input.jerseyNo ?? null,
     );
 
-    const updatedPlayer = await this.playerRepository.updatePlayer(playerId, {
+    const updatedPlayer = await this._playerRepository.updatePlayer(playerId, {
       teamRef: new Types.ObjectId(input.teamRef),
       auctionPrice: input.auctionPrice,
       jerseyNo: input.jerseyNo ?? null,
@@ -201,22 +204,22 @@ export class PlayerService implements IPlayerService {
     });
     if (!updatedPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    const populatedPlayer = await this.playerRepository.findPlayerWithTeamById(playerId);
+    const populatedPlayer = await this._playerRepository.findPlayerWithTeamById(playerId);
     if (!populatedPlayer) throw new AppError("Updated player could not be retrieved", 500, "PLAYER_UPDATE_FAILED");
     return this.mapPlayerToAdminDTO(populatedPlayer);
   }
 
   async markPlayerUnsold(playerId: string): Promise<PlayerAdminDTO> {
     this.ensureValidPlayerId(playerId);
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     if (settings.auctionState !== "in_progress") {
       throw new AppError("Start or reopen the auction before changing auction results", 409, "AUCTION_NOT_IN_PROGRESS");
     }
 
-    const player = await this.playerRepository.findPlayerById(playerId);
+    const player = await this._playerRepository.findPlayerById(playerId);
     if (!player || player.status !== "active") throw new AppError("Active player not found", 404, "PLAYER_NOT_FOUND");
 
-    const updatedPlayer = await this.playerRepository.updatePlayer(playerId, {
+    const updatedPlayer = await this._playerRepository.updatePlayer(playerId, {
       teamRef: null,
       jerseyNo: null,
       auctionPrice: 0,
@@ -224,7 +227,7 @@ export class PlayerService implements IPlayerService {
     });
     if (!updatedPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    const populatedPlayer = await this.playerRepository.findPlayerWithTeamById(playerId);
+    const populatedPlayer = await this._playerRepository.findPlayerWithTeamById(playerId);
     if (!populatedPlayer) throw new AppError("Updated player could not be retrieved", 500, "PLAYER_UPDATE_FAILED");
     return this.mapPlayerToAdminDTO(populatedPlayer);
   }
@@ -238,10 +241,10 @@ export class PlayerService implements IPlayerService {
     profileUpdates: Partial<PlayerFields>,
   ): Promise<PlayerAdminDTO> {
     this.ensureValidPlayerId(playerId);
-    const player = await this.playerRepository.findPlayerById(playerId);
+    const player = await this._playerRepository.findPlayerById(playerId);
     if (!player) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    const deactivatedPlayer = await this.playerRepository.updatePlayer(playerId, {
+    const deactivatedPlayer = await this._playerRepository.updatePlayer(playerId, {
       ...profileUpdates,
       status: "inactive",
       teamRef: null,
@@ -251,26 +254,26 @@ export class PlayerService implements IPlayerService {
     });
     if (!deactivatedPlayer) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     if (settings.auctionState === "completed") {
-      await this.settingsService.updateAuctionLifecycle("in_progress", null);
+      await this._settingsService.updateAuctionLifecycle("in_progress", null);
     }
 
-    const populatedPlayer = await this.playerRepository.findPlayerWithTeamById(playerId);
+    const populatedPlayer = await this._playerRepository.findPlayerWithTeamById(playerId);
     if (!populatedPlayer) throw new AppError("Deactivated player could not be retrieved", 500, "PLAYER_UPDATE_FAILED");
     return this.mapPlayerToAdminDTO(populatedPlayer);
   }
 
   async deletePlayer(playerId: string): Promise<void> {
     this.ensureValidPlayerId(playerId);
-    const player = await this.playerRepository.findPlayerById(playerId);
+    const player = await this._playerRepository.findPlayerById(playerId);
     if (!player) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
 
-    if (await this.playerRepository.countPlayerGoalReferences(playerId) > 0) {
+    if (await this._playerRepository.countPlayerGoalReferences(playerId) > 0) {
       throw new AppError("Player is referenced by match goals. Deactivate instead.", 409, "PLAYER_REFERENCED");
     }
 
-    const deleted = await this.playerRepository.deletePlayer(playerId);
+    const deleted = await this._playerRepository.deletePlayer(playerId);
     if (!deleted) throw new AppError("Player not found", 404, "PLAYER_NOT_FOUND");
   }
 
@@ -282,11 +285,11 @@ export class PlayerService implements IPlayerService {
     position: string,
     jerseyNo: number | null,
   ): Promise<void> {
-    const team = await this.teamRepository.findTeamById(teamId);
+    const team = await this._teamRepository.findTeamById(teamId);
     if (!team || team.status !== "active") throw new AppError("Select an active team", 422, "INVALID_TEAM");
 
-    const settings = await this.settingsService.getTournamentSettings();
-    const assignedPlayers = await this.playerRepository.findSoldPlayersByTeam(teamId);
+    const settings = await this._settingsService.getTournamentSettings();
+    const assignedPlayers = await this._playerRepository.findSoldPlayersByTeam(teamId);
     const existingPlayers = assignedPlayers.filter((player) => String(player._id) !== excludePlayerId);
 
     if (existingPlayers.length >= settings.maxPlayersPerTeam) {
@@ -306,7 +309,7 @@ export class PlayerService implements IPlayerService {
       throw new AppError("Team already has a goalkeeper", 422, "GOALKEEPER_LIMIT");
     }
 
-    if (jerseyNo !== null && await this.playerRepository.findPlayerWithJerseyNumber(teamId, jerseyNo, excludePlayerId)) {
+    if (jerseyNo !== null && await this._playerRepository.findPlayerWithJerseyNumber(teamId, jerseyNo, excludePlayerId)) {
       throw new AppError("Jersey number already used in this team", 409, "DUPLICATE_JERSEY", {
         jerseyNo: "Jersey number already used in this team",
       });
@@ -314,10 +317,10 @@ export class PlayerService implements IPlayerService {
   }
 
   private async ensurePlayerContactDetailsAreUnique(mobile: string, email: string | null): Promise<void> {
-    if (await this.playerRepository.findPlayerByMobile(mobile)) {
+    if (await this._playerRepository.findPlayerByMobile(mobile)) {
       throw new AppError("Mobile already exists", 409, "DUPLICATE_MOBILE", { mobile: "Mobile already exists" });
     }
-    if (email && await this.playerRepository.findPlayerByEmail(email)) {
+    if (email && await this._playerRepository.findPlayerByEmail(email)) {
       throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
     }
   }
@@ -328,7 +331,7 @@ export class PlayerService implements IPlayerService {
   ): Promise<void> {
     if (input.mobile !== undefined) {
       const mobile = normalizeMobile(input.mobile);
-      const existing = await this.playerRepository.findPlayerByMobile(mobile);
+      const existing = await this._playerRepository.findPlayerByMobile(mobile);
       if (existing && String(existing._id) !== playerId) {
         throw new AppError("Mobile already exists", 409, "DUPLICATE_MOBILE", { mobile: "Mobile already exists" });
       }
@@ -336,7 +339,7 @@ export class PlayerService implements IPlayerService {
 
     if (input.email !== undefined) {
       const email = normalizeEmail(input.email);
-      const existing = email ? await this.playerRepository.findPlayerByEmail(email) : null;
+      const existing = email ? await this._playerRepository.findPlayerByEmail(email) : null;
       if (existing && String(existing._id) !== playerId) {
         throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
       }

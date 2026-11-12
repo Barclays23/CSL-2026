@@ -1,63 +1,87 @@
-import type { RequestHandler } from "express";
-import { asyncHandler } from "../../shared/utils/asyncHandler.js";
-import { sendSuccess } from "../../shared/responses/response.helper.js";
-import type { IPlayerController, IPlayerService } from "./player.types.js";
-import {
-  playerAssignmentSchema,
-  playerCreateSchema,
-  playerQuerySchema,
-  playerUpdateSchema,
-} from "./player.dto.js";
+import type { Request, Response, NextFunction } from "express";
+import { ApiResponse } from "../../utils/apiResponse.utils.js";
+import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
+import { PLAYER_MESSAGES } from "../../shared/constants/messages.constants.js";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
+import type { IPlayerController, IPlayerService, PlayerResponseDTO, PlayerAdminDTO } from "./player.types.js";
+import { playerAssignmentSchema, playerCreateSchema, playerQuerySchema, playerUpdateSchema, type PlayerAssignmentInput, type PlayerCreateInput, type PlayerQueryInput, type PlayerUpdateInput } from "./player.dto.js";
 
 export class PlayerController implements IPlayerController {
-  constructor(private readonly playerService: IPlayerService) {}
+  constructor(private readonly _playerService: IPlayerService) {
+    this.getPlayers = this.getPlayers.bind(this);
+    this.getPlayerById = this.getPlayerById.bind(this);
+    this.createPlayer = this.createPlayer.bind(this);
+    this.updatePlayer = this.updatePlayer.bind(this);
+    this.assignPlayerToTeam = this.assignPlayerToTeam.bind(this);
+    this.markPlayerUnsold = this.markPlayerUnsold.bind(this);
+    this.deactivatePlayer = this.deactivatePlayer.bind(this);
+    this.deletePlayer = this.deletePlayer.bind(this);
+  }
 
-  getPlayers: RequestHandler = asyncHandler(async (request, response) => {
-    const query = playerQuerySchema.parse(request.query);
-    const result = await this.playerService.getPlayers(query, Boolean(request.user));
-    sendSuccess(response, result.items, "Players fetched", 200, {
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-      totalPages: Math.ceil(result.total / result.limit),
-    });
-  });
+  async getPlayers(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const query: PlayerQueryInput = playerQuerySchema.parse(request.query);
+      const result: PaginatedResult<PlayerResponseDTO> = await this._playerService.getPlayers(query, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<PlayerResponseDTO[]>(PLAYER_MESSAGES.PLAYERS_FETCHED, result.items, result.pagination));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getPlayerById: RequestHandler = asyncHandler(async (request, response) => {
-    const player = await this.playerService.getPlayerById(String(request.params.id), Boolean(request.user));
-    sendSuccess(response, player, "Player fetched");
-  });
+  async getPlayerById(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
+      const player: PlayerResponseDTO = await this._playerService.getPlayerById(playerId, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<PlayerResponseDTO>(PLAYER_MESSAGES.PLAYER_FETCHED, player));
+    } catch (error: unknown) { next(error); }
+  }
 
-  createPlayer: RequestHandler = asyncHandler(async (request, response) => {
-    const input = playerCreateSchema.parse(request.body);
-    const player = await this.playerService.createPlayer(input);
-    sendSuccess(response, player, "Player created", 201);
-  });
+  async createPlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const input: PlayerCreateInput = playerCreateSchema.parse(request.body);
+      const player: PlayerAdminDTO = await this._playerService.createPlayer(input);
+      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_CREATED, player));
+    } catch (error: unknown) { next(error); }
+  }
 
-  updatePlayer: RequestHandler = asyncHandler(async (request, response) => {
-    const input = playerUpdateSchema.parse(request.body);
-    const player = await this.playerService.updatePlayer(String(request.params.id), input);
-    sendSuccess(response, player, "Player updated");
-  });
+  async updatePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
+      const input: PlayerUpdateInput = playerUpdateSchema.parse(request.body);
+      const player: PlayerAdminDTO = await this._playerService.updatePlayer(playerId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_UPDATED, player));
+    } catch (error: unknown) { next(error); }
+  }
 
-  assignPlayerToTeam: RequestHandler = asyncHandler(async (request, response) => {
-    const input = playerAssignmentSchema.parse(request.body);
-    const player = await this.playerService.assignPlayerToTeam(String(request.params.id), input);
-    sendSuccess(response, player, "Player assigned to team");
-  });
+  async assignPlayerToTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
+      const input: PlayerAssignmentInput = playerAssignmentSchema.parse(request.body);
+      const player: PlayerAdminDTO = await this._playerService.assignPlayerToTeam(playerId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_ASSIGNED, player));
+    } catch (error: unknown) { next(error); }
+  }
 
-  markPlayerUnsold: RequestHandler = asyncHandler(async (request, response) => {
-    const player = await this.playerService.markPlayerUnsold(String(request.params.id));
-    sendSuccess(response, player, "Player marked unsold");
-  });
+  async markPlayerUnsold(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
+      const player: PlayerAdminDTO = await this._playerService.markPlayerUnsold(playerId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_MARKED_UNSOLD, player));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deactivatePlayer: RequestHandler = asyncHandler(async (request, response) => {
-    const player = await this.playerService.deactivatePlayer(String(request.params.id));
-    sendSuccess(response, player, "Player deactivated");
-  });
+  async deactivatePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
+      const player: PlayerAdminDTO = await this._playerService.deactivatePlayer(playerId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_DEACTIVATED, player));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deletePlayer: RequestHandler = asyncHandler(async (request, response) => {
-    await this.playerService.deletePlayer(String(request.params.id));
-    sendSuccess(response, null, "Player deleted");
-  });
+  async deletePlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const playerId: string = getRequiredRouteParam(request.params.id, "id");
+      await this._playerService.deletePlayer(playerId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(PLAYER_MESSAGES.PLAYER_DELETED, null));
+    } catch (error: unknown) { next(error); }
+  }
 }

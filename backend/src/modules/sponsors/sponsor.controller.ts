@@ -1,46 +1,59 @@
-import type { RequestHandler } from "express";
-import { asyncHandler } from "../../shared/utils/asyncHandler.js";
-import { sendSuccess } from "../../shared/responses/response.helper.js";
-import type { ISponsorController, ISponsorService } from "./sponsor.types.js";
-import {
-  getSponsorsQuerySchema,
-  sponsorCreateSchema,
-  sponsorUpdateSchema,
-} from "./sponsor.dto.js";
+import type { Request, Response, NextFunction } from "express";
+import { ApiResponse } from "../../utils/apiResponse.utils.js";
+import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
+import { SPONSOR_MESSAGES } from "../../shared/constants/messages.constants.js";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
+import type { ISponsorController, ISponsorService, SponsorResponseDTO, AdminSponsorDTO } from "./sponsor.types.js";
+import { getSponsorsQuerySchema, sponsorCreateSchema, sponsorUpdateSchema, type SponsorCreateDTO, type SponsorUpdateDTO, type GetSponsorsQueryDTO } from "./sponsor.dto.js";
 
 export class SponsorController implements ISponsorController {
-  constructor(private readonly sponsorService: ISponsorService) {}
+  constructor(private readonly _sponsorService: ISponsorService) {
+    this.getSponsors = this.getSponsors.bind(this);
+    this.getSponsorById = this.getSponsorById.bind(this);
+    this.createSponsor = this.createSponsor.bind(this);
+    this.updateSponsor = this.updateSponsor.bind(this);
+    this.deleteSponsor = this.deleteSponsor.bind(this);
+  }
 
-  getSponsors: RequestHandler = asyncHandler(async (request, response) => {
-    const query = getSponsorsQuerySchema.parse(request.query);
-    const result = await this.sponsorService.getSponsors(query, Boolean(request.user));
-    sendSuccess(response, result.items, "Sponsors fetched", 200, {
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-      totalPages: Math.ceil(result.total / result.limit),
-    });
-  });
+  async getSponsors(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const query: GetSponsorsQueryDTO = getSponsorsQuerySchema.parse(request.query);
+      const result: PaginatedResult<SponsorResponseDTO> = await this._sponsorService.getSponsors(query, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<SponsorResponseDTO[]>(SPONSOR_MESSAGES.SPONSORS_FETCHED, result.items, result.pagination));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getSponsorById: RequestHandler = asyncHandler(async (request, response) => {
-    const sponsor = await this.sponsorService.getSponsorById(String(request.params.id), Boolean(request.user));
-    sendSuccess(response, sponsor, "Sponsor fetched");
-  });
+  async getSponsorById(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const sponsorId: string = getRequiredRouteParam(request.params.id, "id");
+      const sponsor: SponsorResponseDTO = await this._sponsorService.getSponsorById(sponsorId, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<SponsorResponseDTO>(SPONSOR_MESSAGES.SPONSOR_FETCHED, sponsor));
+    } catch (error: unknown) { next(error); }
+  }
 
-  createSponsor: RequestHandler = asyncHandler(async (request, response) => {
-    const input = sponsorCreateSchema.parse(request.body);
-    const sponsor = await this.sponsorService.createSponsor(input);
-    sendSuccess(response, sponsor, "Sponsor created", 201);
-  });
+  async createSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const input: SponsorCreateDTO = sponsorCreateSchema.parse(request.body);
+      const sponsor: AdminSponsorDTO = await this._sponsorService.createSponsor(input);
+      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success(SPONSOR_MESSAGES.SPONSOR_CREATED, sponsor));
+    } catch (error: unknown) { next(error); }
+  }
 
-  updateSponsor: RequestHandler = asyncHandler(async (request, response) => {
-    const input = sponsorUpdateSchema.parse(request.body);
-    const sponsor = await this.sponsorService.updateSponsor(String(request.params.id), input);
-    sendSuccess(response, sponsor, "Sponsor updated");
-  });
+  async updateSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const sponsorId: string = getRequiredRouteParam(request.params.id, "id");
+      const input: SponsorUpdateDTO = sponsorUpdateSchema.parse(request.body);
+      const sponsor: AdminSponsorDTO = await this._sponsorService.updateSponsor(sponsorId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success(SPONSOR_MESSAGES.SPONSOR_UPDATED, sponsor));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deleteSponsor: RequestHandler = asyncHandler(async (request, response) => {
-    await this.sponsorService.deleteSponsor(String(request.params.id));
-    sendSuccess(response, null, "Sponsor deleted");
-  });
+  async deleteSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const sponsorId: string = getRequiredRouteParam(request.params.id, "id");
+      await this._sponsorService.deleteSponsor(sponsorId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(SPONSOR_MESSAGES.SPONSOR_DELETED, null));
+    } catch (error: unknown) { next(error); }
+  }
 }

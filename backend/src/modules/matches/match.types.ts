@@ -143,12 +143,12 @@ export interface IMatchService {
 }
 
 export interface IMatchController {
-  getMatches: import("express").RequestHandler;
-  getMatchById: import("express").RequestHandler;
-  createMatch: import("express").RequestHandler;
-  updateMatch: import("express").RequestHandler;
-  deleteMatch: import("express").RequestHandler;
-  addGoalToMatch: import("express").RequestHandler;
-  updateMatchGoal: import("express").RequestHandler;
-  deleteMatchGoal: import("express").RequestHandler;
+  getMatches: import("../../shared/types/common.types.js").ControllerMethod;
+  getMatchById: import("../../shared/types/common.types.js").ControllerMethod;
+  createMatch: import("../../shared/types/common.types.js").ControllerMethod;
+  updateMatch: import("../../shared/types/common.types.js").ControllerMethod;
+  deleteMatch: import("../../shared/types/common.types.js").ControllerMethod;
+  addGoalToMatch: import("../../shared/types/common.types.js").ControllerMethod;
+  updateMatchGoal: import("../../shared/types/common.types.js").ControllerMethod;
+  deleteMatchGoal: import("../../shared/types/common.types.js").ControllerMethod;
 }

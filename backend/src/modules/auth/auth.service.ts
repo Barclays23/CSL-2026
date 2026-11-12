@@ -6,10 +6,10 @@ import type { AdminUserDTO, IUserRepository } from "../users/user.types.js";
 import type { AuthSessionDTO, IAuthService, LoginCredentials } from "./auth.types.js";
 
 export class AuthService implements IAuthService {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(private readonly _userRepository: IUserRepository) {}
 
   async login(credentials: LoginCredentials): Promise<AuthSessionDTO> {
-    const user = await this.userRepository.findUserByEmail(credentials.email);
+    const user = await this._userRepository.findUserByEmail(credentials.email);
 
     if (!user || user.status !== "active") {
       throw new AppError("Invalid email or password", 401, "INVALID_CREDENTIALS");
@@ -41,7 +41,7 @@ export class AuthService implements IAuthService {
   }
 
   async getCurrentAdmin(userId: string): Promise<AdminUserDTO> {
-    const user = await this.userRepository.findUserById(userId);
+    const user = await this._userRepository.findUserById(userId);
     if (!user || user.status !== "active" || user.role !== "admin") {
       throw new AppError("Administrator not found", 401, "UNAUTHENTICATED");
     }

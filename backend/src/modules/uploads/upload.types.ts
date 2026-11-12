@@ -1,4 +1,3 @@
-import type { RequestHandler } from "express";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { UploadPurpose } from "./upload.dto.js";
 
@@ -16,5 +15,5 @@ export interface IUploadService {
 }
 
 export interface IUploadController {
-  uploadImage: RequestHandler;
+  uploadImage: import("../../shared/types/common.types.js").ControllerMethod;
 }
