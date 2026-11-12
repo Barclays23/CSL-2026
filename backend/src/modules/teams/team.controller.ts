@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { TEAM_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { ITeamController, ITeamService, TeamDTO, TeamAuctionSummaryDTO } from "./team.types.js";
@@ -31,7 +32,7 @@ export class TeamController implements ITeamController {
 
   async getTeamById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const teamId: string = request.params.id;
+      const teamId: string = getRequiredRouteParam(request.params.id, "id");
       const team: TeamDTO = await this._teamService.getTeamById(teamId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamDTO>(TEAM_MESSAGES.TEAM_FETCHED, team));
     } catch (error: unknown) { next(error); }
@@ -46,7 +47,7 @@ export class TeamController implements ITeamController {
 
   async getTeamStatistics(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const teamId: string = request.params.id;
+      const teamId: string = getRequiredRouteParam(request.params.id, "id");
       const statistics: TeamStatisticsDTO = await this._statisticsService.getTeamStatistics(teamId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamStatisticsDTO>(TEAM_MESSAGES.TEAM_STATISTICS_FETCHED, statistics));
     } catch (error: unknown) { next(error); }
@@ -62,7 +63,7 @@ export class TeamController implements ITeamController {
 
   async updateTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const teamId: string = request.params.id;
+      const teamId: string = getRequiredRouteParam(request.params.id, "id");
       const input: TeamUpdateInput = teamUpdateSchema.parse(request.body);
       const team: TeamDTO = await this._teamService.updateTeam(teamId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamDTO>(TEAM_MESSAGES.TEAM_UPDATED, team));
@@ -71,7 +72,7 @@ export class TeamController implements ITeamController {
 
   async deleteTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const teamId: string = request.params.id;
+      const teamId: string = getRequiredRouteParam(request.params.id, "id");
       await this._teamService.deleteTeam(teamId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(TEAM_MESSAGES.TEAM_DELETED, null));
     } catch (error: unknown) { next(error); }
