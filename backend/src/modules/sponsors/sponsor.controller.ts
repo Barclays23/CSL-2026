@@ -14,9 +14,11 @@ import {
   getSponsorsQuerySchema,
   sponsorCreateSchema,
   sponsorUpdateSchema,
-  type SponsorCreateDTO,
-  type SponsorUpdateDTO,
-  type GetSponsorsQueryDTO,
+} from "./sponsor.schema.js";
+import type {
+  SponsorCreateDTO,
+  SponsorUpdateDTO,
+  GetSponsorsQueryDTO,
 } from "./sponsor.dto.js";
 
 
