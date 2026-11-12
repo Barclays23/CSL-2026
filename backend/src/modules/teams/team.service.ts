@@ -164,8 +164,8 @@ export class TeamService implements ITeamService {
       poster: team.poster,
       groupName: team.groupName,
       status: team.status,
-      createdAt: team.createdAt,
-      updatedAt: team.updatedAt,
+      createdAt: team.createdAt.toISOString(),
+      updatedAt: team.updatedAt.toISOString(),
     };
   }
 
