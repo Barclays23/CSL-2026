@@ -3,7 +3,7 @@ import type { IPagination } from "../types/common.types.js";
 export interface IApiResponse<TData> {
   success: boolean;
   message: string;
-  data?: TData;
+  data: TData;
   pagination?: IPagination;
 }
 
