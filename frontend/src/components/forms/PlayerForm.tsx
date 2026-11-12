@@ -121,7 +121,7 @@ export function PlayerForm({
           ))}
         </Select>
       </FormField>
-      <ImageUploader label="Profile picture" purpose="player" value={photo} onChange={setPhoto} />
+      <ImageUploader label="Profile picture" purpose="player-profile" value={photo} onChange={setPhoto} />
       <Button type="submit" disabled={submitting}>
         {submitting ? "Saving…" : "Save player"}
       </Button>
