@@ -13,10 +13,15 @@ export class TeamService {
   async get(id:string){const team=await this.teams.findById(id);if(!team||team.status!=="active")throw new AppError("Team not found",404,"NOT_FOUND");return team;}
   async create(data:Record<string,unknown>){
     const settings=await this.settings.get();if(data.status!=="inactive"&&await this.teams.countActive()>=Number(settings.maxActiveTeams))throw new AppError("Maximum active team limit reached",422,"TEAM_LIMIT");
-    if(await this.teams.findByName(String(data.name)))throw new AppError("Team name already exists",409,"DUPLICATE_TEAM");return this.teams.create(data);
+    if(await this.teams.findByName(String(data.name)))throw new AppError("Team name already exists",409,"DUPLICATE_TEAM",{name:"Team name already exists"});
+    return this.teams.create(data);
   }
   async update(id:string,data:Record<string,unknown>){
     const current=await this.teams.findById(id);if(!current)throw new AppError("Team not found",404,"NOT_FOUND");
+    if(data.name&&String(data.name).trim().toLowerCase()!==String(current.name).toLowerCase()){
+      const duplicate=await this.teams.findByName(String(data.name));
+      if(duplicate&&String(duplicate._id)!==id)throw new AppError("Team name already exists",409,"DUPLICATE_TEAM",{name:"Team name already exists"});
+    }
     if(data.status==="active"&&current.status!=="active"){const settings=await this.settings.get();if(await this.teams.countActive()>=Number(settings.maxActiveTeams))throw new AppError("Maximum active team limit reached",422,"TEAM_LIMIT");}
     if(data.status==="inactive"){
       const refs=await this.teams.findReferenced(id);
