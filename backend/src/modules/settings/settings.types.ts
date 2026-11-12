@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { SettingsResponseDTO } from "./settings.dto.js";
 import type { SettingsUpdateInput } from "./settings.dto.js";
 
 export interface PointsRule {
@@ -32,14 +33,10 @@ export interface SettingsEntity extends SettingsFields {
 }
 
 /** JSON response shape returned by the Settings API. */
-export interface SettingsResponseDTO extends Omit<SettingsFields, "startDate" | "endDate" | "auctionCompletedAt"> {
-  _id: string;
-  startDate: string;
-  endDate: string;
-  auctionCompletedAt: string | null;
-  updatedAt: string;
-}
+
 
 export type SettingsUpdateDTO = SettingsUpdateInput;
 
 export type { ISettingsRepository, ISettingsService, ISettingsController } from "./settings.interfaces.js";
+
+export type { SettingsResponseDTO } from "./settings.dto.js";
