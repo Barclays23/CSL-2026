@@ -1,7 +1,7 @@
 import { MatchModel } from "../matches/match.model.js";
 import type { MatchEntity, PopulatedMatchEntity } from "../matches/match.types.js";
 import { PlayerModel } from "../players/player.model.js";
-import type { PlayerEntity } from "../players/player.types.js";
+import type { PlayerStatisticsEntity } from "../players/player.types.js";
 import { TeamModel } from "../teams/team.model.js";
 import type { TeamEntity } from "../teams/team.types.js";
 
@@ -18,7 +18,7 @@ export interface IStatisticsRepository {
   findCompletedGroupStageMatches(): Promise<MatchEntity[]>;
   findAllTeams(): Promise<TeamEntity[]>;
   findActiveTeams(): Promise<TeamEntity[]>;
-  findPlayersForTournamentStatistics(): Promise<PlayerEntity[]>;
+  findPlayersForTournamentStatistics(): Promise<PlayerStatisticsEntity[]>;
   findUpcomingFixtureCards(limit: number): Promise<PopulatedMatchEntity[]>;
   findRecentResultCards(limit: number): Promise<PopulatedMatchEntity[]>;
   countScheduledFixtures(): Promise<number>;
@@ -47,11 +47,11 @@ export class StatisticsRepository implements IStatisticsRepository {
     return TeamModel.find({ status: "active" }).sort({ name: 1 }).lean<TeamEntity[]>().exec();
   }
 
-  async findPlayersForTournamentStatistics(): Promise<PlayerEntity[]> {
+  async findPlayersForTournamentStatistics(): Promise<PlayerStatisticsEntity[]> {
     return PlayerModel.find()
       .select("name position isIconPlayer teamRef jerseyNo auctionPrice auctionStatus status profilePic")
       .sort({ name: 1 })
-      .lean<PlayerEntity[]>()
+      .lean<PlayerStatisticsEntity[]>()
       .exec();
   }
 
