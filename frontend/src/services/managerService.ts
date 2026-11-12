@@ -2,7 +2,7 @@ import { USE_MOCK_API } from "@/config/env";
 import { previewRepository } from "@/mocks/repository";
 import { api, run } from "@/services/api";
 import type { ApiResponse } from "@/types/api.types";
-import type { ManagerQuery, ManagerWrite, PublicManager } from "@/types/manager.types";
+import type { AdminManager, ManagerQuery, ManagerWrite, PublicManager } from "@/types/manager.types";
 
 export function getManagers(params: ManagerQuery = {}) {
   return run(() =>
@@ -24,7 +24,7 @@ export function createManager(data: ManagerWrite) {
   return run(() =>
     USE_MOCK_API
       ? previewRepository.createManager(data)
-      : api.post<ApiResponse<PublicManager>>("/managers", data).then((response) => response.data),
+      : api.post<ApiResponse<AdminManager>>("/managers", data).then((response) => response.data),
   );
 }
 
@@ -32,7 +32,7 @@ export function updateManager(id: string, data: ManagerWrite) {
   return run(() =>
     USE_MOCK_API
       ? previewRepository.updateManager(id, data)
-      : api.patch<ApiResponse<PublicManager>>(`/managers/${id}`, data).then((response) => response.data),
+      : api.patch<ApiResponse<AdminManager>>(`/managers/${id}`, data).then((response) => response.data),
   );
 }
 
