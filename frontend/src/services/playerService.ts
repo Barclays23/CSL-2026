@@ -47,7 +47,7 @@ export function deactivatePlayer(id: string) {
     USE_MOCK_API
       ? previewRepository.deactivatePlayer(id)
       : api
-          .patch<ApiResponse<PublicPlayer | AdminPlayer>>(`/players/${id}`, { status: "inactive" })
+          .patch<ApiResponse<AdminPlayer>>(`/players/${id}`, { status: "inactive" })
           .then((response) => response.data),
   );
 }
