@@ -1,96 +1,79 @@
 import { MatchModel } from "../matches/match.model.js";
+import type { MatchEntity, PopulatedMatchEntity } from "../matches/match.types.js";
 import { PlayerModel } from "../players/player.model.js";
+import type { PlayerEntity } from "../players/player.types.js";
 import { TeamModel } from "../teams/team.model.js";
+import type { TeamEntity } from "../teams/team.types.js";
 
+const populatedFixturePaths = [
+  { path: "team1Ref", select: "name shortName logo groupName" },
+  { path: "team2Ref", select: "name shortName logo groupName" },
+  { path: "goals.scoringTeamRef", select: "name shortName logo groupName" },
+  { path: "goals.scorerRef", select: "name position jerseyNo profilePic teamRef" },
+  { path: "goals.ownGoalPlayerRef", select: "name position jerseyNo profilePic teamRef" },
+];
 
+export interface IStatisticsRepository {
+  findCompletedMatches(): Promise<MatchEntity[]>;
+  findCompletedGroupStageMatches(): Promise<MatchEntity[]>;
+  findAllTeams(): Promise<TeamEntity[]>;
+  findActiveTeams(): Promise<TeamEntity[]>;
+  findPlayersForTournamentStatistics(): Promise<PlayerEntity[]>;
+  findUpcomingFixtureCards(limit: number): Promise<PopulatedMatchEntity[]>;
+  findRecentResultCards(limit: number): Promise<PopulatedMatchEntity[]>;
+  countScheduledFixtures(): Promise<number>;
+}
 
-export class StatisticsRepository {
-  async completedMatches() {
+export class StatisticsRepository implements IStatisticsRepository {
+  async findCompletedMatches(): Promise<MatchEntity[]> {
     return MatchModel.find({ status: "completed" })
-      .populate(
-        "team1Ref team2Ref goals.scoringTeamRef goals.scorerRef goals.ownGoalPlayerRef",
-      )
-      .lean()
+      .sort({ kickoffAt: 1 })
+      .lean<MatchEntity[]>()
       .exec();
   }
 
-  async completedGroupMatches() {
+  async findCompletedGroupStageMatches(): Promise<MatchEntity[]> {
     return MatchModel.find({ status: "completed", stage: "group" })
-      .populate("team1Ref team2Ref")
-      .lean()
+      .sort({ kickoffAt: 1 })
+      .lean<MatchEntity[]>()
       .exec();
   }
 
-  async topScorerRows() {
-    return MatchModel.aggregate([
-      { $match: { status: "completed" } },
-      { $unwind: "$goals" },
-      {
-        $match: {
-          "goals.goalType": "normal",
-          "goals.scorerRef": { $ne: null },
-        },
-      },
-      { $group: { _id: "$goals.scorerRef", goals: { $sum: 1 } } },
-      { $sort: { goals: -1 } },
-    ]).exec();
+  async findAllTeams(): Promise<TeamEntity[]> {
+    return TeamModel.find().sort({ name: 1 }).lean<TeamEntity[]>().exec();
   }
 
-  async teamScorers() {
+  async findActiveTeams(): Promise<TeamEntity[]> {
+    return TeamModel.find({ status: "active" }).sort({ name: 1 }).lean<TeamEntity[]>().exec();
+  }
+
+  async findPlayersForTournamentStatistics(): Promise<PlayerEntity[]> {
     return PlayerModel.find()
-      .select(
-        "name position profilePic teamRef jerseyNo isIconPlayer status auctionStatus auctionPrice",
-      )
-      .lean()
+      .select("name position isIconPlayer teamRef jerseyNo auctionPrice auctionStatus status profilePic")
+      .sort({ name: 1 })
+      .lean<PlayerEntity[]>()
       .exec();
   }
-  
-  async activeTeams() {
-    return TeamModel.find({ status: "active" }).sort({ name: 1 }).lean().exec();
-  }
 
-  async activeTeamById(id: string) {
-    return TeamModel.findOne({ _id: id, status: "active" }).lean().exec();
-  }
-
-  async upcomingFixtures() {
+  async findUpcomingFixtureCards(limit: number): Promise<PopulatedMatchEntity[]> {
     return MatchModel.find({ status: "scheduled" })
       .sort({ kickoffAt: 1 })
-      .limit(4)
-      .populate("team1Ref team2Ref")
-      .lean()
+      .limit(limit)
+      .populate(populatedFixturePaths)
+      .lean<PopulatedMatchEntity[]>()
       .exec();
   }
 
-  async recentResults() {
+  async findRecentResultCards(limit: number): Promise<PopulatedMatchEntity[]> {
     return MatchModel.find({ status: "completed" })
-      .sort({ updatedAt: -1 })
-      .limit(4)
-      .populate([
-        { path: "team1Ref", select: "name shortName logo groupName" },
-        { path: "team2Ref", select: "name shortName logo groupName" },
-        {
-          path: "goals.scoringTeamRef",
-          select: "name shortName logo groupName",
-        },
-        {
-          path: "goals.scorerRef",
-          select: "name position jerseyNo profilePic teamRef",
-        },
-        {
-          path: "goals.ownGoalPlayerRef",
-          select: "name position jerseyNo profilePic teamRef",
-        },
-      ])
-      .lean()
+      .sort({ kickoffAt: -1 })
+      .limit(limit)
+      .populate(populatedFixturePaths)
+      .lean<PopulatedMatchEntity[]>()
       .exec();
   }
 
-  async upcomingCount() {
-    return MatchModel.countDocuments({ status: "scheduled" });
-  }
-  
-  async completedCount() {
-    return MatchModel.countDocuments({ status: "completed" });
+  async countScheduledFixtures(): Promise<number> {
+    return MatchModel.countDocuments({ status: "scheduled" }).exec();
   }
 }
