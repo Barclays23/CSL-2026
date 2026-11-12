@@ -15,10 +15,12 @@ import {
   playerCreateSchema,
   playerQuerySchema,
   playerUpdateSchema,
-  type PlayerAssignmentInput,
-  type PlayerCreateInput,
-  type PlayerQueryInput,
-  type PlayerUpdateInput,
+} from "./player.schema.js";
+import type {
+  PlayerAssignmentInput,
+  PlayerCreateInput,
+  PlayerQueryInput,
+  PlayerUpdateInput,
 } from "./player.dto.js";
 
 
