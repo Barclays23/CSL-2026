@@ -4,15 +4,8 @@ import type { TeamRecord } from "./team.model.js";
 import { PlayerModel } from "../players/player.model.js";
 import { ManagerModel } from "../managers/manager.model.js";
 import { MatchModel } from "../matches/match.model.js";
-import type {
-  TeamCreateDTO,
-  TeamEntity,
-  TeamFields,
-  TeamListFilter,
-  TeamReferenceCounts,
-  ITeamRepository,
-  TeamUpdateDTO,
-} from "./team.types.js";
+import type { ITeamRepository } from "./team.interfaces.js";
+import type { TeamCreateDTO, TeamEntity, TeamFields, TeamListFilter, TeamReferenceCounts, TeamUpdateDTO } from "./team.types.js";
 
 export class TeamRepository implements ITeamRepository {
   async findTeams(
