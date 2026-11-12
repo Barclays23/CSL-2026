@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { MatchPlayerBriefDTO, MatchGoalDTO, MatchResponseDTO } from "./match.dto.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { MatchCreateInput, MatchQueryInput, MatchUpdateInput, GoalInput } from "./match.dto.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
@@ -67,40 +68,11 @@ export interface PopulatedMatchEntity extends Omit<MatchEntity, "team1Ref" | "te
   goals: PopulatedGoalEntity[];
 }
 
-export interface MatchPlayerBriefDTO {
-  _id: string;
-  name: string;
-  position: "GK" | "DF" | "MF" | "FW";
-  jerseyNo: number | null;
-  profilePic: Asset | null;
-  teamRef: string | null;
-}
 
-export interface MatchGoalDTO {
-  _id: string;
-  scoringTeamRef: string | TeamBriefDTO;
-  goalType: GoalType;
-  scorerRef: string | MatchPlayerBriefDTO | null;
-  ownGoalPlayerRef: string | MatchPlayerBriefDTO | null;
-  createdAt: string;
-}
 
-export interface MatchResponseDTO {
-  _id: string;
-  matchNo: string;
-  stage: MatchStage;
-  groupName: string | null;
-  kickoffAt: string;
-  venue: string | null;
-  team1Ref: string | TeamBriefDTO;
-  team2Ref: string | TeamBriefDTO;
-  status: MatchStatus;
-  goals: MatchGoalDTO[];
-  penaltyShootout: { team1Score: number; team2Score: number } | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+
+
+
 
 export type MatchCreateDTO = MatchCreateInput;
 export type MatchUpdateDTO = MatchUpdateInput;
@@ -119,3 +91,5 @@ export interface MatchListFilter {
 }
 
 export type { IMatchRepository, IMatchService, IMatchController } from "./match.interfaces.js";
+
+export type { MatchPlayerBriefDTO, MatchGoalDTO, MatchResponseDTO } from "./match.dto.js";
