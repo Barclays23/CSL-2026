@@ -1,3 +1,4 @@
+import type { LoginCredentials, AuthSessionDTO } from "./auth.types.js";
 import type { AdminUserDTO } from "../users/user.types.js";
 import type { LoginInput } from "./auth.dto.js";
 
