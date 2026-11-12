@@ -28,5 +28,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/lib/**", "src/components/preview-host-bridge.tsx"]
 }
