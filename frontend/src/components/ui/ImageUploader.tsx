@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type JSX } from "react";
 import { ImagePlus } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { uploadImage, type UploadPurpose } from "@/services/uploadService";
@@ -7,19 +7,42 @@ import { errorMessage } from "@/utils/errorHandler";
 
 
 
+export interface ImageUploaderProps {
+  label: string;
+  value?: Asset | null;
+  purpose: UploadPurpose;
+  onChange: (asset: Asset | null) => void;
+}
+
+
 export function ImageUploader({
   label,
   value,
   purpose,
   onChange,
-}: {
-  label: string;
-  value?: Asset | null;
-  purpose: UploadPurpose;
-  onChange: (asset: Asset | null) => void;
-}) {
-  const [uploading, setUploading] = useState(false);
+}: ImageUploaderProps): JSX.Element {
+  const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const response = await uploadImage(file, purpose);
+      onChange(response.data);
+    } catch (reason: unknown) {
+      setError(errorMessage(reason));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div>
@@ -34,25 +57,15 @@ export function ImageUploader({
             accept="image/jpeg,image/png,image/webp"
             className="sr-only"
             disabled={uploading}
-            onChange={async (event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (!file) return;
-              setUploading(true);
-              setError(null);
-              try {
-                const response = await uploadImage(file, purpose);
-                onChange(response.data);
-              } catch (reason) {
-                setError(errorMessage(reason));
-              } finally {
-                setUploading(false);
-              }
-            }}
+            onChange={handleFileChange}
           />
         </label>
         {value ? (
-          <button type="button" className="text-sm text-muted underline" onClick={() => onChange(null)}>
+          <button
+            type="button"
+            className="text-sm text-muted underline"
+            onClick={() => onChange(null)}
+          >
             Remove
           </button>
         ) : null}
