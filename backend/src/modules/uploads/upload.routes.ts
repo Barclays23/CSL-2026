@@ -5,7 +5,7 @@ import { imageUpload } from "../../middlewares/upload.middleware.js";
 import { uploadLimiter } from "../../middlewares/rateLimit.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { uploadController } from "../../container/dependencies.js";
-import { imageUploadSchema } from "./upload.dto.js";
+import { imageUploadSchema } from "./upload.schema.js";
 
 
 
