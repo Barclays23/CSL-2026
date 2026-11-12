@@ -37,6 +37,9 @@ export interface IPaginationQuery {
   limit: number;
 }
 
+export type Pagination = IPagination;
+export type PaginationQuery = IPaginationQuery;
+
 export interface PaginatedResult<TEntity> {
   items: TEntity[];
   pagination: IPagination;
