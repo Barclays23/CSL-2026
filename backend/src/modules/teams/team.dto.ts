@@ -1,21 +1,25 @@
-import { z } from "zod";
-const asset=z.object({url:z.url(),publicId:z.string().min(1)}).nullable();
-export const teamCreateSchema=z.object({
-  name:z.string().trim().min(2).max(80),
-  shortName:z.string().trim().max(8).nullable().optional(),
-  logo:asset.optional(),
-  poster:asset.optional(),
-  groupName:z.string().trim().max(40).nullable().optional(),
-  status:z.enum(["active","inactive"]).default("active")
-}).strict();
-export const teamUpdateSchema=teamCreateSchema.partial().strict();
-export const teamQuerySchema=z.object({
-  page:z.coerce.number().int().min(1).default(1),
-  limit:z.coerce.number().int().min(1).max(100).default(50),
-  search:z.string().trim().optional(),
-  status:z.enum(["active","inactive"]).optional(),
-  groupName:z.string().optional()
-});
-export type TeamCreateInput=z.infer<typeof teamCreateSchema>;
-export type TeamUpdateInput=z.infer<typeof teamUpdateSchema>;
-export type TeamQueryInput = z.infer<typeof teamQuerySchema>;
+import type { Asset } from "../../shared/types/common.types.js";
+import type { TeamStatus } from "./team.types.js";
+
+export interface CreateTeamDto {
+  name: string;
+  shortName?: string | null;
+  logo?: Asset | null;
+  poster?: Asset | null;
+  groupName?: string | null;
+  status?: TeamStatus;
+}
+export type UpdateTeamDto = Partial<CreateTeamDto>;
+export interface TeamQueryDto {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: TeamStatus;
+  groupName?: string;
+}
+export type TeamCreateInput = CreateTeamDto;
+export type TeamUpdateInput = UpdateTeamDto;
+export type TeamQueryInput = TeamQueryDto;
+export type TeamCreateDTO = CreateTeamDto;
+export type TeamUpdateDTO = UpdateTeamDto;
+export type TeamQueryDTO = TeamQueryDto;
