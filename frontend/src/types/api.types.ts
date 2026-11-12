@@ -5,6 +5,8 @@ export interface IPagination {
   totalPages: number;
 }
 
+export type Pagination = IPagination;
+
 export interface ApiResponse<TData> {
   success: boolean;
   message: string;
