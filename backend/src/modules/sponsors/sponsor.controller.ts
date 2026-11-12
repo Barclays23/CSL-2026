@@ -23,7 +23,7 @@ export class SponsorController implements ISponsorController {
     } catch (error: unknown) { next(error); }
   }
 
-  async getSponsorById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async getSponsorById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const sponsorId: string = request.params.id;
       const sponsor: SponsorResponseDTO = await this._sponsorService.getSponsorById(sponsorId, Boolean(request.user));
@@ -39,7 +39,7 @@ export class SponsorController implements ISponsorController {
     } catch (error: unknown) { next(error); }
   }
 
-  async updateSponsor(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async updateSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const sponsorId: string = request.params.id;
       const input: SponsorUpdateDTO = sponsorUpdateSchema.parse(request.body);
@@ -48,7 +48,7 @@ export class SponsorController implements ISponsorController {
     } catch (error: unknown) { next(error); }
   }
 
-  async deleteSponsor(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+  async deleteSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const sponsorId: string = request.params.id;
       await this._sponsorService.deleteSponsor(sponsorId);
