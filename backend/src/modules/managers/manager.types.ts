@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { PublicManagerDTO, AdminManagerDTO, ManagerResponseDTO } from "./manager.dto.js";
 import type { Asset, PaginatedResult } from "../../shared/types/common.types.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
 import type { ManagerCreateInput, ManagerQueryInput, ManagerUpdateInput } from "./manager.dto.js";
@@ -32,23 +33,11 @@ export interface PopulatedManagerEntity extends Omit<ManagerEntity, "teamRef"> {
   } | null;
 }
 
-export interface PublicManagerDTO {
-  _id: string;
-  name: string;
-  teamRef: string | null;
-  team: TeamBriefDTO | null;
-  role: string | null;
-  profilePic: Asset | null;
-  status: ManagerStatus;
-}
 
-export interface AdminManagerDTO extends PublicManagerDTO {
-  mobile: string;
-  email: string | null;
-  dateOfBirth: string | null;
-}
 
-export type ManagerResponseDTO = PublicManagerDTO | AdminManagerDTO;
+
+
+
 export type ManagerCreateDTO = ManagerCreateInput;
 export type ManagerUpdateDTO = ManagerUpdateInput;
 export type ManagerQueryDTO = ManagerQueryInput;
@@ -60,3 +49,5 @@ export interface ManagerListFilter {
 }
 
 export type { IManagerRepository, IManagerService, IManagerController } from "./manager.interfaces.js";
+
+export type { PublicManagerDTO, AdminManagerDTO, ManagerResponseDTO } from "./manager.dto.js";
