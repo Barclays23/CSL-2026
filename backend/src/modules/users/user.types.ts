@@ -18,6 +18,8 @@ export interface UserEntity extends UserFields {
   updatedAt: Date;
 }
 
+export interface SafeUserEntity extends Omit<UserEntity, "passwordHash"> {}
+
 export interface AdminUserDTO {
   _id: string;
   name: string;
@@ -26,12 +28,12 @@ export interface AdminUserDTO {
   status: UserStatus;
 }
 
-export type AdminUserCreateDTO = AdminUserCreateInput;
+export type AdminUserCreateDTO = Omit<AdminUserCreateInput, "password">;
 
 export interface IUserRepository {
   findUserByEmail(email: string): Promise<UserEntity | null>;
-  findUserById(userId: string): Promise<UserEntity | null>;
-  createAdminUser(data: AdminUserCreateDTO & { passwordHash: string }): Promise<UserEntity>;
+  findUserById(userId: string): Promise<SafeUserEntity | null>;
+  createAdminUser(data: AdminUserCreateDTO & { passwordHash: string }): Promise<SafeUserEntity>;
 }
 
 export interface IUserService {
