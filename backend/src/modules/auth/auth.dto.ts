@@ -4,3 +4,10 @@ export interface LoginDto {
   password: string;
 }
 export type LoginInput = LoginDto;
+
+import type { AdminUserDTO } from "../users/user.types.js";
+
+export interface AuthSessionDTO {
+  token: string;
+  user: AdminUserDTO;
+}
