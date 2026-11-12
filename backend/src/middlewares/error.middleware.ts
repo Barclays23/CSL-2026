@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import multer from "multer";
 import { ZodError } from "zod";
 import { AppError } from "../shared/errors/appError.js";
+import { HTTP_STATUS } from "../shared/constants/http-status.constants.js";
 import type { ApiErrorResponse } from "../shared/responses/response.types.js";
 
 function sendApiError(
@@ -51,7 +52,7 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, _request, r
       errorCode: "VALIDATION_ERROR",
       fieldErrors: mapZodIssuesToFieldErrors(error),
     };
-    sendApiError(response, 400, payload);
+    sendApiError(response, HTTP_STATUS.BAD_REQUEST, payload);
     return;
   }
 
@@ -62,7 +63,7 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, _request, r
       message: tooLarge ? "Image exceeds the upload size limit" : error.message,
       errorCode: error.code,
     };
-    sendApiError(response, tooLarge ? 413 : 400, payload);
+    sendApiError(response, tooLarge ? HTTP_STATUS.PAYLOAD_TOO_LARGE : HTTP_STATUS.BAD_REQUEST, payload);
     return;
   }
 
@@ -87,7 +88,7 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, _request, r
   }
 
   if (typeof error === "object" && error !== null && "code" in error && error.code === 11000) {
-    sendApiError(response, 409, {
+    sendApiError(response, HTTP_STATUS.CONFLICT, {
       success: false,
       message: "A record with this value already exists",
       errorCode: "DUPLICATE_VALUE",
@@ -105,7 +106,7 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, _request, r
   }
 
   console.error("[API_ERROR]", error);
-  sendApiError(response, 500, {
+  sendApiError(response, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
     success: false,
     message: "An unexpected server error occurred",
     errorCode: "INTERNAL_SERVER_ERROR",
