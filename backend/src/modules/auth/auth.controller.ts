@@ -9,7 +9,11 @@ import type { AdminUserDTO } from "../users/user.types.js";
 import { loginSchema, type LoginInput } from "./auth.dto.js";
 
 export class AuthController implements IAuthController {
-  constructor(private readonly _authService: IAuthService) {}
+  constructor(private readonly _authService: IAuthService) {
+    this.login = this.login.bind(this);
+    this.logout = this.logout.bind(this);
+    this.getCurrentAdmin = this.getCurrentAdmin.bind(this);
+  }
 
   async login(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
