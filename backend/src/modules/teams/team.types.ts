@@ -113,11 +113,11 @@ export interface ITeamService {
 }
 
 export interface ITeamController {
-  getTeams: import("express").RequestHandler;
-  getTeamById: import("express").RequestHandler;
-  getTeamAuctionSummary: import("express").RequestHandler;
-  getTeamStatistics: import("express").RequestHandler;
-  createTeam: import("express").RequestHandler;
-  updateTeam: import("express").RequestHandler;
-  deleteTeam: import("express").RequestHandler;
+  getTeams: import("../../shared/types/common.types.js").ControllerMethod;
+  getTeamById: import("../../shared/types/common.types.js").ControllerMethod;
+  getTeamAuctionSummary: import("../../shared/types/common.types.js").ControllerMethod;
+  getTeamStatistics: import("../../shared/types/common.types.js").ControllerMethod;
+  createTeam: import("../../shared/types/common.types.js").ControllerMethod;
+  updateTeam: import("../../shared/types/common.types.js").ControllerMethod;
+  deleteTeam: import("../../shared/types/common.types.js").ControllerMethod;
 }
