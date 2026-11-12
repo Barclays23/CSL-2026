@@ -130,6 +130,7 @@ export class StatisticsService {
       this._settingsService.get(),
     ]);
 
+    const pointsRule = settings.pointsRule ?? { win: 3, draw: 1, loss: 0 };
     const rows = new Map<string, StandingRow>();
 
     for (const rawTeam of teams as unknown as Row[]) {
@@ -173,8 +174,8 @@ export class StatisticsService {
       if (team1Goals > team2Goals) {
         team1Row.won += 1;
         team2Row.lost += 1;
-        team1Row.points += Number(settings.pointsRule.win);
-        team2Row.points += Number(settings.pointsRule.loss);
+        team1Row.points += Number(pointsRule.win);
+        team2Row.points += Number(pointsRule.loss);
       } else if (team2Goals > team1Goals) {
         team2Row.won += 1;
         team1Row.lost += 1;
@@ -183,7 +184,7 @@ export class StatisticsService {
       } else {
         team1Row.drawn += 1;
         team2Row.drawn += 1;
-        team1Row.points += Number(settings.pointsRule.draw);
+        team1Row.points += Number(pointsRule.draw);
         team2Row.points += Number(settings.pointsRule.draw);
       }
     }

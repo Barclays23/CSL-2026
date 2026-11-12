@@ -4,33 +4,24 @@ import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInp
 import { PlayerRepository } from "./player.repository.js";
 import { TeamRepository } from "../teams/team.repository.js";
 import { SettingsService } from "../settings/settings.service.js";
-import type { PlayerListRecord } from "./player.types.js";
+import type { PlayerListRecord, PlayerFilter, PlayerPosition, PlayerPublicDTO, PlayerAdminDTO, PlayerResponseDTO } from "./player.types.js";
 import type { PlayerCreateInput, PlayerQueryInput, PlayerUpdateInput, AssignPlayerInput } from "./player.dto.js";
-import type { PlayerAdminDTO, PlayerPublicDTO, PlayerResponseDTO } from "./player.types.js";
-
 export class PlayerService {
   constructor(private readonly playerRepository: PlayerRepository, private readonly teamRepository: TeamRepository, private readonly settingsService: SettingsService) {}
   async getPlayers(query: PlayerQueryInput, isAdmin: boolean): Promise<{ items: PlayerResponseDTO[]; total: number; page: number; limit: number }> {
-    const filter: import("./player.types.js").PlayerFilter = {};
+    const filter: PlayerFilter = {};
     if (query.search) filter.name = { $regex: query.search, $options: "i" };
     if (query.position) filter.position = query.position;
-    if (isAdmin && query.status) filter.status = query.status;
-    else if (!isAdmin) filter.status = "active";
+    if (isAdmin && query.status) filter.status = query.status; else if (!isAdmin) filter.status = "active";
     if (isAdmin && query.auctionStatus) filter.auctionStatus = query.auctionStatus;
-    if (query.teamRef === "unassigned") filter.teamRef = null;
-    else if (query.teamRef) filter.teamRef = query.teamRef;
+    if (query.teamRef === "unassigned") filter.teamRef = null; else if (query.teamRef) filter.teamRef = query.teamRef;
     const result = await this.playerRepository.listPlayers(filter, query.page, query.limit);
     return { items: result.items.map((player) => this.mapPlayerResponse(player, isAdmin)), total: result.total, page: query.page, limit: query.limit };
   }
   private mapPlayerResponse(player: PlayerListRecord, isAdmin: boolean): PlayerResponseDTO {
-    const team = player.teamRef && typeof player.teamRef === "object" && "_id" in player.teamRef
-      ? { _id: String(player.teamRef._id), name: player.teamRef.name, shortName: player.teamRef.shortName ?? null, logo: player.teamRef.logo ?? null, groupName: player.teamRef.groupName ?? null }
-      : null;
-    const base: PlayerPublicDTO = {
-      _id: String(player._id), name: player.name, position: player.position, isIconPlayer: player.isIconPlayer,
-      teamRef: team?._id ?? (player.teamRef ? String(player.teamRef) : null), team, jerseyNo: player.jerseyNo ?? null,
-      auctionPrice: player.auctionPrice, auctionStatus: player.auctionStatus, status: player.status, profilePic: player.profilePic ?? null,
-    };
+    const populatedTeam = player.teamRef && !(player.teamRef instanceof Types.ObjectId) ? player.teamRef : null;
+    const team = populatedTeam ? { _id: String(populatedTeam._id), name: populatedTeam.name, shortName: populatedTeam.shortName ?? null, logo: populatedTeam.logo ?? null, groupName: populatedTeam.groupName ?? null } : null;
+    const base: PlayerPublicDTO = { _id: String(player._id), name: player.name, position: player.position, isIconPlayer: player.isIconPlayer, teamRef: team?._id ?? (player.teamRef ? String(player.teamRef) : null), team, jerseyNo: player.jerseyNo ?? null, auctionPrice: player.auctionPrice, auctionStatus: player.auctionStatus, status: player.status, profilePic: player.profilePic ?? null };
     return isAdmin ? { ...base, mobile: player.mobile, email: player.email ?? null, dateOfBirth: player.dateOfBirth ?? null } : base;
   }
   async getPlayerById(playerId: string, isAdmin: boolean): Promise<PlayerResponseDTO> {
@@ -48,15 +39,16 @@ export class PlayerService {
     if (data.auctionStatus === "sold") {
       if (settings.auctionState !== "in_progress") throw new AppError("Start or reopen the auction before marking a player sold", 409, "AUCTION_NOT_IN_PROGRESS");
       if (!data.teamRef || !data.auctionPrice || data.auctionPrice <= 0) throw new AppError("A sold player requires a team and auction price", 422, "INVALID_SOLD_PLAYER");
-      await this.validatePlayerAssignment(data.teamRef, "", data.auctionPrice, data.isIconPlayer, data.position, data.jerseyNo);
+      await this.validatePlayerAssignment(data.teamRef, "", data.auctionPrice, data.isIconPlayer ?? false, data.position, data.jerseyNo);
     }
+    if (data.status !== "inactive" && data.auctionStatus !== "sold" && (data.teamRef || data.jerseyNo != null || (data.auctionPrice ?? 0) !== 0)) throw new AppError("Pending and unsold players cannot have a team, jersey number or auction price", 422, "INVALID_AUCTION_FIELDS");
     const createData = data.status === "inactive"
       ? { ...data, mobile, email, teamRef: null, jerseyNo: null, auctionPrice: 0, auctionStatus: "pending" as const }
-      : { ...data, mobile, email, teamRef: data.auctionStatus === "sold" ? data.teamRef ?? null : null, jerseyNo: data.auctionStatus === "sold" ? data.jerseyNo ?? null : null, auctionPrice: data.auctionStatus === "sold" ? data.auctionPrice : 0 };
-    if (data.auctionStatus !== "sold" && data.status !== "inactive" && (data.teamRef || data.jerseyNo != null || data.auctionPrice !== 0)) throw new AppError("Pending and unsold players cannot have a team, jersey number or auction price", 422, "INVALID_AUCTION_FIELDS");
+      : { ...data, mobile, email, teamRef: data.auctionStatus === "sold" ? data.teamRef ?? null : null, jerseyNo: data.auctionStatus === "sold" ? data.jerseyNo ?? null : null, auctionPrice: data.auctionStatus === "sold" ? data.auctionPrice ?? 0 : 0 };
     const created = await this.playerRepository.create(createData);
     const response = await this.getPlayerById(String(created._id), true);
-    return response as PlayerAdminDTO;
+    if (!("mobile" in response)) throw new AppError("Unable to create player", 500, "PLAYER_RESPONSE_ERROR");
+    return response;
   }
   async updatePlayer(playerId: string, data: PlayerUpdateInput): Promise<PlayerAdminDTO> {
     const current = await this.playerRepository.findById(playerId);
@@ -67,21 +59,21 @@ export class PlayerService {
     if (email && email !== current.email && await this.playerRepository.findOne({ email, _id: { $ne: playerId } })) throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
     if (data.status === "inactive") return this.deactivatePlayer(playerId);
     const settings = await this.settingsService.get();
-    const auctionChanged = ["teamRef", "jerseyNo", "auctionPrice", "auctionStatus", "isIconPlayer", "position", "status"].some((key) => key in data);
-    if (settings.auctionState === "completed" && auctionChanged) throw new AppError("Reopen the auction before changing auction-related player data", 409, "AUCTION_COMPLETED");
+    const assignmentChanged = ["teamRef", "jerseyNo", "auctionPrice", "auctionStatus", "isIconPlayer", "position", "status"].some((key) => key in data);
+    if (settings.auctionState === "completed" && assignmentChanged) throw new AppError("Reopen the auction before changing auction-related player data", 409, "AUCTION_COMPLETED");
     const merged = { ...current, ...data };
     if (merged.auctionStatus === "sold") {
       if (!merged.teamRef || merged.auctionPrice <= 0) throw new AppError("A sold player requires a team and auction price", 422, "INVALID_SOLD_PLAYER");
-      if (auctionChanged) await this.validatePlayerAssignment(String(merged.teamRef), playerId, merged.auctionPrice, merged.isIconPlayer, merged.position, merged.jerseyNo);
-    } else {
-      merged.teamRef = null; merged.jerseyNo = null; merged.auctionPrice = 0;
-    }
+      if (assignmentChanged) await this.validatePlayerAssignment(String(merged.teamRef), playerId, merged.auctionPrice, merged.isIconPlayer, merged.position, merged.jerseyNo);
+    } else { merged.teamRef = null; merged.jerseyNo = null; merged.auctionPrice = 0; }
     const updateData = { ...data, ...(data.mobile ? { mobile } : {}), ...("email" in data ? { email } : {}), ...(merged.auctionStatus !== "sold" ? { teamRef: null, jerseyNo: null, auctionPrice: 0 } : {}) };
     const updated = await this.playerRepository.update(playerId, updateData);
     if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
-    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
+    const response = await this.getPlayerById(playerId, true);
+    if (!("mobile" in response)) throw new AppError("Unable to update player", 500, "PLAYER_RESPONSE_ERROR");
+    return response;
   }
-  private async validatePlayerAssignment(teamId: string, playerId: string, price: number, isIconPlayer: boolean, position: import("./player.types.js").PlayerPosition, jerseyNo?: number | null): Promise<void> {
+  private async validatePlayerAssignment(teamId: string, playerId: string, price: number, isIconPlayer: boolean, position: PlayerPosition, jerseyNo?: number | null): Promise<void> {
     const team = await this.teamRepository.findById(teamId);
     if (!team || team.status !== "active") throw new AppError("Select an active team", 422, "INVALID_TEAM");
     const settings = await this.settingsService.get(); const squad = await this.playerRepository.getTeamPlayers(teamId);
@@ -99,20 +91,26 @@ export class PlayerService {
     await this.validatePlayerAssignment(data.teamRef, playerId, data.auctionPrice, player.isIconPlayer, player.position, data.jerseyNo);
     const updated = await this.playerRepository.update(playerId, { teamRef: data.teamRef, auctionPrice: data.auctionPrice, jerseyNo: data.jerseyNo ?? null, auctionStatus: "sold" });
     if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
-    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
+    const response = await this.getPlayerById(playerId, true);
+    if (!("mobile" in response)) throw new AppError("Unable to assign player", 500, "PLAYER_RESPONSE_ERROR");
+    return response;
   }
   async markPlayerUnsold(playerId: string): Promise<PlayerAdminDTO> {
     if ((await this.settingsService.get()).auctionState !== "in_progress") throw new AppError("Start or reopen the auction before changing auction results", 409, "AUCTION_NOT_IN_PROGRESS");
     const updated = await this.playerRepository.update(playerId, { teamRef: null, jerseyNo: null, auctionPrice: 0, auctionStatus: "unsold" });
     if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
-    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
+    const response = await this.getPlayerById(playerId, true);
+    if (!("mobile" in response)) throw new AppError("Unable to mark player unsold", 500, "PLAYER_RESPONSE_ERROR");
+    return response;
   }
   async deactivatePlayer(playerId: string): Promise<PlayerAdminDTO> {
     if (!await this.playerRepository.findById(playerId)) throw new AppError("Player not found", 404, "NOT_FOUND");
     if ((await this.settingsService.get()).auctionState === "completed") await this.settingsService.updateSettings({ auctionState: "in_progress", auctionCompletedAt: null });
     const updated = await this.playerRepository.update(playerId, { status: "inactive", teamRef: null, jerseyNo: null, auctionPrice: 0, auctionStatus: "pending" });
     if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
-    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
+    const response = await this.getPlayerById(playerId, true);
+    if (!("mobile" in response)) throw new AppError("Unable to deactivate player", 500, "PLAYER_RESPONSE_ERROR");
+    return response;
   }
   async deletePlayer(playerId: string): Promise<void> {
     if (!await this.playerRepository.findById(playerId)) throw new AppError("Player not found", 404, "NOT_FOUND");
