@@ -15,9 +15,12 @@ export class SponsorService implements ISponsorService {
     const result = await this.sponsorRepository.findSponsors(filter, page, limit, isAdmin);
     return {
       items: result.items.map((sponsor) => this.mapSponsorToResponseDTO(sponsor, isAdmin)),
-      total: result.total,
-      page,
-      limit,
+      pagination: {
+        page,
+        limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limit),
+      },
     };
   }
 
