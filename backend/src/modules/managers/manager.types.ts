@@ -1,5 +1,4 @@
 import type { Types } from "mongoose";
-import type { RequestHandler } from "express";
 import type { Asset, PaginatedResult } from "../../shared/types/common.types.js";
 import type { TeamBriefDTO, TeamRepositoryContract } from "../teams/team.types.js";
 import type { ManagerCreateInput, ManagerQueryInput, ManagerUpdateInput } from "./manager.dto.js";
@@ -80,9 +79,9 @@ export interface IManagerService {
 }
 
 export interface IManagerController {
-  getManagers: RequestHandler;
-  getManagerById: RequestHandler;
-  createManager: RequestHandler;
-  updateManager: RequestHandler;
-  deleteManager: RequestHandler;
+  getManagers: import("../../shared/types/common.types.js").ControllerMethod;
+  getManagerById: import("../../shared/types/common.types.js").ControllerMethod;
+  createManager: import("../../shared/types/common.types.js").ControllerMethod;
+  updateManager: import("../../shared/types/common.types.js").ControllerMethod;
+  deleteManager: import("../../shared/types/common.types.js").ControllerMethod;
 }
