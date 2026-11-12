@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - refactor/typed-solid-architecture
+      - refactor/module-dto-schema-types
   pull_request:
     branches:
       - main
