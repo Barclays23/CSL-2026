@@ -7,30 +7,30 @@ import type { AuctionCompletionValidationResult, AuctionTeamValidation, IAuction
 
 export class AuctionService implements IAuctionService {
   constructor(
-    private readonly settingsService: ISettingsService,
-    private readonly teamRepository: TeamRepositoryContract,
-    private readonly playerRepository: PlayerRepositoryContract,
+    private readonly _settingsService: ISettingsService,
+    private readonly _teamRepository: TeamRepositoryContract,
+    private readonly _playerRepository: PlayerRepositoryContract,
   ) {}
 
   async startAuction(): Promise<SettingsEntity> {
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     if (settings.auctionState === "completed") {
       throw new AppError("Reopen the auction before starting it again", 409, "AUCTION_COMPLETED");
     }
-    return this.settingsService.updateAuctionLifecycle("in_progress", null);
+    return this._settingsService.updateAuctionLifecycle("in_progress", null);
   }
 
   async reopenAuction(): Promise<SettingsEntity> {
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     if (settings.auctionState === "not_started") {
       throw new AppError("The auction has not been started yet", 409, "AUCTION_NOT_STARTED");
     }
-    return this.settingsService.updateAuctionLifecycle("in_progress", null);
+    return this._settingsService.updateAuctionLifecycle("in_progress", null);
   }
 
   async validateAuctionCompletion(): Promise<AuctionCompletionValidationResult> {
-    const settings = await this.settingsService.getTournamentSettings();
-    const activeTeams = await this.teamRepository.findTeams({ status: "active" }, 1, 100);
+    const settings = await this._settingsService.getTournamentSettings();
+    const activeTeams = await this._teamRepository.findTeams({ status: "active" }, 1, 100);
     const errors: AuctionTeamValidation[] = [];
 
     if (activeTeams.total !== settings.maxActiveTeams) {
@@ -41,7 +41,7 @@ export class AuctionService implements IAuctionService {
       });
     }
 
-    const activePlayers = await this.playerRepository.countPlayers({ status: "active" });
+    const activePlayers = await this._playerRepository.countPlayers({ status: "active" });
     if (activePlayers > settings.maxActivePlayers) {
       errors.push({
         teamId: null,
@@ -52,7 +52,7 @@ export class AuctionService implements IAuctionService {
 
     for (const team of activeTeams.items) {
       const teamId = String(team._id);
-      const players = await this.playerRepository.findSoldPlayersByTeam(teamId);
+      const players = await this._playerRepository.findSoldPlayersByTeam(teamId);
       const purchaseTotal = players.reduce((total, player) => total + player.auctionPrice, 0);
       const iconPlayerCount = players.filter((player) => player.isIconPlayer).length;
       const goalkeeperCount = players.filter((player) => player.position === "GK").length;
@@ -87,7 +87,7 @@ export class AuctionService implements IAuctionService {
       }
     }
 
-    const invalidSoldPlayers = await this.playerRepository.countInvalidSoldPlayers();
+    const invalidSoldPlayers = await this._playerRepository.countInvalidSoldPlayers();
     if (invalidSoldPlayers > 0) {
       errors.push({
         teamId: null,
@@ -96,7 +96,7 @@ export class AuctionService implements IAuctionService {
       });
     }
 
-    const pendingPlayers = await this.playerRepository.countPlayers({
+    const pendingPlayers = await this._playerRepository.countPlayers({
       status: "active",
       auctionStatus: "pending",
     });
@@ -112,7 +112,7 @@ export class AuctionService implements IAuctionService {
   }
 
   async completeAuction(): Promise<SettingsEntity> {
-    const settings = await this.settingsService.getTournamentSettings();
+    const settings = await this._settingsService.getTournamentSettings();
     if (settings.auctionState !== "in_progress") {
       throw new AppError("Start or reopen the auction before completing it", 409, "AUCTION_NOT_IN_PROGRESS");
     }
@@ -126,6 +126,6 @@ export class AuctionService implements IAuctionService {
       throw new AppError("Auction completion failed. Review the validation errors.", 422, "AUCTION_VALIDATION_FAILED", fieldErrors);
     }
 
-    return this.settingsService.updateAuctionLifecycle("completed", new Date());
+    return this._settingsService.updateAuctionLifecycle("completed", new Date());
   }
 }
