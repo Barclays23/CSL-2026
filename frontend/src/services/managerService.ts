@@ -2,7 +2,7 @@ import { USE_MOCK_API } from "@/config/env";
 import { previewRepository } from "@/mocks/repository";
 import { api, run } from "@/services/api";
 import type { ApiResponse } from "@/types/api.types";
-import type { AdminManager, ManagerQuery, ManagerResponse, ManagerWrite, PublicManager } from "@/types/manager.types";
+import type { AdminManager, ManagerQuery, ManagerResponse, ManagerWrite } from "@/types/manager.types";
 
 export function getManagers(params: ManagerQuery = {}) {
   return run(() =>
