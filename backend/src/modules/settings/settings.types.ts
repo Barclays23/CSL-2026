@@ -1,3 +1,4 @@
+import type { Types } from "mongoose";
 import type { SettingsUpdateInput } from "./settings.dto.js";
 
 export interface PointsRule {
@@ -5,6 +6,7 @@ export interface PointsRule {
   draw: number;
   loss: number;
 }
+
 export type AuctionState = "not_started" | "in_progress" | "completed";
 
 export interface SettingsFields {
@@ -24,7 +26,7 @@ export interface SettingsFields {
 }
 
 export interface SettingsEntity extends SettingsFields {
-  _id: string;
+  _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,7 +36,8 @@ export type SettingsUpdateDTO = SettingsUpdateInput;
 export interface ISettingsRepository {
   getTournamentSettings(): Promise<SettingsEntity | null>;
   initializeTournamentSettings(): Promise<SettingsEntity>;
-  updateTournamentSettings(data: SettingsUpdateDTO): Promise<SettingsEntity | null>;
+  updateTournamentSettings(data: Partial<SettingsFields>): Promise<SettingsEntity | null>;
+  updateAuctionLifecycle(state: AuctionState, completedAt: Date | null): Promise<SettingsEntity | null>;
 }
 
 export interface ISettingsService {
@@ -42,4 +45,9 @@ export interface ISettingsService {
   initializeTournamentSettings(): Promise<SettingsEntity>;
   updateTournamentSettings(data: SettingsUpdateDTO): Promise<SettingsEntity>;
   updateAuctionLifecycle(state: AuctionState, completedAt: Date | null): Promise<SettingsEntity>;
+}
+
+export interface ISettingsController {
+  getTournamentSettings: import("express").RequestHandler;
+  updateTournamentSettings: import("express").RequestHandler;
 }
