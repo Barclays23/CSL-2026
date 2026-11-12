@@ -5,7 +5,8 @@ import { UPLOAD_MESSAGES } from "../../shared/constants/messages.constants.js";
 import { AppError } from "../../shared/errors/appError.js";
 import type { IUploadController, IUploadService } from "./upload.interfaces.js";
 import type { ImageUploadResult, ImageUploadFile } from "./upload.types.js";
-import { imageUploadSchema, type UploadPurpose } from "./upload.dto.js";
+import { imageUploadSchema } from "./upload.schema.js";
+import type { UploadPurpose } from "./upload.dto.js";
 
 
 
