@@ -75,3 +75,5 @@ export interface PlayerAuctionCountsDTO {
   unsoldPlayers: number;
   totalAuctionSpend: number;
 }
+
+export type PlayerAssignmentInput = AssignPlayerDto;
