@@ -1,6 +1,25 @@
-export interface Asset { url: string; publicId: string; }
-export interface Pagination { page: number; limit: number; total: number; totalPages: number; }
-export interface ApiResponse<T> { success: boolean; message: string; data: T; pagination?: Pagination; }
+export interface Asset { 
+    url: string; 
+    publicId: string; 
+}
+
+
+export interface Pagination { 
+    page: number; 
+    limit: number; 
+    total: number; 
+    totalPages: number; 
+}
+
+
+export interface ApiResponse<T> { 
+    success: boolean; 
+    message: string; 
+    data: T; 
+    pagination?: Pagination; 
+}
+
+
 export type UserRole = "admin";
 export type RecordStatus = "active" | "inactive";
 export type Position = "GK" | "DF" | "MF" | "FW";
