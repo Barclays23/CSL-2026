@@ -1,10 +1,11 @@
 import { AppError } from "../../shared/errors/appError.js";
-import type { ISponsorRepository, AdminSponsorDTO, PublicSponsorDTO, SponsorEntity, SponsorListFilter, SponsorQuery, SponsorResponseDTO, PaginatedSponsors, SponsorCreateData, SponsorUpdateData, ISponsorService } from "./sponsor.types.js";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
+import type { ISponsorRepository, AdminSponsorDTO, PublicSponsorDTO, SponsorEntity, SponsorListFilter, SponsorQuery, SponsorResponseDTO, SponsorCreateData, SponsorUpdateData, ISponsorService } from "./sponsor.types.js";
 
 export class SponsorService implements ISponsorService {
   constructor(private readonly _sponsorRepository: ISponsorRepository) {}
 
-  async getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedSponsors> {
+  async getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedResult<SponsorResponseDTO>> {
     const page = query.page;
     const limit = query.limit;
     const filter: SponsorListFilter = {};
