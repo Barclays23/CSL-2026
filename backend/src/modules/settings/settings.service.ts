@@ -1,5 +1,6 @@
 import { AppError } from "../../shared/errors/appError.js";
-import type { ISettingsRepository, ISettingsService, SettingsEntity, SettingsUpdateDTO, AuctionState } from "./settings.types.js";
+import type { ISettingsRepository, ISettingsService } from "./settings.interfaces.js";
+import type { SettingsEntity, SettingsUpdateDTO, AuctionState } from "./settings.types.js";
 
 export class SettingsService implements ISettingsService {
   constructor(private readonly _settingsRepository: ISettingsRepository) {}
