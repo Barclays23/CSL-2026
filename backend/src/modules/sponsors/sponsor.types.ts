@@ -60,3 +60,11 @@ export interface ISponsorService {
   updateSponsor(sponsorId: string, data: SponsorUpdateData): Promise<AdminSponsorDTO>;
   deleteSponsor(sponsorId: string): Promise<void>;
 }
+
+export interface ISponsorController {
+  getSponsors: import("express").RequestHandler;
+  getSponsorById: import("express").RequestHandler;
+  createSponsor: import("express").RequestHandler;
+  updateSponsor: import("express").RequestHandler;
+  deleteSponsor: import("express").RequestHandler;
+}
