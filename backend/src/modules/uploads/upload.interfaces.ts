@@ -1,3 +1,4 @@
+import type {  } from "./upload.types.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { UploadPurpose } from "./upload.dto.js";
 
