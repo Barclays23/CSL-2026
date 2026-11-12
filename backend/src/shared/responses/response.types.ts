@@ -13,3 +13,5 @@ export interface IApiErrorResponse {
   errorCode?: string;
   fieldErrors?: Record<string, string>;
 }
+
+export type ApiErrorResponse = IApiErrorResponse;
