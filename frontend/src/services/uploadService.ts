@@ -4,14 +4,18 @@ import { validatePhotoFile } from "@/schemas/common.schema";
 import type { ApiResponse, Asset } from "@/types/api.types";
 import { ApiError } from "@/utils/errorHandler";
 
-/**
- * Live mode posts multipart field `file` plus `purpose` to VITE_UPLOAD_PATH
- * (default `/uploads`). The response data must be `{ url, publicId }`.
- */
-export function uploadImage(file: File, purpose: string) {
+export type UploadPurpose =
+  | "player-profile"
+  | "team-logo"
+  | "team-poster"
+  | "manager-profile"
+  | "sponsor-logo";
+
+export function uploadImage(file: File, purpose: UploadPurpose) {
   return run(async () => {
     const problem = validatePhotoFile(file);
     if (problem) throw new ApiError(400, problem, { fieldErrors: { photo: problem } });
+
     if (USE_MOCK_API) {
       const url = await readFile(file);
       return {
@@ -20,6 +24,7 @@ export function uploadImage(file: File, purpose: string) {
         data: { url, publicId: `${purpose}-${crypto.randomUUID()}` } satisfies Asset,
       };
     }
+
     const body = new FormData();
     body.append("file", file);
     body.append("purpose", purpose);
