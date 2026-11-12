@@ -16,13 +16,4 @@ export interface AuthSessionDTO {
   user: AdminUserDTO;
 }
 
-export interface IAuthService {
-  login(credentials: LoginCredentials): Promise<AuthSessionDTO>;
-  getCurrentAdmin(userId: string): Promise<AdminUserDTO>;
-}
-
-export interface IAuthController {
-  login: import("../../shared/types/common.types.js").ControllerMethod;
-  logout: import("../../shared/types/common.types.js").ControllerMethod;
-  getCurrentAdmin: import("../../shared/types/common.types.js").ControllerMethod;
-}
+export type { IAuthService, IAuthController } from "./auth.interfaces.js";
