@@ -4,12 +4,8 @@ import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { SPONSOR_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type {
-  ISponsorController,
-  ISponsorService,
-  SponsorResponseDTO,
-  AdminSponsorDTO,
-} from "./sponsor.types.js";
+import type { ISponsorController, ISponsorService } from "./sponsor.interfaces.js";
+import type { SponsorResponseDTO, AdminSponsorDTO } from "./sponsor.types.js";
 import {
   getSponsorsQuerySchema,
   sponsorCreateSchema,
