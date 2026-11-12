@@ -4,7 +4,7 @@ import { optionalAuthenticate } from "../../middlewares/optionalAuthenticate.mid
 import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { managerController } from "../../container/dependencies.js";
-import { managerCreateSchema, managerQuerySchema, managerUpdateSchema } from "./manager.dto.js";
+import { managerCreateSchema, managerQuerySchema, managerUpdateSchema } from "./manager.schema.js";
 
 
 export const managerRouter = Router();
