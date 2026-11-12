@@ -43,9 +43,12 @@ export class PlayerService implements IPlayerService {
     const result = await this.playerRepository.findPlayers(filter, query.page, query.limit);
     return {
       items: result.items.map((player) => this.mapPlayerToResponseDTO(player, isAdmin)),
-      total: result.total,
-      page: query.page,
-      limit: query.limit,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   }
 
