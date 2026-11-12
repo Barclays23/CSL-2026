@@ -1,13 +1,13 @@
-import type { Pagination } from "../types/common.types.js";
+import type { IPagination } from "../types/common.types.js";
 
-export interface ApiResponse<TData> {
-  success: true;
+export interface IApiResponse<TData> {
+  success: boolean;
   message: string;
-  data: TData;
-  pagination?: Pagination;
+  data?: TData;
+  pagination?: IPagination;
 }
 
-export interface ApiErrorResponse {
+export interface IApiErrorResponse {
   success: false;
   message: string;
   errorCode?: string;
