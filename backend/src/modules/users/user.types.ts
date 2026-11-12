@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { AdminUserDTO } from "./user.dto.js";
 import type { AdminUserCreateInput } from "./user.dto.js";
 
 export type UserStatus = "active" | "blocked";
@@ -20,14 +21,10 @@ export interface UserEntity extends UserFields {
 
 export interface SafeUserEntity extends Omit<UserEntity, "passwordHash"> {}
 
-export interface AdminUserDTO {
-  _id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: UserStatus;
-}
+
 
 export type AdminUserCreateDTO = Omit<AdminUserCreateInput, "password">;
 
 export type { IUserRepository, IUserService } from "./user.interfaces.js";
+
+export type { AdminUserDTO } from "./user.dto.js";
