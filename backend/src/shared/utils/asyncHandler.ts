@@ -1,3 +1,12 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>): RequestHandler =>
-  (req, res, next) => { Promise.resolve(fn(req, res, next)).catch(next); };
+
+export type AsyncControllerHandler = (
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) => Promise<void>;
+
+export const asyncHandler = (handler: AsyncControllerHandler): RequestHandler =>
+  (request, response, next) => {
+    Promise.resolve(handler(request, response, next)).catch(next);
+  };
