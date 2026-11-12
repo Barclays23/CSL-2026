@@ -25,14 +25,6 @@ export class SettingsService implements ISettingsService {
       });
     }
 
-    if (
-      input.maxPlayersPerTeam !== undefined &&
-      input.maxActiveTeams === undefined &&
-      input.maxPlayersPerTeam * currentSettings.maxActiveTeams < currentSettings.maxActivePlayers
-    ) {
-      // This configuration is allowed; active players may include the unsold player pool.
-    }
-
     const updatedSettings = await this.settingsRepository.updateTournamentSettings(input);
     if (!updatedSettings) throw new AppError("Settings not found", 404, "SETTINGS_NOT_FOUND");
     return updatedSettings;
