@@ -1,21 +1,22 @@
+import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
-import { SettingsService } from "../settings/settings.service.js";
-import { PlayerRepository } from "../players/player.repository.js";
-import { TeamRepository } from "../teams/team.repository.js";
-import { StatisticsRepository } from "./statistics.repository.js";
+import type { ISettingsService } from "../settings/settings.types.js";
+import type { PlayerAuctionCountsDTO, PlayerEntity, PlayerRepositoryContract, PlayerPublicDTO } from "../players/player.types.js";
+import type { TeamBriefDTO, TeamEntity, TeamRepositoryContract } from "../teams/team.types.js";
+import type { MatchEntity, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
+import type {
+  DashboardSummaryDTO,
+  GroupStandingDTO,
+  IStatisticsService,
+  OverallTeamStatisticsDTO,
+  StandingRowDTO,
+  TeamStatisticsDTO,
+  TopScorerDTO,
+} from "./statistics.types.js";
+import type { IStatisticsRepository } from "./statistics.repository.js";
 
-type Row = Record<string, unknown>;
-
-interface TeamBrief {
-  _id: string;
-  name: string;
-  shortName: unknown;
-  logo: unknown;
-  groupName: unknown;
-}
-
-interface StandingRow {
-  team: TeamBrief;
+interface MutableStanding {
+  team: TeamBriefDTO;
   played: number;
   won: number;
   drawn: number;
@@ -24,118 +25,40 @@ interface StandingRow {
   goalsAgainst: number;
   goalDifference: number;
   points: number;
-  position?: number;
-  qualified?: boolean;
 }
 
-interface OverallTeamRow {
-  team: TeamBrief;
+interface MutableTeamTotals {
+  team: TeamBriefDTO;
   played: number;
   goalsFor: number;
   goalsAgainst: number;
   cleanSheets: number;
 }
 
-const asRow = (value: unknown): Row =>
-  value && typeof value === "object" ? (value as Row) : {};
-
-const idOf = (value: unknown): string => {
-  if (value && typeof value === "object" && "_id" in value) {
-    return String((value as Row)._id);
-  }
-  return String(value);
-};
-
-const brief = (value: unknown): TeamBrief => {
-  const team = asRow(value);
-  return {
-    _id: String(team._id),
-    name: String(team.name ?? ""),
-    shortName: team.shortName ?? null,
-    logo: team.logo ?? null,
-    groupName: team.groupName ?? null,
-  };
-};
-
-const getGoals = (match: Row): Row[] =>
-  Array.isArray(match.goals) ? (match.goals as Row[]) : [];
-
-export class StatisticsService {
+export class StatisticsService implements IStatisticsService {
   constructor(
-    private readonly _statisticsRepo: StatisticsRepository,
-    private readonly _settingsService: SettingsService,
-    private readonly _playerRepo: PlayerRepository,
-    private readonly _teamRepo: TeamRepository,
+    private readonly statisticsRepository: IStatisticsRepository,
+    private readonly settingsService: ISettingsService,
+    private readonly playerRepository: PlayerRepositoryContract,
+    private readonly teamRepository: TeamRepositoryContract,
   ) {}
 
-  async getTopScorers() {
-    const [goalRows, players, teams] = await Promise.all([
-      this._statisticsRepo.topScorerRows(),
-      this._statisticsRepo.teamScorers(),
-      this._statisticsRepo.activeTeams(),
+  async getGroupStandings(): Promise<GroupStandingDTO[]> {
+    const [completedGroupMatches, activeTeams, settings] = await Promise.all([
+      this.statisticsRepository.findCompletedGroupStageMatches(),
+      this.statisticsRepository.findActiveTeams(),
+      this.settingsService.getTournamentSettings(),
     ]);
 
-    const playerMap = new Map(
-      (players as unknown as Row[]).map((player) => [
-        String(player._id),
-        player,
-      ]),
-    );
-    const teamMap = new Map(
-      (teams as unknown as Row[]).map((team) => [String(team._id), team]),
-    );
+    const standingByTeamId = new Map<string, MutableStanding>();
+    const teamById = new Map<string, TeamBriefDTO>();
 
-    const result: Row[] = [];
-    let previousGoals = -1;
-    let currentRank = 0;
-
-    for (const raw of goalRows as unknown as Row[]) {
-      const goals = Number(raw.goals ?? 0);
-      const player = playerMap.get(String(raw._id));
-
-      // Keep the aggregation rank stable even if a player record is missing.
-      if (goals !== previousGoals) {
-        currentRank = result.length + 1;
-        previousGoals = goals;
-      }
-      if (!player) continue;
-
-      const team = player.teamRef
-        ? teamMap.get(idOf(player.teamRef))
-        : undefined;
-
-      result.push({
-        rank: currentRank,
-        player: {
-          _id: String(player._id),
-          name: player.name,
-          position: player.position,
-          isIconPlayer: Boolean(player.isIconPlayer),
-          teamRef: player.teamRef ? idOf(player.teamRef) : null,
-          jerseyNo: player.jerseyNo ?? null,
-          profilePic: player.profilePic ?? null,
-        },
-        team: team ? brief(team) : null,
-        goals,
-      });
-    }
-
-    return result;
-  }
-
-  private async groupStandingsData() {
-    const [matches, teams, settings] = await Promise.all([
-      this._statisticsRepo.completedGroupMatches(),
-      this._statisticsRepo.activeTeams(),
-      this._settingsService.get(),
-    ]);
-
-    const rows = new Map<string, StandingRow>();
-
-    for (const rawTeam of teams as unknown as Row[]) {
-      const team = brief(rawTeam);
-      rows.set(team._id, {
-        team,
+    for (const team of activeTeams) {
+      const briefTeam = this.mapTeamToBriefDTO(team);
+      const teamId = String(team._id);
+      teamById.set(teamId, briefTeam);
+      standingByTeamId.set(teamId, {
+        team: briefTeam,
         played: 0,
         won: 0,
         drawn: 0,
@@ -147,70 +70,31 @@ export class StatisticsService {
       });
     }
 
-    for (const rawMatch of matches as unknown as Row[]) {
-      const team1Id = idOf(rawMatch.team1Ref);
-      const team2Id = idOf(rawMatch.team2Ref);
-      const team1Row = rows.get(team1Id);
-      const team2Row = rows.get(team2Id);
-
-      if (!team1Row || !team2Row) continue;
-
-      const goals = getGoals(rawMatch);
-      const team1Goals = goals.filter(
-        (goal) => idOf(goal.scoringTeamRef) === team1Id,
-      ).length;
-      const team2Goals = goals.filter(
-        (goal) => idOf(goal.scoringTeamRef) === team2Id,
-      ).length;
-
-      team1Row.played += 1;
-      team2Row.played += 1;
-      team1Row.goalsFor += team1Goals;
-      team1Row.goalsAgainst += team2Goals;
-      team2Row.goalsFor += team2Goals;
-      team2Row.goalsAgainst += team1Goals;
-
-      if (team1Goals > team2Goals) {
-        team1Row.won += 1;
-        team2Row.lost += 1;
-        team1Row.points += Number(settings.pointsRule.win);
-        team2Row.points += Number(settings.pointsRule.loss);
-      } else if (team2Goals > team1Goals) {
-        team2Row.won += 1;
-        team1Row.lost += 1;
-        team2Row.points += Number(settings.pointsRule.win);
-        team1Row.points += Number(settings.pointsRule.loss);
-      } else {
-        team1Row.drawn += 1;
-        team2Row.drawn += 1;
-        team1Row.points += Number(settings.pointsRule.draw);
-        team2Row.points += Number(settings.pointsRule.draw);
-      }
+    for (const match of completedGroupMatches) {
+      this.applyMatchToGroupStandings(match, standingByTeamId, settings.pointsRule);
     }
 
-    const groups = new Map<string, StandingRow[]>();
-
-    for (const row of rows.values()) {
+    const groupRows = new Map<string, MutableStanding[]>();
+    for (const row of standingByTeamId.values()) {
       row.goalDifference = row.goalsFor - row.goalsAgainst;
-      const groupName = String(row.team.groupName ?? "Ungrouped");
-      const groupRows = groups.get(groupName) ?? [];
-      groupRows.push(row);
-      groups.set(groupName, groupRows);
+      const groupName = row.team.groupName ?? "Ungrouped";
+      const rows = groupRows.get(groupName) ?? [];
+      rows.push(row);
+      groupRows.set(groupName, rows);
     }
 
-    return [...groups.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([groupName, groupRows]) => ({
+    return [...groupRows.entries()]
+      .sort(([firstGroup], [secondGroup]) => firstGroup.localeCompare(secondGroup))
+      .map(([groupName, rows]) => ({
         groupName,
-        rows: groupRows
-          .sort(
-            (a, b) =>
-              b.points - a.points ||
-              b.goalDifference - a.goalDifference ||
-              b.goalsFor - a.goalsFor ||
-              a.team.name.localeCompare(b.team.name),
+        rows: rows
+          .sort((first, second) =>
+            second.points - first.points ||
+            second.goalDifference - first.goalDifference ||
+            second.goalsFor - first.goalsFor ||
+            first.team.name.localeCompare(second.team.name),
           )
-          .map((row, index) => ({
+          .map((row, index): StandingRowDTO => ({
             ...row,
             position: index + 1,
             qualified: index < 2,
@@ -218,73 +102,122 @@ export class StatisticsService {
       }));
   }
 
-  async getStandings() {
-    return this.groupStandingsData();
-  }
-
-  async getOverallTeamStatistics(): Promise<OverallTeamRow[]> {
-    const [matches, teams] = await Promise.all([
-      this._statisticsRepo.completedMatches(),
-      this._statisticsRepo.activeTeams(),
+  async getTopScorers(): Promise<TopScorerDTO[]> {
+    const [completedMatches, players, teams] = await Promise.all([
+      this.statisticsRepository.findCompletedMatches(),
+      this.statisticsRepository.findPlayersForTournamentStatistics(),
+      this.statisticsRepository.findAllTeams(),
     ]);
 
-    return (teams as unknown as Row[]).map((rawTeam) => {
-      const team = brief(rawTeam);
-      let played = 0;
-      let goalsFor = 0;
-      let goalsAgainst = 0;
-      let cleanSheets = 0;
+    const playerById = new Map<string, PlayerEntity>(players.map((player) => [String(player._id), player]));
+    const teamById = new Map<string, TeamBriefDTO>(teams.map((team) => [String(team._id), this.mapTeamToBriefDTO(team)]));
+    const goalCountByPlayerId = new Map<string, number>();
+    const scoringTeamByPlayerId = new Map<string, string>();
 
-      for (const rawMatch of matches as unknown as Row[]) {
-        const team1Id = idOf(rawMatch.team1Ref);
-        const team2Id = idOf(rawMatch.team2Ref);
+    for (const match of completedMatches) {
+      for (const goal of match.goals) {
+        if (goal.goalType !== "normal" || !goal.scorerRef) continue;
+        const playerId = String(goal.scorerRef);
+        goalCountByPlayerId.set(playerId, (goalCountByPlayerId.get(playerId) ?? 0) + 1);
+        scoringTeamByPlayerId.set(playerId, String(goal.scoringTeamRef));
+      }
+    }
 
-        if (team._id !== team1Id && team._id !== team2Id) continue;
+    const rankedScorers = [...goalCountByPlayerId.entries()]
+      .map(([playerId, goals]) => ({ playerId, goals, player: playerById.get(playerId) }))
+      .filter((entry): entry is { playerId: string; goals: number; player: PlayerEntity } => entry.player !== undefined)
+      .sort((first, second) => second.goals - first.goals || first.player.name.localeCompare(second.player.name));
 
-        const goals = getGoals(rawMatch);
-        const scored = goals.filter(
-          (goal) => idOf(goal.scoringTeamRef) === team._id,
-        ).length;
-        const conceded = goals.length - scored;
+    let previousGoals = -1;
+    let previousRank = 0;
 
-        played += 1;
-        goalsFor += scored;
-        goalsAgainst += conceded;
-
-        if (conceded === 0) cleanSheets += 1;
+    return rankedScorers.map((entry, index) => {
+      if (entry.goals !== previousGoals) {
+        previousRank = index + 1;
+        previousGoals = entry.goals;
       }
 
-      return { team, played, goalsFor, goalsAgainst, cleanSheets };
+      const scoringTeamId = scoringTeamByPlayerId.get(entry.playerId) ?? (entry.player.teamRef ? String(entry.player.teamRef) : null);
+      const scoringTeam = scoringTeamId ? teamById.get(scoringTeamId) ?? null : null;
+
+      return {
+        rank: previousRank,
+        player: this.mapPlayerToPublicDTO(entry.player, scoringTeam),
+        team: scoringTeam,
+        goals: entry.goals,
+      };
     });
   }
 
-  async getTeamStatistics(teamId: string) {
-    const [standingGroups, overallRows] = await Promise.all([
-      this.groupStandingsData(),
+  async getOverallTeamStatistics(): Promise<OverallTeamStatisticsDTO[]> {
+    const [completedMatches, activeTeams] = await Promise.all([
+      this.statisticsRepository.findCompletedMatches(),
+      this.statisticsRepository.findActiveTeams(),
+    ]);
+
+    const totalsByTeamId = new Map<string, MutableTeamTotals>();
+    for (const team of activeTeams) {
+      totalsByTeamId.set(String(team._id), {
+        team: this.mapTeamToBriefDTO(team),
+        played: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        cleanSheets: 0,
+      });
+    }
+
+    for (const match of completedMatches) {
+      const team1Id = String(match.team1Ref);
+      const team2Id = String(match.team2Ref);
+      const team1Totals = totalsByTeamId.get(team1Id);
+      const team2Totals = totalsByTeamId.get(team2Id);
+      if (!team1Totals || !team2Totals) continue;
+
+      const team1Goals = this.countGoalsCreditedToTeam(match, team1Id);
+      const team2Goals = this.countGoalsCreditedToTeam(match, team2Id);
+
+      team1Totals.played += 1;
+      team2Totals.played += 1;
+      team1Totals.goalsFor += team1Goals;
+      team1Totals.goalsAgainst += team2Goals;
+      team2Totals.goalsFor += team2Goals;
+      team2Totals.goalsAgainst += team1Goals;
+
+      if (team2Goals === 0) team1Totals.cleanSheets += 1;
+      if (team1Goals === 0) team2Totals.cleanSheets += 1;
+    }
+
+    return [...totalsByTeamId.values()];
+  }
+
+  async getTeamStatistics(teamId: string): Promise<TeamStatisticsDTO> {
+    this.ensureValidTeamId(teamId);
+    const [team, groupStandings, overallStatistics] = await Promise.all([
+      this.teamRepository.findTeamById(teamId),
+      this.getGroupStandings(),
       this.getOverallTeamStatistics(),
     ]);
 
-    const standing = standingGroups
-      .flatMap((group) => group.rows)
-      .find((row) => row.team._id === teamId);
-    const overall = overallRows.find((row) => row.team._id === teamId);
+    if (!team) throw new AppError("Team not found", 404, "TEAM_NOT_FOUND");
 
-    if (!overall) {
-      throw new AppError("Team not found", 404, "NOT_FOUND");
-    }
+    const teamBrief = this.mapTeamToBriefDTO(team);
+    const groupStanding = groupStandings
+      .flatMap((group) => group.rows)
+      .find((standing) => standing.team._id === teamId);
+    const overall = overallStatistics.find((statistics) => statistics.team._id === teamId);
 
     return {
-      team: overall.team,
-      group: standing
+      team: teamBrief,
+      group: groupStanding
         ? {
-            played: standing.played,
-            won: standing.won,
-            drawn: standing.drawn,
-            lost: standing.lost,
-            goalsFor: standing.goalsFor,
-            goalsAgainst: standing.goalsAgainst,
-            goalDifference: standing.goalDifference,
-            points: standing.points,
+            played: groupStanding.played,
+            won: groupStanding.won,
+            drawn: groupStanding.drawn,
+            lost: groupStanding.lost,
+            goalsFor: groupStanding.goalsFor,
+            goalsAgainst: groupStanding.goalsAgainst,
+            goalDifference: groupStanding.goalDifference,
+            points: groupStanding.points,
           }
         : {
             played: 0,
@@ -296,90 +229,206 @@ export class StatisticsService {
             goalDifference: 0,
             points: 0,
           },
-      overall: {
-        played: overall.played,
-        goalsFor: overall.goalsFor,
-        goalsAgainst: overall.goalsAgainst,
-        cleanSheets: overall.cleanSheets,
-      },
+      overall: overall
+        ? {
+            played: overall.played,
+            goalsFor: overall.goalsFor,
+            goalsAgainst: overall.goalsAgainst,
+            cleanSheets: overall.cleanSheets,
+          }
+        : { played: 0, goalsFor: 0, goalsAgainst: 0, cleanSheets: 0 },
     };
   }
 
-  async getDashboardStatistics() {
+  async getDashboardStatistics(): Promise<DashboardSummaryDTO> {
     const [
       settings,
       activeTeams,
-      auction,
+      auctionTotals,
       completedMatches,
       upcomingFixtures,
       recentResults,
       topScorers,
-      overallRows,
+      overallTeamStatistics,
       upcomingMatchCount,
     ] = await Promise.all([
-      this._settingsService.get(),
-      this._teamRepo.countActive(),
-      this._playerRepo.auctionCounts(),
-      this._statisticsRepo.completedMatches(),
-      this._statisticsRepo.upcomingFixtures(),
-      this._statisticsRepo.recentResults(),
+      this.settingsService.getTournamentSettings(),
+      this.teamRepository.countActiveTeams(),
+      this.playerRepository.getPlayerAuctionCounts(),
+      this.statisticsRepository.findCompletedMatches(),
+      this.statisticsRepository.findUpcomingFixtureCards(4),
+      this.statisticsRepository.findRecentResultCards(4),
       this.getTopScorers(),
       this.getOverallTeamStatistics(),
-      this._statisticsRepo.upcomingCount(),
+      this.statisticsRepository.countScheduledFixtures(),
     ]);
-
-    const matches = completedMatches as unknown as Row[];
-    const totalGoals = matches.reduce(
-      (total, match) => total + getGoals(match).length,
-      0,
-    );
-
-    const pickLeader = (field: "goalsFor" | "goalsAgainst") => {
-      const sorted = [...overallRows].sort(
-        (a, b) =>
-          b[field] - a[field] || a.team.name.localeCompare(b.team.name),
-      );
-      const leader = sorted[0];
-
-      return leader && leader[field] > 0
-        ? { team: leader.team, goals: leader[field] }
-        : null;
-    };
-
-    const maxCleanSheets = Math.max(
-      0,
-      ...overallRows.map((row) => row.cleanSheets),
-    );
-    const mostCleanSheets =
-      maxCleanSheets > 0
-        ? overallRows
-            .filter((row) => row.cleanSheets === maxCleanSheets)
-            .map((row) => ({
-              team: row.team,
-              cleanSheets: row.cleanSheets,
-            }))
-        : [];
 
     return {
       tournamentName: settings.tournamentName,
-      startDate: settings.startDate,
-      endDate: settings.endDate,
-      totalMatchesPlayed: matches.length,
-      totalGoals,
+      startDate: settings.startDate.toISOString(),
+      endDate: settings.endDate.toISOString(),
+      totalMatchesPlayed: completedMatches.length,
+      totalGoals: completedMatches.reduce((total, match) => total + match.goals.length, 0),
       activeTeams,
-      activePlayers: auction.activeAuctionPlayers,
-      pendingPlayers: auction.pendingPlayers,
-      soldPlayers: auction.soldPlayers,
-      unsoldPlayers: auction.unsoldPlayers,
-      totalAuctionSpend: auction.totalAuctionSpend,
+      activePlayers: auctionTotals.activeAuctionPlayers,
+      pendingPlayers: auctionTotals.pendingPlayers,
+      soldPlayers: auctionTotals.soldPlayers,
+      unsoldPlayers: auctionTotals.unsoldPlayers,
+      totalAuctionSpend: auctionTotals.totalAuctionSpend,
       upcomingMatchCount,
       topScorer: topScorers[0] ?? null,
-      mostScoringTeam: pickLeader("goalsFor"),
-      mostConcedingTeam: pickLeader("goalsAgainst"),
-      mostCleanSheets,
-      upcomingFixtures,
-      recentResults,
+      mostScoringTeam: this.getTeamGoalLeader(overallTeamStatistics, "goalsFor"),
+      mostConcedingTeam: this.getTeamGoalLeader(overallTeamStatistics, "goalsAgainst"),
+      mostCleanSheets: this.getCleanSheetLeaders(overallTeamStatistics),
+      upcomingFixtures: upcomingFixtures.map((match) => this.mapPopulatedMatchToDTO(match)),
+      recentResults: recentResults.map((match) => this.mapPopulatedMatchToDTO(match)),
       alerts: [],
     };
+  }
+
+  private applyMatchToGroupStandings(
+    match: MatchEntity,
+    standings: Map<string, MutableStanding>,
+    pointsRule: { win: number; draw: number; loss: number },
+  ): void {
+    const team1Id = String(match.team1Ref);
+    const team2Id = String(match.team2Ref);
+    const team1Standing = standings.get(team1Id);
+    const team2Standing = standings.get(team2Id);
+    if (!team1Standing || !team2Standing) return;
+
+    const team1Goals = this.countGoalsCreditedToTeam(match, team1Id);
+    const team2Goals = this.countGoalsCreditedToTeam(match, team2Id);
+
+    team1Standing.played += 1;
+    team2Standing.played += 1;
+    team1Standing.goalsFor += team1Goals;
+    team1Standing.goalsAgainst += team2Goals;
+    team2Standing.goalsFor += team2Goals;
+    team2Standing.goalsAgainst += team1Goals;
+
+    if (team1Goals > team2Goals) {
+      team1Standing.won += 1;
+      team2Standing.lost += 1;
+      team1Standing.points += pointsRule.win;
+      team2Standing.points += pointsRule.loss;
+    } else if (team2Goals > team1Goals) {
+      team2Standing.won += 1;
+      team1Standing.lost += 1;
+      team2Standing.points += pointsRule.win;
+      team1Standing.points += pointsRule.loss;
+    } else {
+      team1Standing.drawn += 1;
+      team2Standing.drawn += 1;
+      team1Standing.points += pointsRule.draw;
+      team2Standing.points += pointsRule.draw;
+    }
+  }
+
+  private countGoalsCreditedToTeam(match: MatchEntity, teamId: string): number {
+    return match.goals.filter((goal) => String(goal.scoringTeamRef) === teamId).length;
+  }
+
+  private getTeamGoalLeader(
+    statistics: OverallTeamStatisticsDTO[],
+    field: "goalsFor" | "goalsAgainst",
+  ): { team: TeamBriefDTO; goals: number } | null {
+    const leader = [...statistics].sort(
+      (first, second) => second[field] - first[field] || first.team.name.localeCompare(second.team.name),
+    )[0];
+
+    if (!leader || leader[field] === 0) return null;
+    return { team: leader.team, goals: leader[field] };
+  }
+
+  private getCleanSheetLeaders(statistics: OverallTeamStatisticsDTO[]): { team: TeamBriefDTO; cleanSheets: number }[] {
+    const highestCount = statistics.reduce((highest, team) => Math.max(highest, team.cleanSheets), 0);
+    if (highestCount === 0) return [];
+    return statistics
+      .filter((team) => team.cleanSheets === highestCount)
+      .map((team) => ({ team: team.team, cleanSheets: team.cleanSheets }));
+  }
+
+  private mapTeamToBriefDTO(team: TeamEntity): TeamBriefDTO {
+    return {
+      _id: String(team._id),
+      name: team.name,
+      shortName: team.shortName,
+      logo: team.logo,
+      groupName: team.groupName,
+    };
+  }
+
+  private mapPlayerToPublicDTO(player: PlayerEntity, scoringTeam: TeamBriefDTO | null): PlayerPublicDTO {
+    const teamRef = scoringTeam?._id ?? (player.teamRef ? String(player.teamRef) : null);
+    return {
+      _id: String(player._id),
+      name: player.name,
+      position: player.position,
+      isIconPlayer: player.isIconPlayer,
+      teamRef,
+      team: scoringTeam,
+      jerseyNo: player.jerseyNo,
+      auctionPrice: player.auctionPrice,
+      auctionStatus: player.auctionStatus,
+      status: player.status,
+      profilePic: player.profilePic,
+    };
+  }
+
+  private mapPopulatedMatchToDTO(match: PopulatedMatchEntity): MatchResponseDTO {
+    return {
+      _id: String(match._id),
+      matchNo: match.matchNo,
+      stage: match.stage,
+      groupName: match.groupName,
+      kickoffAt: match.kickoffAt.toISOString(),
+      venue: match.venue,
+      team1Ref: this.mapMatchTeamReference(match.team1Ref),
+      team2Ref: this.mapMatchTeamReference(match.team2Ref),
+      status: match.status,
+      goals: match.goals.map((goal) => ({
+        _id: String(goal._id),
+        scoringTeamRef: this.mapMatchTeamReference(goal.scoringTeamRef),
+        goalType: goal.goalType,
+        scorerRef: this.mapMatchPlayerReference(goal.scorerRef),
+        ownGoalPlayerRef: this.mapMatchPlayerReference(goal.ownGoalPlayerRef),
+        createdAt: goal.createdAt.toISOString(),
+      })),
+      penaltyShootout: match.penaltyShootout,
+      notes: match.notes,
+      createdAt: match.createdAt.toISOString(),
+      updatedAt: match.updatedAt.toISOString(),
+    };
+  }
+
+  private mapMatchTeamReference(reference: Types.ObjectId | MatchTeamReferenceEntity): string | TeamBriefDTO {
+    if (reference instanceof Types.ObjectId) return String(reference);
+    return {
+      _id: String(reference._id),
+      name: reference.name,
+      shortName: reference.shortName,
+      logo: reference.logo,
+      groupName: reference.groupName,
+    };
+  }
+
+  private mapMatchPlayerReference(
+    reference: Types.ObjectId | MatchPlayerReferenceEntity | null,
+  ): string | import("../matches/match.types.js").MatchPlayerBriefDTO | null {
+    if (!reference) return null;
+    if (reference instanceof Types.ObjectId) return String(reference);
+    return {
+      _id: String(reference._id),
+      name: reference.name,
+      position: reference.position,
+      jerseyNo: reference.jerseyNo,
+      profilePic: reference.profilePic,
+      teamRef: reference.teamRef ? String(reference.teamRef) : null,
+    };
+  }
+
+  private ensureValidTeamId(teamId: string): void {
+    if (!Types.ObjectId.isValid(teamId)) throw new AppError("Invalid team ID", 400, "INVALID_ID");
   }
 }
