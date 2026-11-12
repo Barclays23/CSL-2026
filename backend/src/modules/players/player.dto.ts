@@ -43,3 +43,35 @@ export type PlayerQueryInput = PlayerQueryDto;
 export type PlayerCreateDTO = CreatePlayerDto;
 export type PlayerUpdateDTO = UpdatePlayerDto;
 export type PlayerQueryDTO = PlayerQueryDto;
+
+import type { TeamBriefDTO } from "../teams/team.types.js";
+
+export interface PlayerPublicDTO {
+  _id: string;
+  name: string;
+  position: PlayerPosition;
+  isIconPlayer: boolean;
+  teamRef: string | null;
+  team: TeamBriefDTO | null;
+  jerseyNo: number | null;
+  auctionPrice: number;
+  auctionStatus: AuctionStatus;
+  status: PlayerStatus;
+  profilePic: Asset | null;
+}
+
+export interface PlayerAdminDTO extends PlayerPublicDTO {
+  mobile: string;
+  email: string | null;
+  dateOfBirth: string | null;
+}
+
+export type PlayerResponseDTO = PlayerPublicDTO | PlayerAdminDTO;
+
+export interface PlayerAuctionCountsDTO {
+  activeAuctionPlayers: number;
+  pendingPlayers: number;
+  soldPlayers: number;
+  unsoldPlayers: number;
+  totalAuctionSpend: number;
+}
