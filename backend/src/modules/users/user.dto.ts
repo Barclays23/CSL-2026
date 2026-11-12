@@ -15,3 +15,5 @@ export interface AdminUserDTO {
   role: UserRole;
   status: UserStatus;
 }
+
+export type AdminUserCreateDTO = Omit<CreateAdminUserDto, "password">;
