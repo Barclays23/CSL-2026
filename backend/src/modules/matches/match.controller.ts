@@ -7,7 +7,16 @@ import type { IMatchController, IMatchService, MatchResponseDTO } from "./match.
 import { goalSchema, matchCreateSchema, matchQuerySchema, matchUpdateSchema, type GoalInput, type MatchCreateInput, type MatchQueryInput, type MatchUpdateInput } from "./match.dto.js";
 
 export class MatchController implements IMatchController {
-  constructor(private readonly _matchService: IMatchService) {}
+  constructor(private readonly _matchService: IMatchService) {
+    this.getMatches = this.getMatches.bind(this);
+    this.getMatchById = this.getMatchById.bind(this);
+    this.createMatch = this.createMatch.bind(this);
+    this.updateMatch = this.updateMatch.bind(this);
+    this.deleteMatch = this.deleteMatch.bind(this);
+    this.addGoalToMatch = this.addGoalToMatch.bind(this);
+    this.updateMatchGoal = this.updateMatchGoal.bind(this);
+    this.deleteMatchGoal = this.deleteMatchGoal.bind(this);
+  }
 
   async getMatches(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
