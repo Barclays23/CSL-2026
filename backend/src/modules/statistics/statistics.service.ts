@@ -4,16 +4,8 @@ import type { ISettingsService } from "../settings/settings.types.js";
 import type { IPlayerRepository, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
 import type { TeamBriefDTO, TeamEntity, ITeamRepository } from "../teams/team.types.js";
 import type { MatchEntity, MatchPlayerBriefDTO, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
-import type {
-  DashboardSummaryDTO,
-  GroupStandingDTO,
-  IStatisticsRepository,
-  IStatisticsService,
-  OverallTeamStatisticsDTO,
-  StandingRowDTO,
-  TeamStatisticsDTO,
-  TopScorerDTO,
-} from "./statistics.types.js";
+import type { IStatisticsRepository, IStatisticsService } from "./statistics.interfaces.js";
+import type { DashboardSummaryDTO, GroupStandingDTO, OverallTeamStatisticsDTO, StandingRowDTO, TeamStatisticsDTO, TopScorerDTO } from "./statistics.types.js";
 
 
 interface MutableStanding {
