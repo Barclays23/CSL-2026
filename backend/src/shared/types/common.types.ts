@@ -1,4 +1,4 @@
-import type { Request } from "express";
+import type { Request, Response, NextFunction } from "express";
 import type { Types } from "mongoose";
 
 export type UserRole = "admin";
@@ -25,23 +25,27 @@ export interface Asset {
   publicId: string;
 }
 
-export interface Pagination {
+export interface IPagination {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
 }
 
-export interface PaginationQuery {
+export interface IPaginationQuery {
   page: number;
   limit: number;
 }
 
 export interface PaginatedResult<TEntity> {
   items: TEntity[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: IPagination;
 }
+
+export type ControllerMethod = (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => Promise<void>;
 
 export type MongoId = Types.ObjectId;
