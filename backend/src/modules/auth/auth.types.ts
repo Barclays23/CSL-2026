@@ -1,4 +1,5 @@
 import type { AdminUserDTO } from "../users/user.types.js";
+import type { AuthSessionDTO } from "./auth.dto.js";
 import type { LoginInput } from "./auth.dto.js";
 
 export interface LoginCredentials extends LoginInput {}
@@ -11,9 +12,8 @@ export interface JwtAdminPayload {
   exp?: number;
 }
 
-export interface AuthSessionDTO {
-  token: string;
-  user: AdminUserDTO;
-}
+
 
 export type { IAuthService, IAuthController } from "./auth.interfaces.js";
+
+export type { AuthSessionDTO } from "./auth.dto.js";
