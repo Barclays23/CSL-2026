@@ -38,9 +38,9 @@ export interface PopulatedManagerEntity extends Omit<ManagerEntity, "teamRef"> {
 
 
 
-export type ManagerCreateDTO = ManagerCreateInput;
-export type ManagerUpdateDTO = ManagerUpdateInput;
-export type ManagerQueryDTO = ManagerQueryInput;
+
+
+
 
 export interface ManagerListFilter {
   name?: { $regex: string; $options: "i" };
@@ -51,3 +51,5 @@ export interface ManagerListFilter {
 export type { IManagerRepository, IManagerService, IManagerController } from "./manager.interfaces.js";
 
 export type { PublicManagerDTO, AdminManagerDTO, ManagerResponseDTO } from "./manager.dto.js";
+
+export type { ManagerCreateDTO, ManagerUpdateDTO, ManagerQueryDTO } from "./manager.dto.js";
