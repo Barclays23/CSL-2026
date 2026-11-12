@@ -7,7 +7,16 @@ import type { IPlayerController, IPlayerService, PlayerResponseDTO, PlayerAdminD
 import { playerAssignmentSchema, playerCreateSchema, playerQuerySchema, playerUpdateSchema, type PlayerAssignmentInput, type PlayerCreateInput, type PlayerQueryInput, type PlayerUpdateInput } from "./player.dto.js";
 
 export class PlayerController implements IPlayerController {
-  constructor(private readonly _playerService: IPlayerService) {}
+  constructor(private readonly _playerService: IPlayerService) {
+    this.getPlayers = this.getPlayers.bind(this);
+    this.getPlayerById = this.getPlayerById.bind(this);
+    this.createPlayer = this.createPlayer.bind(this);
+    this.updatePlayer = this.updatePlayer.bind(this);
+    this.assignPlayerToTeam = this.assignPlayerToTeam.bind(this);
+    this.markPlayerUnsold = this.markPlayerUnsold.bind(this);
+    this.deactivatePlayer = this.deactivatePlayer.bind(this);
+    this.deletePlayer = this.deletePlayer.bind(this);
+  }
 
   async getPlayers(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
