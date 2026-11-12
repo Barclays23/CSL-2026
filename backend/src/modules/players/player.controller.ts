@@ -3,7 +3,7 @@ import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { PLAYER_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type { IPlayerController, IPlayerService, PlayerResponseDTO } from "./player.types.js";
+import type { IPlayerController, IPlayerService, PlayerResponseDTO, PlayerAdminDTO } from "./player.types.js";
 import { playerAssignmentSchema, playerCreateSchema, playerQuerySchema, playerUpdateSchema, type PlayerAssignmentInput, type PlayerCreateInput, type PlayerQueryInput, type PlayerUpdateInput } from "./player.dto.js";
 
 export class PlayerController implements IPlayerController {
@@ -28,7 +28,7 @@ export class PlayerController implements IPlayerController {
   async createPlayer(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
       const input: PlayerCreateInput = playerCreateSchema.parse(request.body);
-      const player = await this._playerService.createPlayer(input);
+      const player: PlayerAdminDTO = await this._playerService.createPlayer(input);
       response.status(HTTP_STATUS.CREATED).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_CREATED, player));
     } catch (error: unknown) { next(error); }
   }
@@ -37,7 +37,7 @@ export class PlayerController implements IPlayerController {
     try {
       const playerId: string = request.params.id;
       const input: PlayerUpdateInput = playerUpdateSchema.parse(request.body);
-      const player = await this._playerService.updatePlayer(playerId, input);
+      const player: PlayerAdminDTO = await this._playerService.updatePlayer(playerId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_UPDATED, player));
     } catch (error: unknown) { next(error); }
   }
@@ -46,7 +46,7 @@ export class PlayerController implements IPlayerController {
     try {
       const playerId: string = request.params.id;
       const input: PlayerAssignmentInput = playerAssignmentSchema.parse(request.body);
-      const player = await this._playerService.assignPlayerToTeam(playerId, input);
+      const player: PlayerAdminDTO = await this._playerService.assignPlayerToTeam(playerId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_ASSIGNED, player));
     } catch (error: unknown) { next(error); }
   }
@@ -54,7 +54,7 @@ export class PlayerController implements IPlayerController {
   async markPlayerUnsold(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
-      const player = await this._playerService.markPlayerUnsold(playerId);
+      const player: PlayerAdminDTO = await this._playerService.markPlayerUnsold(playerId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_MARKED_UNSOLD, player));
     } catch (error: unknown) { next(error); }
   }
@@ -62,7 +62,7 @@ export class PlayerController implements IPlayerController {
   async deactivatePlayer(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
     try {
       const playerId: string = request.params.id;
-      const player = await this._playerService.deactivatePlayer(playerId);
+      const player: PlayerAdminDTO = await this._playerService.deactivatePlayer(playerId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(PLAYER_MESSAGES.PLAYER_DEACTIVATED, player));
     } catch (error: unknown) { next(error); }
   }
