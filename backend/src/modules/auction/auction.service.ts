@@ -3,7 +3,8 @@ import type { IPlayerRepository } from "../players/player.types.js";
 import type { ISettingsService } from "../settings/settings.types.js";
 import type { ITeamRepository } from "../teams/team.types.js";
 import type { SettingsEntity } from "../settings/settings.types.js";
-import type { AuctionCompletionValidationResult, AuctionTeamValidation, IAuctionService } from "./auction.types.js";
+import type { IAuctionService } from "./auction.interfaces.js";
+import type { AuctionCompletionValidationResult, AuctionTeamValidation } from "./auction.types.js";
 
 
 
