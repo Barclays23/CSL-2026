@@ -34,9 +34,12 @@ export class TeamService implements ITeamService {
     const result = await this.teamRepository.findTeams(filter, query.page, query.limit);
     return {
       items: result.items.map((team) => this.mapTeamToDTO(team)),
-      total: result.total,
-      page: query.page,
-      limit: query.limit,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   }
 
