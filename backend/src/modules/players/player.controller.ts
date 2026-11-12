@@ -4,12 +4,8 @@ import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { PLAYER_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type {
-  IPlayerController,
-  IPlayerService,
-  PlayerResponseDTO,
-  PlayerAdminDTO,
-} from "./player.types.js";
+import type { IPlayerController, IPlayerService } from "./player.interfaces.js";
+import type { PlayerResponseDTO, PlayerAdminDTO } from "./player.types.js";
 import {
   playerAssignmentSchema,
   playerCreateSchema,
