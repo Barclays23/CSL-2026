@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
-import type { ISettingsService } from "../settings/settings.types.js";
+import type { ISettingsService } from "../settings/settings.interfaces.js";
 import type { ITeamRepository } from "../teams/team.types.js";
 import type { PlayerAssignmentInput } from "./player.dto.js";
 import type { IPlayerService, IPlayerRepository } from "./player.interfaces.js";
