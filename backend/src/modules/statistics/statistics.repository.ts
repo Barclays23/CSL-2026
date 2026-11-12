@@ -4,6 +4,7 @@ import { PlayerModel } from "../players/player.model.js";
 import type { PlayerStatisticsEntity } from "../players/player.types.js";
 import { TeamModel } from "../teams/team.model.js";
 import type { TeamEntity } from "../teams/team.types.js";
+import { IStatisticsRepository } from "./statistics.types.js";
 
 const populatedFixturePaths = [
   { path: "team1Ref", select: "name shortName logo groupName" },
@@ -13,16 +14,6 @@ const populatedFixturePaths = [
   { path: "goals.ownGoalPlayerRef", select: "name position jerseyNo profilePic teamRef" },
 ];
 
-export interface IStatisticsRepository {
-  findCompletedMatches(): Promise<MatchEntity[]>;
-  findCompletedGroupStageMatches(): Promise<MatchEntity[]>;
-  findAllTeams(): Promise<TeamEntity[]>;
-  findActiveTeams(): Promise<TeamEntity[]>;
-  findPlayersForTournamentStatistics(): Promise<PlayerStatisticsEntity[]>;
-  findUpcomingFixtureCards(limit: number): Promise<PopulatedMatchEntity[]>;
-  findRecentResultCards(limit: number): Promise<PopulatedMatchEntity[]>;
-  countScheduledFixtures(): Promise<number>;
-}
 
 export class StatisticsRepository implements IStatisticsRepository {
   async findCompletedMatches(): Promise<MatchEntity[]> {

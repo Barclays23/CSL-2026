@@ -1,19 +1,20 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { PlayerRepositoryContract, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
-import type { TeamBriefDTO, TeamEntity, TeamRepositoryContract } from "../teams/team.types.js";
+import type { IPlayerRepository, PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
+import type { TeamBriefDTO, TeamEntity, ITeamRepository } from "../teams/team.types.js";
 import type { MatchEntity, MatchPlayerBriefDTO, MatchPlayerReferenceEntity, MatchResponseDTO, MatchTeamReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "../matches/match.types.js";
 import type {
   DashboardSummaryDTO,
   GroupStandingDTO,
+  IStatisticsRepository,
   IStatisticsService,
   OverallTeamStatisticsDTO,
   StandingRowDTO,
   TeamStatisticsDTO,
   TopScorerDTO,
 } from "./statistics.types.js";
-import type { IStatisticsRepository } from "./statistics.repository.js";
+
 
 interface MutableStanding {
   team: TeamBriefDTO;
@@ -39,8 +40,8 @@ export class StatisticsService implements IStatisticsService {
   constructor(
     private readonly _statisticsRepository: IStatisticsRepository,
     private readonly _settingsService: ISettingsService,
-    private readonly _playerRepository: PlayerRepositoryContract,
-    private readonly _teamRepository: TeamRepositoryContract,
+    private readonly _playerRepository: IPlayerRepository,
+    private readonly _teamRepository: ITeamRepository,
   ) {}
 
   async getGroupStandings(): Promise<GroupStandingDTO[]> {

@@ -5,11 +5,11 @@ import type {
   ManagerEntity,
   ManagerFields,
   ManagerListFilter,
-  ManagerRepositoryContract,
+  IManagerRepository,
   PopulatedManagerEntity,
 } from "./manager.types.js";
 
-export class ManagerRepository implements ManagerRepositoryContract {
+export class ManagerRepository implements IManagerRepository {
   async findManagers(
     filter: ManagerListFilter,
     page: number,

@@ -1,15 +1,18 @@
 import { AppError } from "../../shared/errors/appError.js";
-import type { PlayerRepositoryContract } from "../players/player.types.js";
+import type { IPlayerRepository } from "../players/player.types.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { TeamRepositoryContract } from "../teams/team.types.js";
+import type { ITeamRepository } from "../teams/team.types.js";
 import type { SettingsEntity } from "../settings/settings.types.js";
 import type { AuctionCompletionValidationResult, AuctionTeamValidation, IAuctionService } from "./auction.types.js";
+
+
+
 
 export class AuctionService implements IAuctionService {
   constructor(
     private readonly _settingsService: ISettingsService,
-    private readonly _teamRepository: TeamRepositoryContract,
-    private readonly _playerRepository: PlayerRepositoryContract,
+    private readonly _teamRepository: ITeamRepository,
+    private readonly _playerRepository: IPlayerRepository,
   ) {}
 
   async startAuction(): Promise<SettingsEntity> {

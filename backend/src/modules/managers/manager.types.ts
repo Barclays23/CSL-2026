@@ -1,6 +1,6 @@
 import type { Types } from "mongoose";
 import type { Asset, PaginatedResult } from "../../shared/types/common.types.js";
-import type { TeamBriefDTO, TeamRepositoryContract } from "../teams/team.types.js";
+import type { TeamBriefDTO } from "../teams/team.types.js";
 import type { ManagerCreateInput, ManagerQueryInput, ManagerUpdateInput } from "./manager.dto.js";
 
 export type ManagerStatus = "active" | "inactive";
@@ -59,7 +59,7 @@ export interface ManagerListFilter {
   teamRef?: Types.ObjectId;
 }
 
-export interface ManagerRepositoryContract {
+export interface IManagerRepository {
   findManagers(filter: ManagerListFilter, page: number, limit: number): Promise<{ items: PopulatedManagerEntity[]; total: number }>;
   findManagerById(managerId: string): Promise<ManagerEntity | null>;
   findManagerWithTeamById(managerId: string): Promise<PopulatedManagerEntity | null>;

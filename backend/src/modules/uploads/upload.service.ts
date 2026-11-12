@@ -3,6 +3,8 @@ import { AppError } from "../../shared/errors/appError.js";
 import type { ImageUploadResult, ImageUploadFile, IUploadService } from "./upload.types.js";
 import type { UploadPurpose } from "./upload.dto.js";
 
+
+
 const uploadFolderByPurpose: Record<UploadPurpose, string> = {
   "player-profile": "players",
   "team-logo": "teams/logos",

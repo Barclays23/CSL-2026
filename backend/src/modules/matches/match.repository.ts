@@ -6,7 +6,7 @@ import type {
   MatchEntity,
   MatchFields,
   MatchListFilter,
-  MatchRepositoryContract,
+  IMatchRepository,
   PopulatedMatchEntity,
 } from "./match.types.js";
 
@@ -18,7 +18,7 @@ const populatedMatchPaths = [
   { path: "goals.ownGoalPlayerRef", select: "name position jerseyNo profilePic teamRef" },
 ];
 
-export class MatchRepository implements MatchRepositoryContract {
+export class MatchRepository implements IMatchRepository {
   async findMatches(
     filter: MatchListFilter,
     page: number,

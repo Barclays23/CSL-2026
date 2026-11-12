@@ -92,7 +92,7 @@ export interface TeamAuctionSummaryDTO {
   teams: TeamAuctionCardDTO[];
 }
 
-export interface TeamRepositoryContract {
+export interface ITeamRepository {
   findTeams(filter: TeamListFilter, page: number, limit: number): Promise<{ items: TeamEntity[]; total: number }>;
   findTeamById(teamId: string): Promise<TeamEntity | null>;
   findTeamByName(name: string): Promise<TeamEntity | null>;

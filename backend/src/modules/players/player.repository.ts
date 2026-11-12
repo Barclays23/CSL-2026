@@ -7,7 +7,7 @@ import type {
   PlayerEntity,
   PlayerFields,
   PlayerListFilter,
-  PlayerRepositoryContract,
+  IPlayerRepository,
   PopulatedPlayerEntity,
 } from "./player.types.js";
 
@@ -16,7 +16,7 @@ interface AuctionSpendAggregationResult {
   totalAmount: number;
 }
 
-export class PlayerRepository implements PlayerRepositoryContract {
+export class PlayerRepository implements IPlayerRepository {
   async findPlayers(
     filter: PlayerListFilter,
     page: number,

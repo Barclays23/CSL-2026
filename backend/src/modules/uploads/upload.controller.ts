@@ -3,25 +3,59 @@ import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { UPLOAD_MESSAGES } from "../../shared/constants/messages.constants.js";
 import { AppError } from "../../shared/errors/appError.js";
-import type { IUploadController, IUploadService, ImageUploadResult, ImageUploadFile } from "./upload.types.js";
+import type {
+  IUploadController,
+  IUploadService,
+  ImageUploadResult,
+  ImageUploadFile,
+} from "./upload.types.js";
 import { imageUploadSchema, type UploadPurpose } from "./upload.dto.js";
 
-export class UploadController implements IUploadController {
-  constructor(private readonly _uploadService: IUploadService) {
-    this.uploadImage = this.uploadImage.bind(this);
-  }
 
-  async uploadImage(request: Request, response: Response, next: NextFunction): Promise<void> {
+
+
+
+export class UploadController implements IUploadController {
+  constructor(
+    private readonly _uploadService: IUploadService
+  ) {}
+
+  uploadImage = async (
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
-      if (!request.file) throw new AppError("An image file is required", HTTP_STATUS.BAD_REQUEST, "FILE_REQUIRED");
-      const purposeInput: { purpose: UploadPurpose } = imageUploadSchema.parse(request.body);
+      if (!request.file) {
+        throw new AppError(
+          "An image file is required",
+          HTTP_STATUS.BAD_REQUEST,
+          "FILE_REQUIRED",
+        );
+      }
+      const purposeInput: { purpose: UploadPurpose } = imageUploadSchema.parse(
+        request.body,
+      );
       const uploadFile: ImageUploadFile = {
         buffer: request.file.buffer,
         mimetype: request.file.mimetype,
         size: request.file.size,
       };
-      const uploadedAsset: ImageUploadResult = await this._uploadService.uploadImage(uploadFile, purposeInput.purpose);
-      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success<ImageUploadResult>(UPLOAD_MESSAGES.IMAGE_UPLOADED, uploadedAsset));
-    } catch (error: unknown) { next(error); }
-  }
+      const uploadedAsset: ImageUploadResult =
+        await this._uploadService.uploadImage(
+          uploadFile,
+          purposeInput.purpose,
+        );
+      response
+        .status(HTTP_STATUS.CREATED)
+        .json(
+          ApiResponse.success<ImageUploadResult>(
+            UPLOAD_MESSAGES.IMAGE_UPLOADED,
+            uploadedAsset,
+          ),
+        );
+    } catch (error: unknown) {
+      next(error);
+    }
+  };
 }

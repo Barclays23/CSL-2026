@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
-import type { PlayerRepositoryContract, PlayerEntity } from "../players/player.types.js";
-import type { TeamRepositoryContract, TeamBriefDTO } from "../teams/team.types.js";
+import type { IPlayerRepository, PlayerEntity } from "../players/player.types.js";
+import type { ITeamRepository, TeamBriefDTO } from "../teams/team.types.js";
 import type {
   GoalCreateDTO,
   GoalFields,
@@ -12,7 +12,7 @@ import type {
   MatchFields,
   MatchListFilter,
   MatchQueryDTO,
-  MatchRepositoryContract,
+  IMatchRepository,
   MatchResponseDTO,
   MatchGoalDTO,
   MatchPlayerBriefDTO,
@@ -25,9 +25,9 @@ import type {
 
 export class MatchService implements IMatchService {
   constructor(
-    private readonly _matchRepository: MatchRepositoryContract,
-    private readonly _teamRepository: TeamRepositoryContract,
-    private readonly _playerRepository: PlayerRepositoryContract,
+    private readonly _matchRepository: IMatchRepository,
+    private readonly _teamRepository: ITeamRepository,
+    private readonly _playerRepository: IPlayerRepository,
   ) {}
 
   async getMatches(query: MatchQueryDTO): Promise<PaginatedResult<MatchResponseDTO>> {

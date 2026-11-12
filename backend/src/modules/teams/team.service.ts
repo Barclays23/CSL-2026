@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { PlayerRepositoryContract } from "../players/player.types.js";
+import type { IPlayerRepository } from "../players/player.types.js";
 import type {
   ITeamService,
   TeamAuctionCardDTO,
@@ -13,14 +13,14 @@ import type {
   TeamFields,
   TeamListFilter,
   TeamQueryDTO,
-  TeamRepositoryContract,
+  ITeamRepository,
   TeamUpdateDTO,
 } from "./team.types.js";
 
 export class TeamService implements ITeamService {
   constructor(
-    private readonly _teamRepository: TeamRepositoryContract,
-    private readonly _playerRepository: PlayerRepositoryContract,
+    private readonly _teamRepository: ITeamRepository,
+    private readonly _playerRepository: IPlayerRepository,
     private readonly _settingsService: ISettingsService,
   ) {}
 

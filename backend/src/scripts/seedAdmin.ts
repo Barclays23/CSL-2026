@@ -3,6 +3,7 @@ import { env } from "../config/env.config.js";
 import { UserRepository } from "../modules/users/user.repository.js";
 import { UserService } from "../modules/users/user.service.js";
 
+
 async function seedInitialAdmin(): Promise<void> {
   await connectDatabase(env.MONGODB_URI);
   try {

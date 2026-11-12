@@ -1,6 +1,6 @@
-import type { MatchResponseDTO } from "../matches/match.types.js";
-import type { PlayerPublicDTO } from "../players/player.types.js";
-import type { TeamBriefDTO } from "../teams/team.types.js";
+import type { MatchEntity, MatchResponseDTO, PopulatedMatchEntity } from "../matches/match.types.js";
+import type { PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
+import type { TeamBriefDTO, TeamEntity } from "../teams/team.types.js";
 
 export interface StandingRowDTO {
   position: number;
@@ -82,6 +82,19 @@ export interface TeamStatisticsDTO {
     goalsAgainst: number;
     cleanSheets: number;
   };
+}
+
+
+
+export interface IStatisticsRepository {
+  findCompletedMatches(): Promise<MatchEntity[]>;
+  findCompletedGroupStageMatches(): Promise<MatchEntity[]>;
+  findAllTeams(): Promise<TeamEntity[]>;
+  findActiveTeams(): Promise<TeamEntity[]>;
+  findPlayersForTournamentStatistics(): Promise<PlayerStatisticsEntity[]>;
+  findUpcomingFixtureCards(limit: number): Promise<PopulatedMatchEntity[]>;
+  findRecentResultCards(limit: number): Promise<PopulatedMatchEntity[]>;
+  countScheduledFixtures(): Promise<number>;
 }
 
 export interface IStatisticsService {

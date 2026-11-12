@@ -102,7 +102,7 @@ export interface PlayerAssignmentInput {
   jerseyNo?: number | null;
 }
 
-export interface PlayerRepositoryContract {
+export interface IPlayerRepository {
   findPlayers(filter: PlayerListFilter, page: number, limit: number): Promise<{ items: PopulatedPlayerEntity[]; total: number }>;
   findPlayerById(playerId: string): Promise<PlayerEntity | null>;
   findPlayerWithTeamById(playerId: string): Promise<PopulatedPlayerEntity | null>;

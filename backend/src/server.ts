@@ -1,11 +1,14 @@
 import { env } from "./config/env.config.js";
 import { connectDatabase, disconnectDatabase } from "./config/database.config.js";
-import { services } from "./container/index.js";
+import { settingsService } from "./container/dependencies.js";
 import app from "./app.js";
+
+
+
 
 async function startServer(): Promise<void> {
   await connectDatabase(env.MONGODB_URI);
-  await services.settings.initializeTournamentSettings();
+  await settingsService.initializeTournamentSettings();
 
   const server = app.listen(env.PORT, () => {
     console.log(`CSL API running at http://localhost:${env.PORT}${env.API_PREFIX}`);

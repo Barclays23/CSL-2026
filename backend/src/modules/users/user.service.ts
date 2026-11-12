@@ -3,8 +3,13 @@ import { env } from "../../config/env.config.js";
 import { AppError } from "../../shared/errors/appError.js";
 import type { AdminUserDTO, IUserRepository, IUserService } from "./user.types.js";
 
+
+
+
 export class UserService implements IUserService {
-  constructor(private readonly _userRepository: IUserRepository) {}
+  constructor(
+    private readonly _userRepository: IUserRepository
+  ) {}
 
   async createInitialAdmin(): Promise<void> {
     if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {

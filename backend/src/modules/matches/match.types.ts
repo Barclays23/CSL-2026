@@ -118,7 +118,7 @@ export interface MatchListFilter {
   $or?: MatchListFilter[];
 }
 
-export interface MatchRepositoryContract {
+export interface IMatchRepository {
   findMatches(filter: MatchListFilter, page: number, limit: number): Promise<{ items: PopulatedMatchEntity[]; total: number }>;
   findMatchById(matchId: string): Promise<MatchEntity | null>;
   findMatchWithTeamsAndGoals(matchId: string): Promise<PopulatedMatchEntity | null>;

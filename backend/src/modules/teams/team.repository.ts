@@ -10,11 +10,11 @@ import type {
   TeamFields,
   TeamListFilter,
   TeamReferenceCounts,
-  TeamRepositoryContract,
+  ITeamRepository,
   TeamUpdateDTO,
 } from "./team.types.js";
 
-export class TeamRepository implements TeamRepositoryContract {
+export class TeamRepository implements ITeamRepository {
   async findTeams(
     filter: TeamListFilter,
     page: number,

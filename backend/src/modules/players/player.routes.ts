@@ -3,7 +3,7 @@ import { authenticate } from "../../middlewares/authenticate.middleware.js";
 import { optionalAuthenticate } from "../../middlewares/optionalAuthenticate.middleware.js";
 import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
-import { controllers } from "../../container/index.js";
+import { playerController } from "../../container/dependencies.js";
 import {
   playerAssignmentSchema,
   playerCreateSchema,
@@ -11,13 +11,19 @@ import {
   playerUpdateSchema,
 } from "./player.dto.js";
 
+
+
+
 export const playerRouter = Router();
 
-playerRouter.get("/", optionalAuthenticate, validate(playerQuerySchema, "query"), controllers.players.getPlayers);
-playerRouter.get("/:id", optionalAuthenticate, controllers.players.getPlayerById);
-playerRouter.post("/", authenticate, requireAdmin, validate(playerCreateSchema), controllers.players.createPlayer);
-playerRouter.patch("/:id", authenticate, requireAdmin, validate(playerUpdateSchema), controllers.players.updatePlayer);
-playerRouter.patch("/:id/assign", authenticate, requireAdmin, validate(playerAssignmentSchema), controllers.players.assignPlayerToTeam);
-playerRouter.patch("/:id/unsold", authenticate, requireAdmin, controllers.players.markPlayerUnsold);
-playerRouter.patch("/:id/deactivate", authenticate, requireAdmin, controllers.players.deactivatePlayer);
-playerRouter.delete("/:id", authenticate, requireAdmin, controllers.players.deletePlayer);
+
+
+
+playerRouter.get("/", optionalAuthenticate, validate(playerQuerySchema, "query"), playerController.getPlayers);
+playerRouter.get("/:id", optionalAuthenticate, playerController.getPlayerById);
+playerRouter.post("/", authenticate, requireAdmin, validate(playerCreateSchema), playerController.createPlayer);
+playerRouter.patch("/:id", authenticate, requireAdmin, validate(playerUpdateSchema), playerController.updatePlayer);
+playerRouter.patch("/:id/assign", authenticate, requireAdmin, validate(playerAssignmentSchema), playerController.assignPlayerToTeam);
+playerRouter.patch("/:id/unsold", authenticate, requireAdmin, playerController.markPlayerUnsold);
+playerRouter.patch("/:id/deactivate", authenticate, requireAdmin, playerController.deactivatePlayer);
+playerRouter.delete("/:id", authenticate, requireAdmin, playerController.deletePlayer);

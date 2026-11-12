@@ -3,7 +3,7 @@ import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
 import type { ISettingsService } from "../settings/settings.types.js";
-import type { TeamRepositoryContract } from "../teams/team.types.js";
+import type { ITeamRepository } from "../teams/team.types.js";
 import type { PlayerAssignmentInput } from "./player.dto.js";
 import type {
   IPlayerService,
@@ -14,7 +14,7 @@ import type {
   PlayerListFilter,
   PlayerPublicDTO,
   PlayerQueryDTO,
-  PlayerRepositoryContract,
+  IPlayerRepository,
   PlayerResponseDTO,
   PlayerUpdateDTO,
   PopulatedPlayerEntity,
@@ -22,8 +22,8 @@ import type {
 
 export class PlayerService implements IPlayerService {
   constructor(
-    private readonly _playerRepository: PlayerRepositoryContract,
-    private readonly _teamRepository: TeamRepositoryContract,
+    private readonly _playerRepository: IPlayerRepository,
+    private readonly _teamRepository: ITeamRepository,
     private readonly _settingsService: ISettingsService,
   ) {}
 

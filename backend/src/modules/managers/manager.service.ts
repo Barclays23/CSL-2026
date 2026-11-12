@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
-import type { TeamRepositoryContract } from "../teams/team.types.js";
+import type { ITeamRepository } from "../teams/team.types.js";
 import type {
   AdminManagerDTO,
   IManagerService,
@@ -9,7 +9,7 @@ import type {
   ManagerFields,
   ManagerListFilter,
   ManagerQueryDTO,
-  ManagerRepositoryContract,
+  IManagerRepository,
   ManagerResponseDTO,
   ManagerUpdateDTO,
   PopulatedManagerEntity,
@@ -19,8 +19,8 @@ import type { PaginatedResult } from "../../shared/types/common.types.js";
 
 export class ManagerService implements IManagerService {
   constructor(
-    private readonly _managerRepository: ManagerRepositoryContract,
-    private readonly _teamRepository: TeamRepositoryContract,
+    private readonly _managerRepository: IManagerRepository,
+    private readonly _teamRepository: ITeamRepository,
   ) {}
 
   async getManagers(query: ManagerQueryDTO, isAdmin: boolean): Promise<PaginatedResult<ManagerResponseDTO>> {
