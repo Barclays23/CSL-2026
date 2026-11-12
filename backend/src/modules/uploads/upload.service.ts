@@ -1,6 +1,7 @@
 import { cloudinary, cloudinaryReady } from "../../config/cloudinary.config.js";
 import { AppError } from "../../shared/errors/appError.js";
-import type { ImageUploadResult, ImageUploadFile, IUploadService } from "./upload.types.js";
+import type { IUploadService } from "./upload.interfaces.js";
+import type { ImageUploadResult, ImageUploadFile } from "./upload.types.js";
 import type { UploadPurpose } from "./upload.dto.js";
 import { appConfig } from "../../config/env.config.js";
 
