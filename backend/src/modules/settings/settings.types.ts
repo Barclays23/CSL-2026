@@ -35,8 +35,10 @@ export interface SettingsEntity extends SettingsFields {
 /** JSON response shape returned by the Settings API. */
 
 
-export type SettingsUpdateDTO = SettingsUpdateInput;
+
 
 export type { ISettingsRepository, ISettingsService, ISettingsController } from "./settings.interfaces.js";
 
 export type { SettingsResponseDTO } from "./settings.dto.js";
+
+export type { SettingsUpdateDTO } from "./settings.dto.js";
