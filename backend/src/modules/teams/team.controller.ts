@@ -11,7 +11,15 @@ export class TeamController implements ITeamController {
   constructor(
     private readonly _teamService: ITeamService,
     private readonly _statisticsService: IStatisticsService,
-  ) {}
+  ) {
+    this.getTeams = this.getTeams.bind(this);
+    this.getTeamById = this.getTeamById.bind(this);
+    this.getTeamAuctionSummary = this.getTeamAuctionSummary.bind(this);
+    this.getTeamStatistics = this.getTeamStatistics.bind(this);
+    this.createTeam = this.createTeam.bind(this);
+    this.updateTeam = this.updateTeam.bind(this);
+    this.deleteTeam = this.deleteTeam.bind(this);
+  }
 
   async getTeams(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
