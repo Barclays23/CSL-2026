@@ -14,9 +14,11 @@ import {
   managerCreateSchema,
   managerQuerySchema,
   managerUpdateSchema,
-  type ManagerCreateInput,
-  type ManagerQueryInput,
-  type ManagerUpdateInput,
+} from "./manager.schema.js";
+import type {
+  ManagerCreateInput,
+  ManagerQueryInput,
+  ManagerUpdateInput,
 } from "./manager.dto.js";
 
 
