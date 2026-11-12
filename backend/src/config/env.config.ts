@@ -4,13 +4,15 @@ import { z } from "zod";
 const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(5000),
-  API_PREFIX: z.string().default("/api")
-    .transform((value) => (value.startsWith("/") ? value : "/" + value).replace(/\/+$/, "")),
+  API_PREFIX: z.string().default("/api").transform((value) => {
+    const normalizedPrefix = value.startsWith("/") ? value : "/" + value;
+    return normalizedPrefix.replace(/\/+$/, "");
+  }),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   CLIENT_URL: z.url().default("http://localhost:5173"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must contain at least 32 characters"),
   JWT_EXPIRES_IN: z.enum(["15m", "30m", "1h", "1d", "7d"]).default("1d"),
-    .transform((value) => (value.startsWith("/") ? value : "/" + value).replace(/\/+$/, "")),
+  COOKIE_SECURE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
   ADMIN_NAME: z.string().default("CSL Administrator"),
   ADMIN_EMAIL: z.email().optional(),
