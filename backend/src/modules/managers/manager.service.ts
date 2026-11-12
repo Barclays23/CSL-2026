@@ -2,19 +2,8 @@ import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
 import type { ITeamRepository } from "../teams/team.types.js";
-import type {
-  AdminManagerDTO,
-  IManagerService,
-  ManagerCreateDTO,
-  ManagerFields,
-  ManagerListFilter,
-  ManagerQueryDTO,
-  IManagerRepository,
-  ManagerResponseDTO,
-  ManagerUpdateDTO,
-  PopulatedManagerEntity,
-  PublicManagerDTO,
-} from "./manager.types.js";
+import type { IManagerService, IManagerRepository } from "./manager.interfaces.js";
+import type { AdminManagerDTO, ManagerCreateDTO, ManagerFields, ManagerListFilter, ManagerQueryDTO, ManagerResponseDTO, ManagerUpdateDTO, PopulatedManagerEntity, PublicManagerDTO } from "./manager.types.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 
 export class ManagerService implements IManagerService {
