@@ -1,3 +1,4 @@
+import type { AuctionState, SettingsFields, SettingsEntity, SettingsUpdateDTO } from "./settings.types.js";
 import type { Types } from "mongoose";
 import type { SettingsUpdateInput } from "./settings.dto.js";
 
