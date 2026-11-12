@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env.config.js";
 import { AppError } from "../../shared/errors/appError.js";
-import { UserRepository } from "../_userRepo/user.repository.js";
+import { UserRepository } from "../users/user.repository.js";
 export class AuthService {
   constructor(private readonly _userRepo:UserRepository){}
   async login(email:string,password:string){

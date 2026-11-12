@@ -1,22 +1,65 @@
-import type { QueryFilter, Model, PipelineStage, SortOrder } from "mongoose";
-export type Row=Record<string,unknown>;
-export class CrudRepository {
-  private readonly model:Model<Row>;
-  constructor(model:unknown){this.model=model as Model<Row>;}
-  async list(filter:Row,page=1,limit=50,sort:Record<string,SortOrder>={createdAt:-1}):Promise<{items:Row[];total:number}>{
-    const query=filter as QueryFilter<Row>;
-    const [items,total]=await Promise.all([
-      this.model.find(query).sort(sort).skip((page-1)*limit).limit(limit).lean().exec(),
-      this.model.countDocuments(query).exec()
+import type {
+  FilterQuery,
+  HydratedDocument,
+  Model,
+  PipelineStage,
+  SortOrder,
+  UpdateQuery,
+} from "mongoose";
+
+/**
+ * Generic persistence base.
+ * Feature repositories should expose descriptive, domain-specific methods
+ * and delegate common MongoDB operations to this class.
+ */
+export abstract class CrudRepository<TEntity extends object> {
+  protected constructor(protected readonly model: Model<TEntity>) {}
+
+  async list(
+    filter: FilterQuery<TEntity> = {},
+    page = 1,
+    limit = 50,
+    sort: Record<string, SortOrder> = { createdAt: -1 },
+  ): Promise<{ items: HydratedDocument<TEntity>[]; total: number }> {
+    const [items, total] = await Promise.all([
+      this.model.find(filter).sort(sort).skip((page - 1) * limit).limit(limit).exec(),
+      this.model.countDocuments(filter).exec(),
     ]);
-    return {items:items as unknown as Row[],total};
+    return { items, total };
   }
-  async findById(id:string):Promise<Row|null>{return await this.model.findById(id).lean().exec() as unknown as Row|null;}
-  async findOne(filter:Row):Promise<Row|null>{return await this.model.findOne(filter as QueryFilter<Row>).lean().exec() as unknown as Row|null;}
-  async count(filter:Row={}):Promise<number>{return this.model.countDocuments(filter as QueryFilter<Row>).exec();}
-  async create(data:Row):Promise<Row>{return await this.model.create(data) as unknown as Row;}
-  async update(id:string,data:Row):Promise<Row|null>{return await this.model.findByIdAndUpdate(id,{$set:data},{new:true,runValidators:true}).lean().exec() as unknown as Row|null;}
-  async remove(id:string):Promise<Row|null>{return await this.model.findByIdAndDelete(id).lean().exec() as unknown as Row|null;}
-  async aggregate<T extends Row>(pipeline:PipelineStage[]):Promise<T[]>{return await this.model.aggregate<T>(pipeline).exec();}
-  get native():Model<Row>{return this.model;}
+
+  async findById(id: string): Promise<HydratedDocument<TEntity> | null> {
+    return this.model.findById(id).exec();
+  }
+
+  async findOne(filter: FilterQuery<TEntity>): Promise<HydratedDocument<TEntity> | null> {
+    return this.model.findOne(filter).exec();
+  }
+
+  async count(filter: FilterQuery<TEntity> = {}): Promise<number> {
+    return this.model.countDocuments(filter).exec();
+  }
+
+  async create(data: Partial<TEntity>): Promise<HydratedDocument<TEntity>> {
+    return this.model.create(data);
+  }
+
+  async update(id: string, data: UpdateQuery<TEntity>): Promise<HydratedDocument<TEntity> | null> {
+    return this.model.findByIdAndUpdate(id, { $set: data }, {
+      new: true,
+      runValidators: true,
+    }).exec();
+  }
+
+  async remove(id: string): Promise<HydratedDocument<TEntity> | null> {
+    return this.model.findByIdAndDelete(id).exec();
+  }
+
+  async aggregate<TResult>(pipeline: PipelineStage[]): Promise<TResult[]> {
+    return this.model.aggregate<TResult>(pipeline).exec();
+  }
+
+  protected get nativeModel(): Model<TEntity> {
+    return this.model;
+  }
 }

@@ -1,4 +1,5 @@
 import { MatchModel } from "./match.model.js";
+import type { MatchRecord } from "./match.model.js";
 import { CrudRepository } from "../../shared/utils/crud.repository.js";
 const publicPopulates=[
   {path:"team1Ref",select:"name shortName logo groupName"},
@@ -7,7 +8,7 @@ const publicPopulates=[
   {path:"goals.scorerRef",select:"name position jerseyNo profilePic teamRef"},
   {path:"goals.ownGoalPlayerRef",select:"name position jerseyNo profilePic teamRef"}
 ];
-export class MatchRepository extends CrudRepository {
+export class MatchRepository extends CrudRepository<MatchRecord> {
   constructor(){super(MatchModel);}
   async listPopulated(filter:Record<string,unknown>,page=1,limit=20){
     const [items,total]=await Promise.all([

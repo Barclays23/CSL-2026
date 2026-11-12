@@ -1,6 +1,7 @@
 import { ManagerModel } from "./manager.model.js";
+import type { ManagerRecord } from "./manager.model.js";
 import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class ManagerRepository extends CrudRepository {
+export class ManagerRepository extends CrudRepository<ManagerRecord> {
   constructor(){super(ManagerModel);}
   async listPopulated(filter:Record<string,unknown>,page:number,limit:number){
     const [items,total]=await Promise.all([

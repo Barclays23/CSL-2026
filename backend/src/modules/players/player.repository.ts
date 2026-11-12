@@ -1,7 +1,8 @@
 import { MatchModel } from "../matches/match.model.js";
 import { PlayerModel } from "./player.model.js";
+import type { PlayerRecord } from "./player.model.js";
 import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class PlayerRepository extends CrudRepository {
+export class PlayerRepository extends CrudRepository<PlayerRecord> {
   constructor(){super(PlayerModel);}
   async listPlayers(filter:Record<string,unknown>,page=1,limit=10,sort:Record<string,1|-1>={name:1}){
     const [items,total]=await Promise.all([
