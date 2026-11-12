@@ -31,6 +31,15 @@ export interface SettingsEntity extends SettingsFields {
   updatedAt: Date;
 }
 
+/** JSON response shape returned by the Settings API. */
+export interface SettingsResponseDTO extends Omit<SettingsFields, "startDate" | "endDate" | "auctionCompletedAt"> {
+  _id: string;
+  startDate: string;
+  endDate: string;
+  auctionCompletedAt: string | null;
+  updatedAt: string;
+}
+
 export type SettingsUpdateDTO = SettingsUpdateInput;
 
 export interface ISettingsRepository {
