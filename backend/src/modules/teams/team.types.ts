@@ -38,8 +38,8 @@ export interface TeamBriefDTO {
 
 export interface TeamDTO extends TeamFields {
   _id: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type TeamCreateDTO = TeamCreateInput;
