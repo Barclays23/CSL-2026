@@ -1,24 +1,23 @@
-import { z } from "zod";
+import type { Asset } from "../../shared/types/common.types.js";
+import type { SponsorStatus } from "./sponsor.types.js";
 
-export const sponsorCreateSchema = z.object({
-  name: z.string().trim().min(2).max(100),
-  logo: z.object({ url: z.url(), publicId: z.string().min(1) }).nullable().optional(),
-  tier: z.string().trim().max(40).nullable().optional(),
-  website: z.union([z.url(), z.literal(""), z.null()]).optional().transform((value) => value || null),
-  contactPerson: z.string().trim().max(80).nullable().optional(),
-  contactMobile: z.string().trim().max(20).nullable().optional(),
-  notes: z.string().trim().max(500).nullable().optional(),
-  status: z.enum(["active", "inactive"]).default("active"),
-}).strict();
-
-export const sponsorUpdateSchema = sponsorCreateSchema.partial().strict();
-export const getSponsorsQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
-  search: z.string().trim().max(100).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
-}).strict();
-
-export type SponsorCreateDTO = z.infer<typeof sponsorCreateSchema>;
-export type SponsorUpdateDTO = z.infer<typeof sponsorUpdateSchema>;
-export type GetSponsorsQueryDTO = z.infer<typeof getSponsorsQuerySchema>;
+export interface CreateSponsorDto {
+  name: string;
+  logo?: Asset | null;
+  tier?: string | null;
+  website?: string | null;
+  contactPerson?: string | null;
+  contactMobile?: string | null;
+  notes?: string | null;
+  status?: SponsorStatus;
+}
+export type UpdateSponsorDto = Partial<CreateSponsorDto>;
+export interface SponsorQueryDto {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: SponsorStatus;
+}
+export type SponsorCreateDTO = CreateSponsorDto;
+export type SponsorUpdateDTO = UpdateSponsorDto;
+export type GetSponsorsQueryDTO = SponsorQueryDto;
