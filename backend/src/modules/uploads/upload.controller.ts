@@ -3,12 +3,8 @@ import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { UPLOAD_MESSAGES } from "../../shared/constants/messages.constants.js";
 import { AppError } from "../../shared/errors/appError.js";
-import type {
-  IUploadController,
-  IUploadService,
-  ImageUploadResult,
-  ImageUploadFile,
-} from "./upload.types.js";
+import type { IUploadController, IUploadService } from "./upload.interfaces.js";
+import type { ImageUploadResult, ImageUploadFile } from "./upload.types.js";
 import { imageUploadSchema, type UploadPurpose } from "./upload.dto.js";
 
 
