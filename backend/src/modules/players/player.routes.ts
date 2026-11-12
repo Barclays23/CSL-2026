@@ -1,0 +1,13 @@
+import { Router } from "express";
+import { authenticate } from "../../middlewares/authenticate.middleware.js";
+import { optionalAuthenticate } from "../../middlewares/optionalAuthenticate.middleware.js";
+import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { controllers } from "../../container/index.js";
+import { playerCreateSchema,playerQuerySchema,playerUpdateSchema } from "./player.dto.js";
+export const playerRouter=Router();
+playerRouter.get("/",optionalAuthenticate,validate(playerQuerySchema,"query"),controllers.players.list);
+playerRouter.get("/:id",optionalAuthenticate,controllers.players.get);
+playerRouter.post("/",authenticate,requireAdmin,validate(playerCreateSchema),controllers.players.create);
+playerRouter.patch("/:id",authenticate,requireAdmin,validate(playerUpdateSchema),controllers.players.update);
+playerRouter.delete("/:id",authenticate,requireAdmin,controllers.players.remove);

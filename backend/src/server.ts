@@ -1,36 +1,20 @@
 import { env } from "./config/env.config.js";
-import { connectDatabase, disconnectDatabase } from "./config/database.config.js";
+import { connectDatabase,disconnectDatabase } from "./config/database.config.js";
+import { services } from "./container/index.js";
 import app from "./app.js";
 
-async function startServer(): Promise<void> {
+async function startServer(){
   await connectDatabase(env.MONGODB_URI);
-
-  const server = app.listen(env.PORT, () => {
-    console.log(`CSL API listening on http://localhost:${env.PORT}${env.API_PREFIX}`);
-  });
-
-  const shutdown = (signal: string) => {
-    console.log(`${signal} received. Closing CSL API...`);
-    server.close(async (error) => {
-      if (error) {
-        console.error("HTTP server shutdown failed:", error);
-        process.exitCode = 1;
-      }
-
-      try {
-        await disconnectDatabase();
-      } catch (databaseError) {
-        console.error("MongoDB shutdown failed:", databaseError);
-        process.exitCode = 1;
-      }
+  await services.settings.initialize();
+  const server=app.listen(env.PORT,()=>console.log(`CSL API running at http://localhost:${env.PORT}${env.API_PREFIX}`));
+  const shutdown=(signal:string)=>{
+    console.log(`${signal} received; shutting down`);
+    server.close(async(error)=>{
+      if(error){console.error("HTTP shutdown error",error);process.exitCode=1;}
+      try{await disconnectDatabase();}catch(dbError){console.error("MongoDB shutdown error",dbError);process.exitCode=1;}
     });
   };
-
-  process.once("SIGINT", () => shutdown("SIGINT"));
-  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT",()=>shutdown("SIGINT"));
+  process.once("SIGTERM",()=>shutdown("SIGTERM"));
 }
-
-startServer().catch((error: unknown) => {
-  console.error("Unable to start CSL API:", error);
-  process.exitCode = 1;
-});
+startServer().catch(error=>{console.error("Unable to start CSL backend",error);process.exitCode=1;});
