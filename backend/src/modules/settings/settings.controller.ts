@@ -7,7 +7,10 @@ import { mapSettingsEntityToResponseDTO } from "./settings.mapper.js";
 import { settingsUpdateSchema, type SettingsUpdateInput } from "./settings.dto.js";
 
 export class SettingsController implements ISettingsController {
-  constructor(private readonly _settingsService: ISettingsService) {}
+  constructor(private readonly _settingsService: ISettingsService) {
+    this.getTournamentSettings = this.getTournamentSettings.bind(this);
+    this.updateTournamentSettings = this.updateTournamentSettings.bind(this);
+  }
 
   async getTournamentSettings(_request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
