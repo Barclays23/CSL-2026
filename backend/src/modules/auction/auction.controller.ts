@@ -7,7 +7,12 @@ import { mapSettingsEntityToResponseDTO } from "../settings/settings.mapper.js";
 import type { SettingsResponseDTO, SettingsEntity } from "../settings/settings.types.js";
 
 export class AuctionController implements IAuctionController {
-  constructor(private readonly _auctionService: IAuctionService) {}
+  constructor(private readonly _auctionService: IAuctionService) {
+    this.startAuction = this.startAuction.bind(this);
+    this.completeAuction = this.completeAuction.bind(this);
+    this.reopenAuction = this.reopenAuction.bind(this);
+    this.validateAuctionCompletion = this.validateAuctionCompletion.bind(this);
+  }
 
   async startAuction(_request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
