@@ -1,8 +1,25 @@
 import { UserModel } from "./user.model.js";
-import type { UserRecord } from "./user.model.js";
-import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class UserRepository extends CrudRepository<UserRecord> {
-  constructor(){super(UserModel);}
-  async findByEmail(email:string){return UserModel.findOne({email}).select("+passwordHash").lean().exec();}
-  async findByIdWithPassword(id:string){return UserModel.findById(id).select("+passwordHash").lean().exec();}
+import type { UserEntity, IUserRepository, AdminUserCreateDTO } from "./user.types.js";
+
+export class UserRepository implements IUserRepository {
+  async findUserByEmail(email: string): Promise<UserEntity | null> {
+    return UserModel.findOne({ email }).select("+passwordHash").lean<UserEntity>().exec();
+  }
+
+  async findUserById(userId: string): Promise<UserEntity | null> {
+    return UserModel.findById(userId).select("+passwordHash").lean<UserEntity>().exec();
+  }
+
+  async createAdminUser(data: AdminUserCreateDTO & { passwordHash: string }): Promise<UserEntity> {
+    const createdUser = await UserModel.create({
+      name: data.name,
+      email: data.email,
+      passwordHash: data.passwordHash,
+      role: "admin",
+      status: "active",
+    });
+    const savedUser = await this.findUserById(String(createdUser._id));
+    if (!savedUser) throw new Error("Created administrator could not be retrieved");
+    return savedUser;
+  }
 }
