@@ -75,14 +75,12 @@ export interface PlayerListFilter {
 
 
 
-export interface PlayerAssignmentInput {
-  teamRef: string;
-  auctionPrice: number;
-  jerseyNo?: number | null;
-}
+
 
 export type { IPlayerRepository, IPlayerService, IPlayerController } from "./player.interfaces.js";
 
 export type { PlayerPublicDTO, PlayerAdminDTO, PlayerResponseDTO, PlayerAuctionCountsDTO } from "./player.dto.js";
 
 export type { PlayerCreateDTO, PlayerUpdateDTO, PlayerQueryDTO } from "./player.dto.js";
+
+export type { PlayerAssignmentInput } from "./player.dto.js";
