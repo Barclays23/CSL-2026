@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { Asset } from "../../shared/types/common.types.js";
 import type { SponsorCreateDTO, SponsorUpdateDTO, GetSponsorsQueryDTO } from "./sponsor.dto.js";
 
@@ -38,13 +39,6 @@ export interface SponsorListResult {
   total: number;
 }
 
-export interface PaginatedSponsors {
-  items: SponsorResponseDTO[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 export interface ISponsorRepository {
   findSponsors(filter: SponsorListFilter, page: number, limit: number, includePrivateFields: boolean): Promise<SponsorListResult>;
   findSponsorById(sponsorId: string, includePrivateFields: boolean): Promise<SponsorEntity | null>;
@@ -54,7 +48,7 @@ export interface ISponsorRepository {
 }
 
 export interface ISponsorService {
-  getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedSponsors>;
+  getSponsors(query: SponsorQuery, isAdmin: boolean): Promise<PaginatedResult<SponsorResponseDTO>>;
   getSponsorById(sponsorId: string, isAdmin: boolean): Promise<SponsorResponseDTO>;
   createSponsor(data: SponsorCreateData): Promise<AdminSponsorDTO>;
   updateSponsor(sponsorId: string, data: SponsorUpdateData): Promise<AdminSponsorDTO>;
