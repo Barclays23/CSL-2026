@@ -1,56 +1,71 @@
-import type { RequestHandler } from "express";
-import { asyncHandler } from "../../shared/utils/asyncHandler.js";
-import { sendSuccess } from "../../shared/responses/response.helper.js";
-import type { ITeamController, ITeamService } from "./team.types.js";
-import type { IStatisticsService } from "../statistics/statistics.types.js";
-import { teamCreateSchema, teamQuerySchema, teamUpdateSchema } from "./team.dto.js";
+import type { Request, Response, NextFunction } from "express";
+import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
+import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { TEAM_MESSAGES } from "../../shared/constants/messages.constants.js";
+import type { PaginatedResult } from "../../shared/types/common.types.js";
+import type { ITeamController, ITeamService, TeamDTO, TeamAuctionSummaryDTO } from "./team.types.js";
+import type { IStatisticsService, TeamStatisticsDTO } from "../statistics/statistics.types.js";
+import { teamCreateSchema, teamQuerySchema, teamUpdateSchema, type TeamCreateInput, type TeamQueryInput, type TeamUpdateInput } from "./team.dto.js";
 
 export class TeamController implements ITeamController {
   constructor(
-    private readonly teamService: ITeamService,
-    private readonly statisticsService: IStatisticsService,
+    private readonly _teamService: ITeamService,
+    private readonly _statisticsService: IStatisticsService,
   ) {}
 
-  getTeams: RequestHandler = asyncHandler(async (request, response) => {
-    const query = teamQuerySchema.parse(request.query);
-    const result = await this.teamService.getTeams(query, Boolean(request.user));
-    sendSuccess(response, result.items, "Teams fetched", 200, {
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-      totalPages: Math.ceil(result.total / result.limit),
-    });
-  });
+  async getTeams(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const query: TeamQueryInput = teamQuerySchema.parse(request.query);
+      const result: PaginatedResult<TeamDTO> = await this._teamService.getTeams(query, Boolean(request.user));
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamDTO[]>(TEAM_MESSAGES.TEAMS_FETCHED, result.items, result.pagination));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getTeamById: RequestHandler = asyncHandler(async (request, response) => {
-    const team = await this.teamService.getTeamById(String(request.params.id));
-    sendSuccess(response, team, "Team fetched");
-  });
+  async getTeamById(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const teamId: string = request.params.id;
+      const team: TeamDTO = await this._teamService.getTeamById(teamId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamDTO>(TEAM_MESSAGES.TEAM_FETCHED, team));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getTeamAuctionSummary: RequestHandler = asyncHandler(async (_request, response) => {
-    const summary = await this.teamService.getTeamAuctionSummary();
-    sendSuccess(response, summary, "Auction summary fetched");
-  });
+  async getTeamAuctionSummary(_request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const summary: TeamAuctionSummaryDTO = await this._teamService.getTeamAuctionSummary();
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamAuctionSummaryDTO>(TEAM_MESSAGES.AUCTION_SUMMARY_FETCHED, summary));
+    } catch (error: unknown) { next(error); }
+  }
 
-  getTeamStatistics: RequestHandler = asyncHandler(async (request, response) => {
-    const statistics = await this.statisticsService.getTeamStatistics(String(request.params.id));
-    sendSuccess(response, statistics, "Team statistics fetched");
-  });
+  async getTeamStatistics(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const teamId: string = request.params.id;
+      const statistics: TeamStatisticsDTO = await this._statisticsService.getTeamStatistics(teamId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamStatisticsDTO>(TEAM_MESSAGES.TEAM_STATISTICS_FETCHED, statistics));
+    } catch (error: unknown) { next(error); }
+  }
 
-  createTeam: RequestHandler = asyncHandler(async (request, response) => {
-    const input = teamCreateSchema.parse(request.body);
-    const team = await this.teamService.createTeam(input);
-    sendSuccess(response, team, "Team created", 201);
-  });
+  async createTeam(request: Request, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const input: TeamCreateInput = teamCreateSchema.parse(request.body);
+      const team: TeamDTO = await this._teamService.createTeam(input);
+      response.status(HTTP_STATUS.CREATED).json(ApiResponse.success<TeamDTO>(TEAM_MESSAGES.TEAM_CREATED, team));
+    } catch (error: unknown) { next(error); }
+  }
 
-  updateTeam: RequestHandler = asyncHandler(async (request, response) => {
-    const input = teamUpdateSchema.parse(request.body);
-    const team = await this.teamService.updateTeam(String(request.params.id), input);
-    sendSuccess(response, team, "Team updated");
-  });
+  async updateTeam(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const teamId: string = request.params.id;
+      const input: TeamUpdateInput = teamUpdateSchema.parse(request.body);
+      const team: TeamDTO = await this._teamService.updateTeam(teamId, input);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<TeamDTO>(TEAM_MESSAGES.TEAM_UPDATED, team));
+    } catch (error: unknown) { next(error); }
+  }
 
-  deleteTeam: RequestHandler = asyncHandler(async (request, response) => {
-    await this.teamService.deleteTeam(String(request.params.id));
-    sendSuccess(response, null, "Team deleted");
-  });
+  async deleteTeam(request: Request<{ id: string }>, response: Response, next: NextFunction): Promise<void> {
+    try {
+      const teamId: string = request.params.id;
+      await this._teamService.deleteTeam(teamId);
+      response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(TEAM_MESSAGES.TEAM_DELETED, null));
+    } catch (error: unknown) { next(error); }
+  }
 }
