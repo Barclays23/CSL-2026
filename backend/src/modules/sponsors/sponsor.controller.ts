@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
+import { getRequiredRouteParam } from "../../shared/utils/routeParams.js";
 import { SPONSOR_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { ISponsorController, ISponsorService, SponsorResponseDTO, AdminSponsorDTO } from "./sponsor.types.js";
@@ -25,7 +26,7 @@ export class SponsorController implements ISponsorController {
 
   async getSponsorById(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const sponsorId: string = request.params.id;
+      const sponsorId: string = getRequiredRouteParam(request.params.id, "id");
       const sponsor: SponsorResponseDTO = await this._sponsorService.getSponsorById(sponsorId, Boolean(request.user));
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<SponsorResponseDTO>(SPONSOR_MESSAGES.SPONSOR_FETCHED, sponsor));
     } catch (error: unknown) { next(error); }
@@ -41,7 +42,7 @@ export class SponsorController implements ISponsorController {
 
   async updateSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const sponsorId: string = request.params.id;
+      const sponsorId: string = getRequiredRouteParam(request.params.id, "id");
       const input: SponsorUpdateDTO = sponsorUpdateSchema.parse(request.body);
       const sponsor: AdminSponsorDTO = await this._sponsorService.updateSponsor(sponsorId, input);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success(SPONSOR_MESSAGES.SPONSOR_UPDATED, sponsor));
@@ -50,7 +51,7 @@ export class SponsorController implements ISponsorController {
 
   async deleteSponsor(request: Request, response: Response, next: NextFunction): Promise<void> {
     try {
-      const sponsorId: string = request.params.id;
+      const sponsorId: string = getRequiredRouteParam(request.params.id, "id");
       await this._sponsorService.deleteSponsor(sponsorId);
       response.status(HTTP_STATUS.OK).json(ApiResponse.success<null>(SPONSOR_MESSAGES.SPONSOR_DELETED, null));
     } catch (error: unknown) { next(error); }
