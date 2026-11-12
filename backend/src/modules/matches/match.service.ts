@@ -52,9 +52,12 @@ export class MatchService implements IMatchService {
     const result = await this.matchRepository.findMatches(filter, query.page, query.limit);
     return {
       items: result.items.map((match) => this.mapMatchToResponseDTO(match)),
-      total: result.total,
-      page: query.page,
-      limit: query.limit,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   }
 
