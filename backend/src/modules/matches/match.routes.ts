@@ -3,7 +3,7 @@ import { authenticate } from "../../middlewares/authenticate.middleware.js";
 import { requireAdmin } from "../../middlewares/authorizeAdmin.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { matchController } from "../../container/dependencies.js";
-import { goalSchema, matchCreateSchema, matchQuerySchema, matchUpdateSchema } from "./match.dto.js";
+import { goalSchema, matchCreateSchema, matchQuerySchema, matchUpdateSchema } from "./match.schema.js";
 
 
 
