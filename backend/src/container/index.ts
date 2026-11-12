@@ -30,6 +30,46 @@ import { StatisticsController } from "../modules/statistics/statistics.controlle
 import { AuctionController } from "../modules/auction/auction.controller.js";
 import { UploadController } from "../modules/uploads/upload.controller.js";
 
+import type { IUserService } from "../modules/users/user.types.js";
+import type { IAuthService, IAuthController } from "../modules/auth/auth.types.js";
+import type { ISettingsService, ISettingsController } from "../modules/settings/settings.types.js";
+import type { IPlayerService, IPlayerController } from "../modules/players/player.types.js";
+import type { ITeamService, ITeamController } from "../modules/teams/team.types.js";
+import type { IManagerService, IManagerController } from "../modules/managers/manager.types.js";
+import type { ISponsorService, ISponsorController } from "../modules/sponsors/sponsor.types.js";
+import type { IMatchService, IMatchController } from "../modules/matches/match.types.js";
+import type { IStatisticsService, IStatisticsController } from "../modules/statistics/statistics.types.js";
+import type { IAuctionService, IAuctionController } from "../modules/auction/auction.types.js";
+import type { IUploadService, IUploadController } from "../modules/uploads/upload.types.js";
+
+interface ServiceContainer {
+  users: IUserService;
+  auth: IAuthService;
+  settings: ISettingsService;
+  players: IPlayerService;
+  teams: ITeamService;
+  managers: IManagerService;
+  sponsors: ISponsorService;
+  matches: IMatchService;
+  statistics: IStatisticsService;
+  auction: IAuctionService;
+  uploads: IUploadService;
+}
+
+interface ControllerContainer {
+  auth: IAuthController;
+  settings: ISettingsController;
+  players: IPlayerController;
+  teams: ITeamController;
+  managers: IManagerController;
+  sponsors: ISponsorController;
+  matches: IMatchController;
+  statistics: IStatisticsController;
+  auction: IAuctionController;
+  upload: IUploadController;
+}
+
+// Repositories are constructed once and shared through the application composition root.
 const userRepository = new UserRepository();
 const settingsRepository = new SettingsRepository();
 const playerRepository = new PlayerRepository();
@@ -39,6 +79,7 @@ const sponsorRepository = new SponsorRepository();
 const matchRepository = new MatchRepository();
 const statisticsRepository = new StatisticsRepository();
 
+// Services receive repository/service contracts, not Express request objects.
 const settingsService = new SettingsService(settingsRepository);
 const userService = new UserService(userRepository);
 const authService = new AuthService(userRepository);
@@ -56,7 +97,7 @@ const statisticsService = new StatisticsService(
 const auctionService = new AuctionService(settingsService, teamRepository, playerRepository);
 const uploadService = new UploadService();
 
-export const services = {
+export const services: ServiceContainer = {
   users: userService,
   auth: authService,
   settings: settingsService,
@@ -70,7 +111,7 @@ export const services = {
   uploads: uploadService,
 };
 
-export const controllers = {
+export const controllers: ControllerContainer = {
   auth: new AuthController(services.auth),
   settings: new SettingsController(services.settings),
   players: new PlayerController(services.players),
