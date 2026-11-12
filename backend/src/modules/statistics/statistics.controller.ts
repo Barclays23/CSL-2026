@@ -1,10 +1,23 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { StatisticsService } from "./statistics.service.js";
-export class StatisticsController {
-  constructor(private readonly _statisticsService:StatisticsService){}
-  dashboard:RequestHandler=asyncHandler(async(_req,res)=>sendSuccess(res,await this._statisticsService.getDashboardStatistics(),"Dashboard fetched"));
-  standings:RequestHandler=asyncHandler(async(_req,res)=>sendSuccess(res,await this._statisticsService.getStandings(),"Standings fetched"));
-  topScorers:RequestHandler=asyncHandler(async(_req,res)=>sendSuccess(res,await this._statisticsService.getTopScorers(),"Top scorers fetched"));
+import type { IStatisticsController, IStatisticsService } from "./statistics.types.js";
+
+export class StatisticsController implements IStatisticsController {
+  constructor(private readonly statisticsService: IStatisticsService) {}
+
+  getDashboardStatistics: RequestHandler = asyncHandler(async (_request, response) => {
+    const dashboard = await this.statisticsService.getDashboardStatistics();
+    sendSuccess(response, dashboard, "Dashboard statistics fetched");
+  });
+
+  getGroupStandings: RequestHandler = asyncHandler(async (_request, response) => {
+    const standings = await this.statisticsService.getGroupStandings();
+    sendSuccess(response, standings, "Group standings fetched");
+  });
+
+  getTopScorers: RequestHandler = asyncHandler(async (_request, response) => {
+    const topScorers = await this.statisticsService.getTopScorers();
+    sendSuccess(response, topScorers, "Top scorers fetched");
+  });
 }

@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { MATCH_STATUSES, STAGES } from "@/constants/football";
-import { matchFormSchema, type MatchFormValues } from "@/schemas/match.schema";
+import { matchFormSchema, type MatchFormInput, type MatchFormValues } from "@/schemas/match.schema";
 import type { Match } from "@/types/match.types";
 import type { Team } from "@/types/team.types";
 import { toDateTimeInput } from "@/utils/formatDate";
 import { applyFieldErrors } from "@/utils/forms";
 import { refId } from "@/utils/refs";
+
 
 
 
@@ -26,8 +27,12 @@ export function MatchForm({
   submitting: boolean;
   onSubmit: (values: MatchFormValues) => Promise<void>;
 }) {
-  const form = useForm<MatchFormValues>({
-    resolver: zodResolver(matchFormSchema) as Resolver<MatchFormValues>,
+  const form = useForm<MatchFormInput, unknown, MatchFormValues>({
+    resolver: zodResolver(matchFormSchema) as unknown as Resolver<
+      MatchFormInput,
+      unknown,
+      MatchFormValues
+    >,
     defaultValues: {
       matchNo: match?.matchNo ?? "",
       stage: match?.stage ?? "group",

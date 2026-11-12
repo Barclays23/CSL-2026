@@ -34,3 +34,5 @@ export interface SponsorWrite {
   notes?: string | null;
   status: SponsorStatus;
 }
+
+export type SponsorResponse = PublicSponsor | AdminSponsor;

@@ -1,15 +1,56 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { TeamService } from "./team.service.js";
-import { StatisticsService } from "../statistics/statistics.service.js";
-export class TeamController {
-  constructor(private readonly _teamService:TeamService,private readonly _statisticsService:StatisticsService){}
-  list:RequestHandler=asyncHandler(async(req,res)=>{const r=await this._teamService.list(req.query as Record<string,unknown>,Boolean(req.user));sendSuccess(res,r.items,"Teams fetched",200,{page:r.page,limit:r.limit,total:r.total,totalPages:Math.ceil(r.total/r.limit)});});
-  get:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._teamService.get(String(req.params.id)),"Team fetched"));
-  auctionSummary:RequestHandler=asyncHandler(async(_req,res)=>sendSuccess(res,await this._teamService.auctionSummary(),"Auction summary fetched"));
-  stats:RequestHandler=asyncHandler(async(req,res)=>{const result=await this._statisticsService.getTeamStatistics(String(req.params.id));sendSuccess(res,result,"Team statistics fetched");});
-  create:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._teamService.create(req.body as Record<string,unknown>),"Team created",201));
-  update:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._teamService.update(String(req.params.id),req.body as Record<string,unknown>),"Team updated"));
-  remove:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._teamService.remove(String(req.params.id)),"Team deleted"));
+import type { ITeamController, ITeamService } from "./team.types.js";
+import type { IStatisticsService } from "../statistics/statistics.types.js";
+import { teamCreateSchema, teamQuerySchema, teamUpdateSchema } from "./team.dto.js";
+
+export class TeamController implements ITeamController {
+  constructor(
+    private readonly teamService: ITeamService,
+    private readonly statisticsService: IStatisticsService,
+  ) {}
+
+  getTeams: RequestHandler = asyncHandler(async (request, response) => {
+    const query = teamQuerySchema.parse(request.query);
+    const result = await this.teamService.getTeams(query, Boolean(request.user));
+    sendSuccess(response, result.items, "Teams fetched", 200, {
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / result.limit),
+    });
+  });
+
+  getTeamById: RequestHandler = asyncHandler(async (request, response) => {
+    const team = await this.teamService.getTeamById(String(request.params.id));
+    sendSuccess(response, team, "Team fetched");
+  });
+
+  getTeamAuctionSummary: RequestHandler = asyncHandler(async (_request, response) => {
+    const summary = await this.teamService.getTeamAuctionSummary();
+    sendSuccess(response, summary, "Auction summary fetched");
+  });
+
+  getTeamStatistics: RequestHandler = asyncHandler(async (request, response) => {
+    const statistics = await this.statisticsService.getTeamStatistics(String(request.params.id));
+    sendSuccess(response, statistics, "Team statistics fetched");
+  });
+
+  createTeam: RequestHandler = asyncHandler(async (request, response) => {
+    const input = teamCreateSchema.parse(request.body);
+    const team = await this.teamService.createTeam(input);
+    sendSuccess(response, team, "Team created", 201);
+  });
+
+  updateTeam: RequestHandler = asyncHandler(async (request, response) => {
+    const input = teamUpdateSchema.parse(request.body);
+    const team = await this.teamService.updateTeam(String(request.params.id), input);
+    sendSuccess(response, team, "Team updated");
+  });
+
+  deleteTeam: RequestHandler = asyncHandler(async (request, response) => {
+    await this.teamService.deleteTeam(String(request.params.id));
+    sendSuccess(response, null, "Team deleted");
+  });
 }

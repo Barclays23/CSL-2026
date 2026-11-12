@@ -1,30 +1,140 @@
+import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "../matches/match.model.js";
 import { PlayerModel } from "./player.model.js";
 import type { PlayerRecord } from "./player.model.js";
-import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class PlayerRepository extends CrudRepository<PlayerRecord> {
-  constructor(){super(PlayerModel);}
-  async listPlayers(filter:Record<string,unknown>,page=1,limit=10,sort:Record<string,1|-1>={name:1}){
-    const [items,total]=await Promise.all([
-      PlayerModel.find(filter as never).sort(sort).skip((page-1)*limit).limit(limit).populate({path:"teamRef",select:"name shortName logo groupName"}).lean().exec(),
-      PlayerModel.countDocuments(filter as never).exec()
+import type {
+  PlayerAuctionCountsDTO,
+  PlayerEntity,
+  PlayerFields,
+  PlayerListFilter,
+  PlayerRepositoryContract,
+  PopulatedPlayerEntity,
+} from "./player.types.js";
+
+interface AuctionSpendAggregationResult {
+  _id: null;
+  totalAmount: number;
+}
+
+export class PlayerRepository implements PlayerRepositoryContract {
+  async findPlayers(
+    filter: PlayerListFilter,
+    page: number,
+    limit: number,
+  ): Promise<{ items: PopulatedPlayerEntity[]; total: number }> {
+    const mongoFilter: QueryFilter<PlayerRecord> = filter;
+    const [items, total] = await Promise.all([
+      PlayerModel.find(mongoFilter)
+        .sort({ name: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate({ path: "teamRef", select: "name shortName logo groupName" })
+        .lean<PopulatedPlayerEntity[]>()
+        .exec(),
+      PlayerModel.countDocuments(mongoFilter).exec(),
     ]);
-    return {items,total};
+    return { items, total };
   }
-  async findPlayerPopulated(id:string){return PlayerModel.findById(id).populate({path:"teamRef",select:"name shortName logo groupName"}).lean().exec();}
-  async findByMobile(mobile:string){return this.findOne({mobile});}
-  async findDuplicateJersey(teamRef:string,jerseyNo:number,excludeId?:string){
-    const filter:Record<string,unknown>={teamRef,jerseyNo};if(excludeId)filter._id={$ne:excludeId};return this.findOne(filter);
+
+  async findPlayerById(playerId: string): Promise<PlayerEntity | null> {
+    return PlayerModel.findById(playerId).lean<PlayerEntity>().exec();
   }
-  async getTeamPlayers(teamRef:string){return PlayerModel.find({teamRef,status:"active",auctionStatus:"sold"}).sort({name:1}).lean().exec();}
-  async countGoalReferences(id:string){const [normal,own]=await Promise.all([MatchModel.countDocuments({"goals.scorerRef":id}),MatchModel.countDocuments({"goals.ownGoalPlayerRef":id})]);return normal+own;}
-  async auctionCounts(){
-    const [active,pending,sold,unsold,spend]=await Promise.all([
-      this.count({status:"active"}),this.count({status:"active",auctionStatus:"pending"}),
-      this.count({status:"active",auctionStatus:"sold"}),this.count({status:"active",auctionStatus:"unsold"}),
-      PlayerModel.aggregate([{$match:{status:"active",auctionStatus:"sold"}},{$group:{_id:null,total:{$sum:"$auctionPrice"}}}]).exec()
+
+  async findPlayerWithTeamById(playerId: string): Promise<PopulatedPlayerEntity | null> {
+    return PlayerModel.findById(playerId)
+      .populate({ path: "teamRef", select: "name shortName logo groupName" })
+      .lean<PopulatedPlayerEntity>()
+      .exec();
+  }
+
+  async findPlayerByMobile(mobile: string): Promise<PlayerEntity | null> {
+    return PlayerModel.findOne({ mobile }).lean<PlayerEntity>().exec();
+  }
+
+  async findPlayerByEmail(email: string): Promise<PlayerEntity | null> {
+    return PlayerModel.findOne({ email }).lean<PlayerEntity>().exec();
+  }
+
+  async findPlayerWithJerseyNumber(
+    teamId: string,
+    jerseyNo: number,
+    excludePlayerId?: string,
+  ): Promise<PlayerEntity | null> {
+    const filter: QueryFilter<PlayerRecord> = {
+      teamRef: new Types.ObjectId(teamId),
+      jerseyNo,
+      ...(excludePlayerId ? { _id: { $ne: new Types.ObjectId(excludePlayerId) } } : {}),
+    };
+    return PlayerModel.findOne(filter).lean<PlayerEntity>().exec();
+  }
+
+  async findSoldPlayersByTeam(teamId: string): Promise<PlayerEntity[]> {
+    return PlayerModel.find({
+      teamRef: new Types.ObjectId(teamId),
+      status: "active",
+      auctionStatus: "sold",
+    }).sort({ name: 1 }).lean<PlayerEntity[]>().exec();
+  }
+
+  async countPlayers(
+    filter: Partial<Pick<PlayerFields, "status" | "auctionStatus">>,
+  ): Promise<number> {
+    return PlayerModel.countDocuments(filter).exec();
+  }
+
+  async countPlayerGoalReferences(playerId: string): Promise<number> {
+    const [normalGoalReferences, ownGoalReferences] = await Promise.all([
+      MatchModel.countDocuments({ "goals.scorerRef": new Types.ObjectId(playerId) }).exec(),
+      MatchModel.countDocuments({ "goals.ownGoalPlayerRef": new Types.ObjectId(playerId) }).exec(),
     ]);
-    return {activeAuctionPlayers:active,pendingPlayers:pending,soldPlayers:sold,unsoldPlayers:unsold,totalAuctionSpend:Number(spend[0]?.total??0)};
+    return normalGoalReferences + ownGoalReferences;
   }
-  async invalidSoldCount(){return this.count({status:"active",auctionStatus:"sold",$or:[{teamRef:null},{auctionPrice:{$lte:0}}]});}
+
+  async getPlayerAuctionCounts(): Promise<PlayerAuctionCountsDTO> {
+    const [activeAuctionPlayers, pendingPlayers, soldPlayers, unsoldPlayers, spendRows] = await Promise.all([
+      this.countPlayers({ status: "active" }),
+      this.countPlayers({ status: "active", auctionStatus: "pending" }),
+      this.countPlayers({ status: "active", auctionStatus: "sold" }),
+      this.countPlayers({ status: "active", auctionStatus: "unsold" }),
+      PlayerModel.aggregate<AuctionSpendAggregationResult>([
+        { $match: { status: "active", auctionStatus: "sold" } },
+        { $group: { _id: null, totalAmount: { $sum: "$auctionPrice" } } },
+      ]).exec(),
+    ]);
+
+    return {
+      activeAuctionPlayers,
+      pendingPlayers,
+      soldPlayers,
+      unsoldPlayers,
+      totalAuctionSpend: spendRows[0]?.totalAmount ?? 0,
+    };
+  }
+
+  async countInvalidSoldPlayers(): Promise<number> {
+    return PlayerModel.countDocuments({
+      status: "active",
+      auctionStatus: "sold",
+      $or: [{ teamRef: null }, { auctionPrice: { $lte: 0 } }],
+    }).exec();
+  }
+
+  async createPlayer(data: PlayerFields): Promise<PlayerEntity> {
+    const createdPlayer = await PlayerModel.create(data);
+    const savedPlayer = await this.findPlayerById(String(createdPlayer._id));
+    if (!savedPlayer) throw new Error("Created player could not be retrieved");
+    return savedPlayer;
+  }
+
+  async updatePlayer(playerId: string, data: Partial<PlayerFields>): Promise<PlayerEntity | null> {
+    return PlayerModel.findByIdAndUpdate(playerId, { $set: data }, {
+      new: true,
+      runValidators: true,
+    }).lean<PlayerEntity>().exec();
+  }
+
+  async deletePlayer(playerId: string): Promise<boolean> {
+    const deletedPlayer = await PlayerModel.findByIdAndDelete(playerId).select("_id").lean().exec();
+    return deletedPlayer !== null;
+  }
 }

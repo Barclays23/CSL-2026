@@ -1,31 +1,131 @@
 import { AppError } from "../../shared/errors/appError.js";
-import { SettingsService } from "../settings/settings.service.js";
-import { TeamRepository } from "../teams/team.repository.js";
-import { PlayerRepository } from "../players/player.repository.js";
-export class AuctionService {
-  constructor(private readonly _settingsService:SettingsService,private readonly _teamRepo:TeamRepository,private readonly _playerRepo:PlayerRepository){}
-  async start(){const s=await this._settingsService.get();if(s.auctionState==="completed")throw new AppError("Reopen the auction before starting it",409,"AUCTION_COMPLETED");return this._settingsService.update({auctionState:"in_progress",auctionCompletedAt:null});}
-  async reopen(){return this._settingsService.update({auctionState:"in_progress",auctionCompletedAt:null});}
-  async complete(){
-    const s=await this._settingsService.get();
-    if(s.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before completing it",409,"AUCTION_NOT_IN_PROGRESS");
-    const teamRows=await this._teamRepo.list({status:"active"},1,100,{name:1});
-    const errors:{team:string;message:string}[]=[];
-    if(teamRows.total!==Number(s.maxActiveTeams))errors.push({team:"Tournament",message:`Expected ${s.maxActiveTeams} active teams; found ${teamRows.total}`});
-    if(await this._playerRepo.count({status:"active"})>Number(s.maxActivePlayers))errors.push({team:"Auction",message:"Active player limit exceeded"});
-    for(const t of teamRows.items){
-      const players=await this._playerRepo.getTeamPlayers(String(t._id)) as unknown as Record<string,unknown>[];
-      const spend=players.reduce((n,p)=>n+Number(p.auctionPrice||0),0);
-      const icons=players.filter(p=>p.isIconPlayer).length,gks=players.filter(p=>p.position==="GK").length;
-      if(players.length!==Number(s.maxPlayersPerTeam))errors.push({team:String(t.name),message:`Squad has ${players.length}; requires exactly ${s.maxPlayersPerTeam}`});
-      if(spend>Number(s.auctionBudgetPerTeam))errors.push({team:String(t.name),message:"Auction budget exceeded"});
-      if(icons!==Number(s.requiredIconPlayers))errors.push({team:String(t.name),message:`Requires ${s.requiredIconPlayers} icon player(s); found ${icons}`});
-      if(gks!==Number(s.requiredGoalkeepers))errors.push({team:String(t.name),message:`Requires ${s.requiredGoalkeepers} goalkeeper(s); found ${gks}`});
+import type { PlayerRepositoryContract } from "../players/player.types.js";
+import type { ISettingsService } from "../settings/settings.types.js";
+import type { TeamRepositoryContract } from "../teams/team.types.js";
+import type { SettingsEntity } from "../settings/settings.types.js";
+import type { AuctionCompletionValidationResult, AuctionTeamValidation, IAuctionService } from "./auction.types.js";
+
+export class AuctionService implements IAuctionService {
+  constructor(
+    private readonly settingsService: ISettingsService,
+    private readonly teamRepository: TeamRepositoryContract,
+    private readonly playerRepository: PlayerRepositoryContract,
+  ) {}
+
+  async startAuction(): Promise<SettingsEntity> {
+    const settings = await this.settingsService.getTournamentSettings();
+    if (settings.auctionState === "completed") {
+      throw new AppError("Reopen the auction before starting it again", 409, "AUCTION_COMPLETED");
     }
-    if(await this._playerRepo.invalidSoldCount())errors.push({team:"Auction",message:"One or more sold players have no team or an invalid auction price"});
-    const pending=await this._playerRepo.count({status:"active",auctionStatus:"pending"});
-    if(pending)errors.push({team:"Auction",message:`${pending} active player(s) are still pending`});
-    if(errors.length)throw new AppError("Auction completion failed",422,"AUCTION_VALIDATION_FAILED",{auction:JSON.stringify(errors)});
-    return this._settingsService.update({auctionState:"completed",auctionCompletedAt:new Date()});
+    return this.settingsService.updateAuctionLifecycle("in_progress", null);
+  }
+
+  async reopenAuction(): Promise<SettingsEntity> {
+    const settings = await this.settingsService.getTournamentSettings();
+    if (settings.auctionState === "not_started") {
+      throw new AppError("The auction has not been started yet", 409, "AUCTION_NOT_STARTED");
+    }
+    return this.settingsService.updateAuctionLifecycle("in_progress", null);
+  }
+
+  async validateAuctionCompletion(): Promise<AuctionCompletionValidationResult> {
+    const settings = await this.settingsService.getTournamentSettings();
+    const activeTeams = await this.teamRepository.findTeams({ status: "active" }, 1, 100);
+    const errors: AuctionTeamValidation[] = [];
+
+    if (activeTeams.total !== settings.maxActiveTeams) {
+      errors.push({
+        teamId: null,
+        teamName: "Tournament",
+        message: `Expected ${settings.maxActiveTeams} active teams; found ${activeTeams.total}`,
+      });
+    }
+
+    const activePlayers = await this.playerRepository.countPlayers({ status: "active" });
+    if (activePlayers > settings.maxActivePlayers) {
+      errors.push({
+        teamId: null,
+        teamName: "Auction",
+        message: `Active player limit exceeded: ${activePlayers}/${settings.maxActivePlayers}`,
+      });
+    }
+
+    for (const team of activeTeams.items) {
+      const teamId = String(team._id);
+      const players = await this.playerRepository.findSoldPlayersByTeam(teamId);
+      const purchaseTotal = players.reduce((total, player) => total + player.auctionPrice, 0);
+      const iconPlayerCount = players.filter((player) => player.isIconPlayer).length;
+      const goalkeeperCount = players.filter((player) => player.position === "GK").length;
+
+      if (players.length !== settings.maxPlayersPerTeam) {
+        errors.push({
+          teamId,
+          teamName: team.name,
+          message: `Squad has ${players.length}; requires exactly ${settings.maxPlayersPerTeam}`,
+        });
+      }
+      if (purchaseTotal > settings.auctionBudgetPerTeam) {
+        errors.push({
+          teamId,
+          teamName: team.name,
+          message: `Auction budget exceeded: ${purchaseTotal}/${settings.auctionBudgetPerTeam}`,
+        });
+      }
+      if (iconPlayerCount !== settings.requiredIconPlayers) {
+        errors.push({
+          teamId,
+          teamName: team.name,
+          message: `Requires ${settings.requiredIconPlayers} icon player(s); found ${iconPlayerCount}`,
+        });
+      }
+      if (goalkeeperCount !== settings.requiredGoalkeepers) {
+        errors.push({
+          teamId,
+          teamName: team.name,
+          message: `Requires ${settings.requiredGoalkeepers} goalkeeper(s); found ${goalkeeperCount}`,
+        });
+      }
+    }
+
+    const invalidSoldPlayers = await this.playerRepository.countInvalidSoldPlayers();
+    if (invalidSoldPlayers > 0) {
+      errors.push({
+        teamId: null,
+        teamName: "Auction",
+        message: `${invalidSoldPlayers} sold player(s) have an invalid team assignment or auction price`,
+      });
+    }
+
+    const pendingPlayers = await this.playerRepository.countPlayers({
+      status: "active",
+      auctionStatus: "pending",
+    });
+    if (pendingPlayers > 0) {
+      errors.push({
+        teamId: null,
+        teamName: "Auction",
+        message: `${pendingPlayers} active player(s) are still pending`,
+      });
+    }
+
+    return { valid: errors.length === 0, errors };
+  }
+
+  async completeAuction(): Promise<SettingsEntity> {
+    const settings = await this.settingsService.getTournamentSettings();
+    if (settings.auctionState !== "in_progress") {
+      throw new AppError("Start or reopen the auction before completing it", 409, "AUCTION_NOT_IN_PROGRESS");
+    }
+
+    const validation = await this.validateAuctionCompletion();
+    if (!validation.valid) {
+      const fieldErrors: Record<string, string> = {};
+      validation.errors.forEach((error, index) => {
+        fieldErrors[`auctionValidation.${index + 1}`] = `${error.teamName}: ${error.message}`;
+      });
+      throw new AppError("Auction completion failed. Review the validation errors.", 422, "AUCTION_VALIDATION_FAILED", fieldErrors);
+    }
+
+    return this.settingsService.updateAuctionLifecycle("completed", new Date());
   }
 }

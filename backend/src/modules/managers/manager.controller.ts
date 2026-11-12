@@ -1,12 +1,42 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { ManagerService } from "./manager.service.js";
-export class ManagerController {
-  constructor(private readonly _managerService:ManagerService){}
-  list:RequestHandler=asyncHandler(async(req,res)=>{const r=await this._managerService.list(req.query as Record<string,unknown>,Boolean(req.user));sendSuccess(res,r.items,"Managers fetched",200,{page:r.page,limit:r.limit,total:r.total,totalPages:Math.ceil(r.total/r.limit)});});
-  get:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._managerService.get(String(req.params.id),Boolean(req.user)),"Manager fetched"));
-  create:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._managerService.save(req.body as Record<string,unknown>),"Manager created",201));
-  update:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._managerService.save(req.body as Record<string,unknown>,String(req.params.id)),"Manager updated"));
-  remove:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._managerService.remove(String(req.params.id)),"Manager deleted"));
+import type { IManagerController, IManagerService } from "./manager.types.js";
+import { managerCreateSchema, managerQuerySchema, managerUpdateSchema } from "./manager.dto.js";
+
+export class ManagerController implements IManagerController {
+  constructor(private readonly managerService: IManagerService) {}
+
+  getManagers: RequestHandler = asyncHandler(async (request, response) => {
+    const query = managerQuerySchema.parse(request.query);
+    const result = await this.managerService.getManagers(query, Boolean(request.user));
+    sendSuccess(response, result.items, "Managers fetched", 200, {
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / result.limit),
+    });
+  });
+
+  getManagerById: RequestHandler = asyncHandler(async (request, response) => {
+    const manager = await this.managerService.getManagerById(String(request.params.id), Boolean(request.user));
+    sendSuccess(response, manager, "Manager fetched");
+  });
+
+  createManager: RequestHandler = asyncHandler(async (request, response) => {
+    const input = managerCreateSchema.parse(request.body);
+    const manager = await this.managerService.createManager(input);
+    sendSuccess(response, manager, "Manager created", 201);
+  });
+
+  updateManager: RequestHandler = asyncHandler(async (request, response) => {
+    const input = managerUpdateSchema.parse(request.body);
+    const manager = await this.managerService.updateManager(String(request.params.id), input);
+    sendSuccess(response, manager, "Manager updated");
+  });
+
+  deleteManager: RequestHandler = asyncHandler(async (request, response) => {
+    await this.managerService.deleteManager(String(request.params.id));
+    sendSuccess(response, null, "Manager deleted");
+  });
 }

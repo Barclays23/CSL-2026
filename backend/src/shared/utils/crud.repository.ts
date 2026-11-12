@@ -1,5 +1,5 @@
 import type {
-  FilterQuery,
+  QueryFilter,
   HydratedDocument,
   Model,
   PipelineStage,
@@ -8,15 +8,14 @@ import type {
 } from "mongoose";
 
 /**
- * Generic persistence base.
- * Feature repositories should expose descriptive, domain-specific methods
- * and delegate common MongoDB operations to this class.
+ * Typed persistence helpers for simple CRUD features.
+ * Feature repositories should expose domain-specific method names and DTOs.
  */
 export abstract class CrudRepository<TEntity extends object> {
   protected constructor(protected readonly model: Model<TEntity>) {}
 
-  async list(
-    filter: FilterQuery<TEntity> = {},
+  async findManyRecords(
+    filter: QueryFilter<TEntity> = {},
     page = 1,
     limit = 50,
     sort: Record<string, SortOrder> = { createdAt: -1 },
@@ -28,38 +27,37 @@ export abstract class CrudRepository<TEntity extends object> {
     return { items, total };
   }
 
-  async findById(id: string): Promise<HydratedDocument<TEntity> | null> {
+  async findRecordById(id: string): Promise<HydratedDocument<TEntity> | null> {
     return this.model.findById(id).exec();
   }
 
-  async findOne(filter: FilterQuery<TEntity>): Promise<HydratedDocument<TEntity> | null> {
+  async findOneRecord(filter: QueryFilter<TEntity>): Promise<HydratedDocument<TEntity> | null> {
     return this.model.findOne(filter).exec();
   }
 
-  async count(filter: FilterQuery<TEntity> = {}): Promise<number> {
+  async countRecords(filter: QueryFilter<TEntity> = {}): Promise<number> {
     return this.model.countDocuments(filter).exec();
   }
 
-  async create(data: Partial<TEntity>): Promise<HydratedDocument<TEntity>> {
+  async createRecord(data: Partial<TEntity>): Promise<HydratedDocument<TEntity>> {
     return this.model.create(data);
   }
 
-  async update(id: string, data: UpdateQuery<TEntity>): Promise<HydratedDocument<TEntity> | null> {
+  async updateRecordById(
+    id: string,
+    data: UpdateQuery<TEntity>,
+  ): Promise<HydratedDocument<TEntity> | null> {
     return this.model.findByIdAndUpdate(id, { $set: data }, {
       new: true,
       runValidators: true,
     }).exec();
   }
 
-  async remove(id: string): Promise<HydratedDocument<TEntity> | null> {
+  async deleteRecordById(id: string): Promise<HydratedDocument<TEntity> | null> {
     return this.model.findByIdAndDelete(id).exec();
   }
 
-  async aggregate<TResult>(pipeline: PipelineStage[]): Promise<TResult[]> {
+  async aggregateRecords<TResult>(pipeline: PipelineStage[]): Promise<TResult[]> {
     return this.model.aggregate<TResult>(pipeline).exec();
-  }
-
-  protected get nativeModel(): Model<TEntity> {
-    return this.model;
   }
 }

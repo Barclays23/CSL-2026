@@ -18,3 +18,4 @@ export const teamQuerySchema=z.object({
 });
 export type TeamCreateInput=z.infer<typeof teamCreateSchema>;
 export type TeamUpdateInput=z.infer<typeof teamUpdateSchema>;
+export type TeamQueryInput = z.infer<typeof teamQuerySchema>;

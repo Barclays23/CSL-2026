@@ -1,6 +1,6 @@
-import type { Pagination } from "@/types/api.types";
+import type { ApiResponse, Pagination } from "@/types/api.types";
 import type { AdminUser } from "@/types/auth.types";
-import type { ManagerQuery, ManagerWrite, PublicManager } from "@/types/manager.types";
+import type { AdminManager, ManagerQuery, ManagerWrite, PublicManager } from "@/types/manager.types";
 import type { GoalWrite, Match, MatchQuery, MatchWrite } from "@/types/match.types";
 import type { PlayerBrief } from "@/types/match.types";
 import type { AdminPlayer, PlayerQuery, PlayerWrite, PublicPlayer } from "@/types/player.types";
@@ -117,11 +117,17 @@ function presentMatch(db: Database, match: StoredMatch): Match {
   };
 }
 
-function presentManager(db: Database, manager: StoredManager, admin: boolean): PublicManager {
+function presentManager(
+  db: Database,
+  manager: StoredManager,
+  admin: boolean,
+): PublicManager | AdminManager {
   const team = manager.teamRef ? db.teams.find((item) => item._id === manager.teamRef) : null;
   const base: PublicManager = {
     _id: manager._id,
     name: manager.name,
+    email: manager.email,
+    dateOfBirth: manager.dateOfBirth,
     teamRef: manager.teamRef,
     team: team ? briefTeam(team) : null,
     role: manager.role,
@@ -129,7 +135,7 @@ function presentManager(db: Database, manager: StoredManager, admin: boolean): P
     status: manager.status,
   };
   if (!admin) return base;
-  return { ...base, mobile: manager.mobile, email: manager.email, dateOfBirth: manager.dateOfBirth };
+  return { ...base, mobile: manager.mobile };
 }
 
 function presentSponsor(sponsor: StoredSponsor, admin: boolean): PublicSponsor | AdminSponsor {
@@ -557,15 +563,15 @@ export const previewRepository = {
     if (!isAdmin() && player.status !== "active") fail(404, "Player not found");
     return ok("Player loaded", presentPlayer(db, player, isAdmin()));
   },
-  async createPlayer(input: PlayerWrite) {
+  async createPlayer(input: PlayerWrite): Promise<ApiResponse<AdminPlayer>> {
     requireAdmin();
     const db = readDb();
     const player = applyPlayer(db, input);
     db.players.push(player);
     commit(db);
-    return ok("Player created", presentPlayer(db, player, true));
+    return ok("Player created", presentPlayer(db, player, true) as AdminPlayer);
   },
-  async updatePlayer(id: string, input: PlayerWrite) {
+  async updatePlayer(id: string, input: PlayerWrite): Promise<ApiResponse<AdminPlayer>> {
     requireAdmin();
     const db = readDb();
     const index = db.players.findIndex((player) => player._id === id);
@@ -573,9 +579,9 @@ export const previewRepository = {
     const player = applyPlayer(db, input, db.players[index]);
     db.players[index] = player;
     commit(db);
-    return ok("Player updated", presentPlayer(db, player, true));
+    return ok("Player updated", presentPlayer(db, player, true) as AdminPlayer);
   },
-  async deactivatePlayer(id: string) {
+  async deactivatePlayer(id: string): Promise<ApiResponse<AdminPlayer>> {
     requireAdmin();
     const db = readDb();
     const current = db.players.find((player) => player._id === id);
@@ -757,15 +763,15 @@ export const previewRepository = {
     };
     return manager;
   },
-  async createManager(input: ManagerWrite) {
+  async createManager(input: ManagerWrite): Promise<ApiResponse<AdminManager>> {
     requireAdmin();
     const db = readDb();
     const manager = await this.saveManager(input);
     db.managers.push(manager);
     commit(db);
-    return ok("Manager created", presentManager(db, manager, true));
+    return ok("Manager created", presentManager(db, manager, true) as AdminManager);
   },
-  async updateManager(id: string, input: ManagerWrite) {
+  async updateManager(id: string, input: ManagerWrite): Promise<ApiResponse<AdminManager>> {
     requireAdmin();
     const db = readDb();
     const index = db.managers.findIndex((manager) => manager._id === id);
@@ -773,7 +779,7 @@ export const previewRepository = {
     const manager = await this.saveManager(input, db.managers[index]);
     db.managers[index] = manager;
     commit(db);
-    return ok("Manager updated", presentManager(db, manager, true));
+    return ok("Manager updated", presentManager(db, manager, true) as AdminManager);
   },
   async deleteManager(id: string) {
     requireAdmin();
@@ -801,7 +807,7 @@ export const previewRepository = {
       page.pagination,
     );
   },
-  async createSponsor(input: SponsorWrite) {
+  async createSponsor(input: SponsorWrite): Promise<ApiResponse<AdminSponsor>> {
     requireAdmin();
     const db = readDb();
     const sponsor: StoredSponsor = {
@@ -817,9 +823,9 @@ export const previewRepository = {
     };
     db.sponsors.push(sponsor);
     commit(db);
-    return ok("Sponsor created", presentSponsor(sponsor, true));
+    return ok("Sponsor created", presentSponsor(sponsor, true) as AdminSponsor);
   },
-  async updateSponsor(id: string, input: SponsorWrite) {
+  async updateSponsor(id: string, input: SponsorWrite): Promise<ApiResponse<AdminSponsor>> {
     requireAdmin();
     const db = readDb();
     const index = db.sponsors.findIndex((sponsor) => sponsor._id === id);
@@ -838,7 +844,7 @@ export const previewRepository = {
     };
     db.sponsors[index] = sponsor;
     commit(db);
-    return ok("Sponsor updated", presentSponsor(sponsor, true));
+    return ok("Sponsor updated", presentSponsor(sponsor, true) as AdminSponsor);
   },
   async deleteSponsor(id: string) {
     requireAdmin();

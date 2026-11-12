@@ -1,2 +1,7 @@
-export const normalizeEmail = (value?: string | null) => value?.trim().toLowerCase() || null;
-export const normalizeMobile = (value: string) => value.replace(/[\\s-]/g, "").trim();
+export function normalizeEmail(value?: string | null): string | null {
+  return value?.trim().toLowerCase() || null;
+}
+
+export function normalizeMobile(value: string): string {
+  return value.replace(/[\\s-]/g, "").trim();
+}

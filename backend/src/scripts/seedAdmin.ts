@@ -1,10 +1,20 @@
-import { connectDatabase,disconnectDatabase } from "../config/database.config.js";
+import { connectDatabase, disconnectDatabase } from "../config/database.config.js";
 import { env } from "../config/env.config.js";
-import { UserService } from "../modules/users/user.service.js";
 import { UserRepository } from "../modules/users/user.repository.js";
-async function main(){
+import { UserService } from "../modules/users/user.service.js";
+
+async function seedInitialAdmin(): Promise<void> {
   await connectDatabase(env.MONGODB_URI);
-  try { await new UserService(new UserRepository()).seedAdmin(); }
-  finally { await disconnectDatabase(); }
+  try {
+    const userRepository = new UserRepository();
+    const userService = new UserService(userRepository);
+    await userService.createInitialAdmin();
+  } finally {
+    await disconnectDatabase();
+  }
 }
-main().catch(error=>{console.error("Admin seed failed",error);process.exitCode=1;});
+
+seedInitialAdmin().catch((error: unknown) => {
+  console.error("Admin seed failed", error);
+  process.exitCode = 1;
+});

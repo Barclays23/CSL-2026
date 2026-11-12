@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { managerFormSchema, type ManagerFormValues } from "@/schemas/manager.schema";
 import type { Asset } from "@/types/api.types";
-import type { PublicManager } from "@/types/manager.types";
+import type { AdminManager, PublicManager } from "@/types/manager.types";
 import type { Team } from "@/types/team.types";
 import { applyFieldErrors, isAdminRecord } from "@/utils/forms";
 
@@ -19,7 +19,7 @@ export function ManagerForm({
   submitting,
   onSubmit,
 }: {
-  manager?: PublicManager | null;
+  manager?: PublicManager | AdminManager | null;
   teams: Team[];
   submitting: boolean;
   onSubmit: (values: ManagerFormValues, photo: Asset | null) => Promise<void>;

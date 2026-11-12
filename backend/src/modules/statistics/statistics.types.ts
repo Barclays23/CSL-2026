@@ -1,6 +1,6 @@
+import type { MatchResponseDTO } from "../matches/match.types.js";
 import type { PlayerPublicDTO } from "../players/player.types.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
-import type { MatchRecord } from "../matches/match.model.js";
 
 export interface StandingRowDTO {
   position: number;
@@ -36,8 +36,8 @@ export interface NamedTeamCountDTO {
 
 export interface DashboardSummaryDTO {
   tournamentName: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   totalMatchesPlayed: number;
   totalGoals: number;
   activeTeams: number;
@@ -50,19 +50,50 @@ export interface DashboardSummaryDTO {
   topScorer: TopScorerDTO | null;
   mostScoringTeam: { team: TeamBriefDTO; goals: number } | null;
   mostConcedingTeam: { team: TeamBriefDTO; goals: number } | null;
-  mostCleanSheets: NamedTeamCountDTO[];
-  upcomingFixtures: MatchRecord[];
-  recentResults: MatchRecord[];
+  mostCleanSheets: { team: TeamBriefDTO; cleanSheets: number }[];
+  upcomingFixtures: MatchResponseDTO[];
+  recentResults: MatchResponseDTO[];
   alerts: string[];
+}
+
+export interface OverallTeamStatisticsDTO {
+  team: TeamBriefDTO;
+  played: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  cleanSheets: number;
 }
 
 export interface TeamStatisticsDTO {
   team: TeamBriefDTO;
-  group: Omit<StandingRowDTO, "position" | "team" | "qualified">;
+  group: {
+    played: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    goalsFor: number;
+    goalsAgainst: number;
+    goalDifference: number;
+    points: number;
+  };
   overall: {
     played: number;
     goalsFor: number;
     goalsAgainst: number;
     cleanSheets: number;
   };
+}
+
+export interface IStatisticsService {
+  getDashboardStatistics(): Promise<DashboardSummaryDTO>;
+  getGroupStandings(): Promise<GroupStandingDTO[]>;
+  getTopScorers(): Promise<TopScorerDTO[]>;
+  getOverallTeamStatistics(): Promise<OverallTeamStatisticsDTO[]>;
+  getTeamStatistics(teamId: string): Promise<TeamStatisticsDTO>;
+}
+
+export interface IStatisticsController {
+  getDashboardStatistics: import("express").RequestHandler;
+  getGroupStandings: import("express").RequestHandler;
+  getTopScorers: import("express").RequestHandler;
 }

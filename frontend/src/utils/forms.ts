@@ -8,6 +8,10 @@ export function applyFieldErrors<T extends FieldValues>(error: unknown, setError
   }
 }
 
-export function isAdminRecord<T extends object>(record: T): record is T & { mobile: string } {
+type AdminVariant<T> = Extract<T, { mobile: string }> extends never
+  ? T & { mobile: string }
+  : Extract<T, { mobile: string }>;
+
+export function isAdminRecord<T extends object>(record: T): record is AdminVariant<T> {
   return "mobile" in record && typeof record.mobile === "string";
 }

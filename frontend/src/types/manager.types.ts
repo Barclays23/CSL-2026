@@ -6,6 +6,8 @@ export type PersonStatus = "active" | "inactive";
 export interface PublicManager {
   _id: string;
   name: string;
+  email: string | null;
+  dateOfBirth: string | null;
   teamRef: string | null;
   team?: TeamBrief | null;
   role: string | null;
@@ -37,3 +39,5 @@ export interface ManagerWrite {
   profilePic?: Asset | null;
   status: PersonStatus;
 }
+
+export type ManagerResponse = PublicManager | AdminManager;

@@ -10,7 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { AUCTION_STATUSES, PLAYER_STATUSES, POSITIONS } from "@/constants/football";
 import { playerFormSchema, type PlayerFormValues } from "@/schemas/player.schema";
 import type { Asset } from "@/types/api.types";
-import type { PublicPlayer } from "@/types/player.types";
+import type { AdminPlayer, PublicPlayer } from "@/types/player.types";
 import type { Team } from "@/types/team.types";
 import { applyFieldErrors, isAdminRecord } from "@/utils/forms";
 
@@ -20,7 +20,7 @@ export function PlayerForm({
   submitting,
   onSubmit,
 }: {
-  player?: PublicPlayer | null;
+  player?: PublicPlayer | AdminPlayer | null;
   teams: Team[];
   submitting: boolean;
   onSubmit: (values: PlayerFormValues, photo: Asset | null) => Promise<void>;
@@ -37,7 +37,7 @@ export function PlayerForm({
       position: player?.position ?? "MF",
       isIconPlayer: player?.isIconPlayer ?? false,
       teamRef: player?.teamRef ?? "",
-      jerseyNo: player?.jerseyNo ?? "",
+      jerseyNo: player?.jerseyNo ?? null,
       auctionPrice: player?.auctionPrice ?? 0,
       auctionStatus: player?.auctionStatus ?? "pending",
       status: player?.status ?? "active",

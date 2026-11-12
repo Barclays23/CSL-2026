@@ -1,27 +1,109 @@
+import { Types, type QueryFilter } from "mongoose";
 import { MatchModel } from "./match.model.js";
 import type { MatchRecord } from "./match.model.js";
-import { CrudRepository } from "../../shared/utils/crud.repository.js";
-const publicPopulates=[
-  {path:"team1Ref",select:"name shortName logo groupName"},
-  {path:"team2Ref",select:"name shortName logo groupName"},
-  {path:"goals.scoringTeamRef",select:"name shortName logo groupName"},
-  {path:"goals.scorerRef",select:"name position jerseyNo profilePic teamRef"},
-  {path:"goals.ownGoalPlayerRef",select:"name position jerseyNo profilePic teamRef"}
+import type {
+  GoalFields,
+  MatchEntity,
+  MatchFields,
+  MatchListFilter,
+  MatchRepositoryContract,
+  PopulatedMatchEntity,
+} from "./match.types.js";
+
+const populatedMatchPaths = [
+  { path: "team1Ref", select: "name shortName logo groupName" },
+  { path: "team2Ref", select: "name shortName logo groupName" },
+  { path: "goals.scoringTeamRef", select: "name shortName logo groupName" },
+  { path: "goals.scorerRef", select: "name position jerseyNo profilePic teamRef" },
+  { path: "goals.ownGoalPlayerRef", select: "name position jerseyNo profilePic teamRef" },
 ];
-export class MatchRepository extends CrudRepository<MatchRecord> {
-  constructor(){super(MatchModel);}
-  async listPopulated(filter:Record<string,unknown>,page=1,limit=20){
-    const [items,total]=await Promise.all([
-      MatchModel.find(filter as never).sort({kickoffAt:1}).skip((page-1)*limit).limit(limit).populate(publicPopulates).lean().exec(),
-      MatchModel.countDocuments(filter as never).exec()
+
+export class MatchRepository implements MatchRepositoryContract {
+  async findMatches(
+    filter: MatchListFilter,
+    page: number,
+    limit: number,
+  ): Promise<{ items: PopulatedMatchEntity[]; total: number }> {
+    const mongoFilter: QueryFilter<MatchRecord> = filter;
+    const [items, total] = await Promise.all([
+      MatchModel.find(mongoFilter)
+        .sort({ kickoffAt: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate(populatedMatchPaths)
+        .lean<PopulatedMatchEntity[]>()
+        .exec(),
+      MatchModel.countDocuments(mongoFilter).exec(),
     ]);
-    return {items,total};
+    return { items, total };
   }
-  async getPopulated(id:string){return MatchModel.findById(id).populate(publicPopulates).lean().exec();}
-  async addGoal(matchId:string,goal:Record<string,unknown>){return MatchModel.findByIdAndUpdate(matchId,{$push:{goals:goal}},{new:true,runValidators:true}).populate(publicPopulates).exec();}
-  async updateGoal(matchId:string,goalId:string,goal:Record<string,unknown>){
-    const sets=Object.fromEntries(Object.entries(goal).map(([k,v])=>[`goals.$.${k}`,v]));
-    return MatchModel.findOneAndUpdate({_id:matchId,"goals._id":goalId},{$set:sets},{new:true,runValidators:true}).populate(publicPopulates).exec();
+
+  async findMatchById(matchId: string): Promise<MatchEntity | null> {
+    return MatchModel.findById(matchId).lean<MatchEntity>().exec();
   }
-  async deleteGoal(matchId:string,goalId:string){return MatchModel.findByIdAndUpdate(matchId,{$pull:{goals:{_id:goalId}}},{new:true}).populate(publicPopulates).exec();}
+
+  async findMatchWithTeamsAndGoals(matchId: string): Promise<PopulatedMatchEntity | null> {
+    return MatchModel.findById(matchId)
+      .populate(populatedMatchPaths)
+      .lean<PopulatedMatchEntity>()
+      .exec();
+  }
+
+  async findMatchByNumber(matchNo: string): Promise<MatchEntity | null> {
+    return MatchModel.findOne({ matchNo }).lean<MatchEntity>().exec();
+  }
+
+  async createMatch(data: MatchFields): Promise<MatchEntity> {
+    const createdMatch = await MatchModel.create(data);
+    const savedMatch = await this.findMatchById(String(createdMatch._id));
+    if (!savedMatch) throw new Error("Created match could not be retrieved");
+    return savedMatch;
+  }
+
+  async updateMatch(matchId: string, data: Partial<MatchFields>): Promise<MatchEntity | null> {
+    return MatchModel.findByIdAndUpdate(matchId, { $set: data }, {
+      new: true,
+      runValidators: true,
+    }).lean<MatchEntity>().exec();
+  }
+
+  async deleteMatch(matchId: string): Promise<boolean> {
+    const deletedMatch = await MatchModel.findByIdAndDelete(matchId).select("_id").lean().exec();
+    return deletedMatch !== null;
+  }
+
+  async appendGoal(matchId: string, goal: GoalFields): Promise<PopulatedMatchEntity | null> {
+    return MatchModel.findByIdAndUpdate(
+      matchId,
+      { $push: { goals: goal } },
+      { new: true, runValidators: true },
+    ).populate(populatedMatchPaths).lean<PopulatedMatchEntity>().exec();
+  }
+
+  async updateMatchGoal(
+    matchId: string,
+    goalId: string,
+    goal: GoalFields,
+  ): Promise<PopulatedMatchEntity | null> {
+    return MatchModel.findOneAndUpdate(
+      { _id: matchId, "goals._id": new Types.ObjectId(goalId) },
+      {
+        $set: {
+          "goals.$.scoringTeamRef": goal.scoringTeamRef,
+          "goals.$.goalType": goal.goalType,
+          "goals.$.scorerRef": goal.scorerRef,
+          "goals.$.ownGoalPlayerRef": goal.ownGoalPlayerRef,
+        },
+      },
+      { new: true, runValidators: true },
+    ).populate(populatedMatchPaths).lean<PopulatedMatchEntity>().exec();
+  }
+
+  async removeMatchGoal(matchId: string, goalId: string): Promise<PopulatedMatchEntity | null> {
+    return MatchModel.findByIdAndUpdate(
+      matchId,
+      { $pull: { goals: { _id: new Types.ObjectId(goalId) } } },
+      { new: true },
+    ).populate(populatedMatchPaths).lean<PopulatedMatchEntity>().exec();
+  }
 }

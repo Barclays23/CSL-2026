@@ -60,7 +60,9 @@ export function SponsorsPage() {
           <div key={sponsor._id} className="grid gap-2">
             <SponsorCard sponsor={sponsor} />
             {isAuthenticated && isAdminRecord(sponsor) ? (
-              <p className="px-1 text-xs text-muted">{sponsor.notes || "No internal notes"}</p>
+              <p className="px-1 text-xs text-muted">
+                {"notes" in sponsor && sponsor.notes ? sponsor.notes : "No internal notes"}
+              </p>
             ) : null}
             {isAuthenticated ? (
               <div className="flex gap-2">

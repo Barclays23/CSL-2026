@@ -60,6 +60,7 @@ export const matchFormSchema = z
   });
 
 export type MatchFormValues = z.infer<typeof matchFormSchema>;
+export type MatchFormInput = z.input<typeof matchFormSchema>;
 
 export const goalFormSchema = z
   .object({
