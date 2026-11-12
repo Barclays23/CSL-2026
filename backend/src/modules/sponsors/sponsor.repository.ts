@@ -1,20 +1,41 @@
+import type { FilterQuery } from "mongoose";
 import { SponsorModel } from "./sponsor.model.js";
-import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class SponsorRepository extends CrudRepository {
-  constructor(){super(SponsorModel);}
-  async listSponsors(filter:Record<string,unknown>,page:number,limit:number,admin:boolean){
-    let q=SponsorModel.find(filter as never).sort({name:1}).skip((page-1)*limit).limit(limit);
-    if(admin)q=q.select("+contactPerson +contactMobile +notes");
-    const [items,total]=await Promise.all([q.lean().exec(),SponsorModel.countDocuments(filter as never).exec()]);
-    return {items,total};
+import type { SponsorRecord } from "./sponsor.model.js";
+import type { ISponsorRepository, SponsorCreateData, SponsorEntity, SponsorListFilter, SponsorListResult, SponsorUpdateData } from "./sponsor.types.js";
+
+export class SponsorRepository implements ISponsorRepository {
+  async findSponsors(filter: SponsorListFilter, page: number, limit: number, includePrivateFields: boolean): Promise<SponsorListResult> {
+    const mongoFilter: FilterQuery<SponsorRecord> = filter;
+    let sponsorQuery = SponsorModel.find(mongoFilter).sort({ name: 1 }).skip((page - 1) * limit).limit(limit);
+    if (includePrivateFields) sponsorQuery = sponsorQuery.select("+contactPerson +contactMobile +notes");
+    const [items, total] = await Promise.all([
+      sponsorQuery.lean<SponsorEntity[]>().exec(),
+      SponsorModel.countDocuments(mongoFilter).exec(),
+    ]);
+    return { items, total };
   }
-  async findSponsor(id:string,admin:boolean){
-    let q=SponsorModel.findById(id);if(admin)q=q.select("+contactPerson +contactMobile +notes");
-    return q.lean().exec();
+
+  async findSponsorById(sponsorId: string, includePrivateFields: boolean): Promise<SponsorEntity | null> {
+    let sponsorQuery = SponsorModel.findById(sponsorId);
+    if (includePrivateFields) sponsorQuery = sponsorQuery.select("+contactPerson +contactMobile +notes");
+    return sponsorQuery.lean<SponsorEntity>().exec();
   }
-  async updateSponsor(id:string,data:Record<string,unknown>,admin:boolean){
-    let q=SponsorModel.findByIdAndUpdate(id,{$set:data},{new:true,runValidators:true});
-    if(admin)q=q.select("+contactPerson +contactMobile +notes");
-    return q.lean().exec();
+
+  async createSponsor(data: SponsorCreateData): Promise<SponsorEntity> {
+    const sponsor = await SponsorModel.create(data);
+    const persistedSponsor = await this.findSponsorById(String(sponsor._id), true);
+    if (!persistedSponsor) throw new Error("Created sponsor could not be retrieved");
+    return persistedSponsor;
+  }
+
+  async updateSponsor(sponsorId: string, data: SponsorUpdateData, includePrivateFields: boolean): Promise<SponsorEntity | null> {
+    let sponsorQuery = SponsorModel.findByIdAndUpdate(sponsorId, { $set: data }, { new: true, runValidators: true });
+    if (includePrivateFields) sponsorQuery = sponsorQuery.select("+contactPerson +contactMobile +notes");
+    return sponsorQuery.lean<SponsorEntity>().exec();
+  }
+
+  async deleteSponsor(sponsorId: string): Promise<boolean> {
+    const deletedSponsor = await SponsorModel.findByIdAndDelete(sponsorId).select("_id").lean().exec();
+    return deletedSponsor !== null;
   }
 }
