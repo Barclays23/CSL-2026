@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { ApiResponse } from "../../shared/responses/apiResponse.utils.js";
+import { ApiResponse } from "../../utils/apiResponse.utils.js";
 import { HTTP_STATUS } from "../../shared/constants/http-status.constants.js";
 import { SETTINGS_MESSAGES } from "../../shared/constants/messages.constants.js";
 import type { ISettingsController, ISettingsService, SettingsResponseDTO, SettingsEntity } from "./settings.types.js";
