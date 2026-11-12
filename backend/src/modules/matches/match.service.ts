@@ -3,25 +3,8 @@ import { AppError } from "../../shared/errors/appError.js";
 import type { PaginatedResult } from "../../shared/types/common.types.js";
 import type { IPlayerRepository, PlayerEntity } from "../players/player.types.js";
 import type { ITeamRepository, TeamBriefDTO } from "../teams/team.types.js";
-import type {
-  GoalCreateDTO,
-  GoalFields,
-  IMatchService,
-  MatchCreateDTO,
-  MatchEntity,
-  MatchFields,
-  MatchListFilter,
-  MatchQueryDTO,
-  IMatchRepository,
-  MatchResponseDTO,
-  MatchGoalDTO,
-  MatchPlayerBriefDTO,
-  MatchUpdateDTO,
-  MatchTeamReferenceEntity,
-  MatchPlayerReferenceEntity,
-  PopulatedGoalEntity,
-  PopulatedMatchEntity,
-} from "./match.types.js";
+import type { IMatchService, IMatchRepository } from "./match.interfaces.js";
+import type { GoalCreateDTO, GoalFields, MatchCreateDTO, MatchEntity, MatchFields, MatchListFilter, MatchQueryDTO, MatchResponseDTO, MatchGoalDTO, MatchPlayerBriefDTO, MatchUpdateDTO, MatchTeamReferenceEntity, MatchPlayerReferenceEntity, PopulatedGoalEntity, PopulatedMatchEntity } from "./match.types.js";
 
 export class MatchService implements IMatchService {
   constructor(
