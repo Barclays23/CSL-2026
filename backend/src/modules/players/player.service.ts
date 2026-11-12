@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
 import { normalizeEmail,normalizeMobile } from "../../shared/utils/normalizeInput.js";
 import { PlayerRepository } from "./player.repository.js";
-import { TeamRepository } from "../_teamRepo/team.repository.js";
+import { TeamRepository } from "../teams/team.repository.js";
 import { SettingsService } from "../_settingsService/_settingsService.service.js";
 type Row=Record<string,unknown>;
 const brief=(v:unknown):Row|null=>v&&typeof v==="object"&&"_id" in v?({_id:String((v as Row)._id),name:(v as Row).name,shortName:(v as Row).shortName??null,logo:(v as Row).logo??null,groupName:(v as Row).groupName??null}):null;
