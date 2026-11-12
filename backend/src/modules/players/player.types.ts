@@ -40,6 +40,21 @@ export interface PopulatedPlayerEntity extends Omit<PlayerEntity, "teamRef"> {
   teamRef: Types.ObjectId | TeamBriefEntity | null;
 }
 
+/** Exact player projection required by tournament statistics queries. */
+export type PlayerStatisticsEntity = Pick<
+  PlayerEntity,
+  | "_id"
+  | "name"
+  | "position"
+  | "isIconPlayer"
+  | "teamRef"
+  | "jerseyNo"
+  | "auctionPrice"
+  | "auctionStatus"
+  | "status"
+  | "profilePic"
+>;
+
 export interface PlayerPublicDTO {
   _id: string;
   name: string;
