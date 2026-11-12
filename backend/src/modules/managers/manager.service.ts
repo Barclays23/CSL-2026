@@ -1,24 +1,66 @@
 import { AppError } from "../../shared/errors/appError.js";
-import { normalizeEmail,normalizeMobile } from "../../shared/utils/normalizeInput.js";
-import { ManagerRepository } from "./manager.repository.js";
+import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
+import { ManagerRepository, type ManagerListRecord } from "./manager.repository.js";
 import { TeamRepository } from "../teams/team.repository.js";
-type Row=Record<string,unknown>;
-const brief=(v:unknown):Row|null=>v&&typeof v==="object"&&"_id" in v?({_id:String((v as Row)._id),name:(v as Row).name,shortName:(v as Row).shortName??null,logo:(v as Row).logo??null,groupName:(v as Row).groupName??null}):null;
+import type { ManagerCreateInput, ManagerQueryInput, ManagerUpdateInput } from "./manager.dto.js";
+import type { AdminManagerDTO, PublicManagerDTO } from "./manager.types.js";
+import type { ManagerRecord } from "./manager.model.js";
+import type { FilterQuery, Types } from "mongoose";
+
 export class ManagerService {
-  constructor(private readonly _managerRepo:ManagerRepository,private readonly _teamRepo:TeamRepository){}
-  async list(query:Row,admin:boolean){
-    const f:Row={};if(query.search)f.name={$regex:String(query.search),$options:"i"};if(admin&&query.status)f.status=query.status;else if(!admin)f.status="active";if(query.teamRef)f.teamRef=query.teamRef;
-    const r=await this._managerRepo.listPopulated(f,Number(query.page||1),Number(query.limit||20));
-    return {items:(r.items as unknown as Row[]).map(m=>this.map(m,admin)),total:r.total,page:Number(query.page||1),limit:Number(query.limit||20)};
+  constructor(private readonly managerRepository: ManagerRepository, private readonly teamRepository: TeamRepository) {}
+  async getManagers(query: ManagerQueryInput, isAdmin: boolean): Promise<{ items: Array<PublicManagerDTO | AdminManagerDTO>; total: number; page: number; limit: number }> {
+    const filter: FilterQuery<ManagerRecord> = {};
+    if (query.search) filter.name = { $regex: query.search, $options: "i" };
+    if (isAdmin && query.status) filter.status = query.status;
+    else if (!isAdmin) filter.status = "active";
+    if (query.teamRef) filter.teamRef = query.teamRef as unknown as Types.ObjectId;
+    const result = await this.managerRepository.listManagers(filter, query.page, query.limit);
+    return { items: result.items.map((manager) => this.mapManagerResponse(manager, isAdmin)), total: result.total, page: query.page, limit: query.limit };
   }
-  async get(id:string,admin:boolean){const m=await this._managerRepo.findPopulated(id) as unknown as Row|null;if(!m||(!admin&&m.status!=="active"))throw new AppError("Manager not found",404,"NOT_FOUND");return this.map(m,admin);}
-  map(m:Row,admin:boolean){const {_id,name,teamRef,role,profilePic,status,mobile,email,dateOfBirth}=m;const team=brief(teamRef);return admin?{_id:String(_id),name,teamRef:team?team._id:teamRef?String(teamRef):null,team,role,profilePic,status,mobile,email:email??null,dateOfBirth:dateOfBirth??null}:{_id:String(_id),name,teamRef:team?team._id:teamRef?String(teamRef):null,team,role,profilePic,status};}
-  async save(data:Row,id?:string){
-    if(data.teamRef){const team=await this._teamRepo.findById(String(data.teamRef));if(!team||team.status!=="active")throw new AppError("Select an active team",422,"INVALID_TEAM");}
-    if(data.mobile)data.mobile=normalizeMobile(String(data.mobile));if("email"in data)data.email=normalizeEmail(data.email as string|null|undefined);
-    if(data.mobile){const existing=await this._managerRepo.findOne({mobile:data.mobile,...(id?{_id:{$ne:id}}:{})});if(existing)throw new AppError("Mobile already exists",409,"DUPLICATE_MOBILE",{mobile:"Mobile already exists"});}
-    if(data.email){const e=await this._managerRepo.findOne({email:data.email,...(id?{_id:{$ne:id}}:{})});if(e)throw new AppError("Email already exists",409,"DUPLICATE_EMAIL",{email:"Email already exists"});}
-    const v=id?await this._managerRepo.update(id,data):await this._managerRepo.create(data);if(!v)throw new AppError("Manager not found",404,"NOT_FOUND");return this.map(v,true);
+  async getManagerById(managerId: string, isAdmin: boolean): Promise<PublicManagerDTO | AdminManagerDTO> {
+    const manager = await this.managerRepository.findManagerById(managerId);
+    if (!manager || (!isAdmin && manager.status !== "active")) throw new AppError("Manager not found", 404, "NOT_FOUND");
+    return this.mapManagerResponse(manager, isAdmin);
   }
-  async remove(id:string){const r=await this._managerRepo.remove(id);if(!r)throw new AppError("Manager not found",404,"NOT_FOUND");return null;}
+  private mapManagerResponse(manager: ManagerListRecord, isAdmin: boolean): PublicManagerDTO | AdminManagerDTO {
+    const team = manager.teamRef && typeof manager.teamRef === "object" && "_id" in manager.teamRef
+      ? { _id: String(manager.teamRef._id), name: manager.teamRef.name, shortName: manager.teamRef.shortName ?? null, logo: manager.teamRef.logo ?? null, groupName: manager.teamRef.groupName ?? null }
+      : null;
+    const base: PublicManagerDTO = { _id: String(manager._id), name: manager.name, teamRef: team?._id ?? (manager.teamRef ? String(manager.teamRef) : null), team, role: manager.role ?? null, profilePic: manager.profilePic ?? null, status: manager.status };
+    return isAdmin ? { ...base, mobile: manager.mobile, email: manager.email ?? null, dateOfBirth: manager.dateOfBirth ?? null } : base;
+  }
+  async createManager(data: ManagerCreateInput): Promise<AdminManagerDTO> {
+    return this.saveManager(data);
+  }
+  async updateManager(managerId: string, data: ManagerUpdateInput): Promise<AdminManagerDTO> {
+    const current = await this.managerRepository.findById(managerId);
+    if (!current) throw new AppError("Manager not found", 404, "NOT_FOUND");
+    return this.saveManager(data, managerId);
+  }
+  private async saveManager(data: ManagerCreateInput | ManagerUpdateInput, managerId?: string): Promise<AdminManagerDTO> {
+    if (data.teamRef) {
+      const team = await this.teamRepository.findById(data.teamRef);
+      if (!team || team.status !== "active") throw new AppError("Select an active team", 422, "INVALID_TEAM");
+    }
+    const mobile = data.mobile ? normalizeMobile(data.mobile) : undefined;
+    const email = "email" in data ? normalizeEmail(data.email) : undefined;
+    if (mobile) {
+      const duplicate = await this.managerRepository.findByMobile(mobile);
+      if (duplicate && String(duplicate._id) !== managerId) throw new AppError("Mobile already exists", 409, "DUPLICATE_MOBILE", { mobile: "Mobile already exists" });
+    }
+    if (email) {
+      const duplicate = await this.managerRepository.findByEmail(email);
+      if (duplicate && String(duplicate._id) !== managerId) throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
+    }
+    const payload: Partial<ManagerRecord> = { ...data, ...(mobile ? { mobile } : {}), ...("email" in data ? { email: email ?? null } : {}) };
+    const manager = managerId ? await this.managerRepository.updateManager(managerId, payload) : await this.managerRepository.createManager(payload);
+    if (!manager) throw new AppError("Manager not found", 404, "NOT_FOUND");
+    const populated = await this.managerRepository.findManagerById(String(manager._id));
+    if (!populated) throw new AppError("Manager not found", 404, "NOT_FOUND");
+    return this.mapManagerResponse(populated, true) as AdminManagerDTO;
+  }
+  async deleteManager(managerId: string): Promise<void> {
+    if (!await this.managerRepository.deleteManager(managerId)) throw new AppError("Manager not found", 404, "NOT_FOUND");
+  }
 }

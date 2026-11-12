@@ -1,13 +1,38 @@
-import { ManagerModel } from "./manager.model.js";
-import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class ManagerRepository extends CrudRepository {
-  constructor(){super(ManagerModel);}
-  async listPopulated(filter:Record<string,unknown>,page:number,limit:number){
-    const [items,total]=await Promise.all([
-      ManagerModel.find(filter as never).sort({name:1}).skip((page-1)*limit).limit(limit).populate({path:"teamRef",select:"name shortName logo groupName"}).lean().exec(),
-      ManagerModel.countDocuments(filter as never).exec()
+import type { FilterQuery, Types } from "mongoose";
+import { ManagerModel, type ManagerRecord } from "./manager.model.js";
+export interface ManagerListRecord extends Omit<ManagerRecord, "teamRef"> {
+  _id: Types.ObjectId;
+  teamRef: Types.ObjectId | { _id: Types.ObjectId; name: string; shortName: string | null; logo: { url: string; publicId: string } | null; groupName: string | null } | null;
+}
+export class ManagerRepository {
+  async listManagers(filter: FilterQuery<ManagerRecord>, page: number, limit: number): Promise<{ items: ManagerListRecord[]; total: number }> {
+    const [items, total] = await Promise.all([
+      ManagerModel.find(filter).sort({ name: 1 }).skip((page - 1) * limit).limit(limit).populate({ path: "teamRef", select: "name shortName logo groupName" }).lean<ManagerListRecord[]>().exec(),
+      ManagerModel.countDocuments(filter).exec(),
     ]);
-    return {items,total};
+    return { items, total };
   }
-  async findPopulated(id:string){return ManagerModel.findById(id).populate({path:"teamRef",select:"name shortName logo groupName"}).lean().exec();}
+  async findManagerById(managerId: string): Promise<ManagerListRecord | null> {
+    return ManagerModel.findById(managerId).populate({ path: "teamRef", select: "name shortName logo groupName" }).lean<ManagerListRecord>().exec();
+  }
+  async findById(managerId: string): Promise<(ManagerRecord & { _id: Types.ObjectId }) | null> {
+    return ManagerModel.findById(managerId).lean().exec() as Promise<(ManagerRecord & { _id: Types.ObjectId }) | null>;
+  }
+  async findByMobile(mobile: string): Promise<(ManagerRecord & { _id: Types.ObjectId }) | null> {
+    return ManagerModel.findOne({ mobile }).lean().exec() as Promise<(ManagerRecord & { _id: Types.ObjectId }) | null>;
+  }
+  async findByEmail(email: string): Promise<(ManagerRecord & { _id: Types.ObjectId }) | null> {
+    return ManagerModel.findOne({ email }).lean().exec() as Promise<(ManagerRecord & { _id: Types.ObjectId }) | null>;
+  }
+  async createManager(data: Partial<ManagerRecord>): Promise<ManagerRecord & { _id: Types.ObjectId }> {
+    const manager = await ManagerModel.create(data);
+    return manager.toObject() as ManagerRecord & { _id: Types.ObjectId };
+  }
+  async updateManager(managerId: string, data: Partial<ManagerRecord>): Promise<(ManagerRecord & { _id: Types.ObjectId }) | null> {
+    return ManagerModel.findByIdAndUpdate(managerId, { $set: data }, { new: true, runValidators: true }).lean().exec() as Promise<(ManagerRecord & { _id: Types.ObjectId }) | null>;
+  }
+  async deleteManager(managerId: string): Promise<boolean> {
+    const deleted = await ManagerModel.findByIdAndDelete(managerId).select("_id").lean().exec();
+    return deleted !== null;
+  }
 }

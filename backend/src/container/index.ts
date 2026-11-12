@@ -27,36 +27,37 @@ import { StatisticsController } from "../modules/statistics/statistics.controlle
 import { AuctionController } from "../modules/auction/auction.controller.js";
 import { UploadController } from "../modules/uploads/upload.controller.js";
 
-const userRepository=new UserRepository();
-const settingsRepository=new SettingsRepository();
-const playerRepository=new PlayerRepository();
-const teamRepository=new TeamRepository();
-const managerRepository=new ManagerRepository();
-const sponsorRepository=new SponsorRepository();
-const matchRepository=new MatchRepository();
-const statisticsRepository=new StatisticsRepository();
+const userRepository = new UserRepository();
+const settingsRepository = new SettingsRepository();
+const playerRepository = new PlayerRepository();
+const teamRepository = new TeamRepository();
+const managerRepository = new ManagerRepository();
+const sponsorRepository = new SponsorRepository();
+const matchRepository = new MatchRepository();
+const statisticsRepository = new StatisticsRepository();
+const settingsService = new SettingsService(settingsRepository);
 
-export const services={
-  auth:new AuthService(userRepository),
-  settings:new SettingsService(settingsRepository),
-  players:new PlayerService(playerRepository,teamRepository,new SettingsService(settingsRepository)),
-  teams:new TeamService(teamRepository,playerRepository,new SettingsService(settingsRepository)),
-  managers:new ManagerService(managerRepository,teamRepository),
-  sponsors:new SponsorService(sponsorRepository),
-  matches:new MatchService(matchRepository,teamRepository,playerRepository),
-  statistics:new StatisticsService(statisticsRepository,new SettingsService(settingsRepository),playerRepository,teamRepository),
-  auction:new AuctionService(new SettingsService(settingsRepository),teamRepository,playerRepository),
-  upload:new UploadService()
+export const services = {
+  auth: new AuthService(userRepository),
+  settings: settingsService,
+  players: new PlayerService(playerRepository, teamRepository, settingsService),
+  teams: new TeamService(teamRepository, playerRepository, settingsService),
+  managers: new ManagerService(managerRepository, teamRepository),
+  sponsors: new SponsorService(sponsorRepository),
+  matches: new MatchService(matchRepository, teamRepository, playerRepository),
+  statistics: new StatisticsService(statisticsRepository, settingsService, playerRepository, teamRepository),
+  auction: new AuctionService(settingsService, teamRepository, playerRepository),
+  upload: new UploadService(),
 };
-export const controllers={
-  auth:new AuthController(services.auth),
-  settings:new SettingsController(services.settings),
-  players:new PlayerController(services.players),
-  teams:new TeamController(services.teams,services.statistics),
-  managers:new ManagerController(services.managers),
-  sponsors:new SponsorController(services.sponsors),
-  matches:new MatchController(services.matches),
-  statistics:new StatisticsController(services.statistics),
-  auction:new AuctionController(services.auction),
-  upload:new UploadController(services.upload)
+export const controllers = {
+  auth: new AuthController(services.auth),
+  settings: new SettingsController(services.settings),
+  players: new PlayerController(services.players),
+  teams: new TeamController(services.teams, services.statistics),
+  managers: new ManagerController(services.managers),
+  sponsors: new SponsorController(services.sponsors),
+  matches: new MatchController(services.matches),
+  statistics: new StatisticsController(services.statistics),
+  auction: new AuctionController(services.auction),
+  upload: new UploadController(services.upload),
 };

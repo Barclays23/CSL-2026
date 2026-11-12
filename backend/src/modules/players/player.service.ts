@@ -1,134 +1,122 @@
 import { Types } from "mongoose";
 import { AppError } from "../../shared/errors/appError.js";
-import { normalizeEmail,normalizeMobile } from "../../shared/utils/normalizeInput.js";
+import { normalizeEmail, normalizeMobile } from "../../shared/utils/normalizeInput.js";
 import { PlayerRepository } from "./player.repository.js";
-import { TeamRepository } from "../_teamRepo/team.repository.js";
-import { SettingsService } from "../_settingsService/_settingsService.service.js";
-type Row=Record<string,unknown>;
-const brief=(v:unknown):Row|null=>v&&typeof v==="object"&&"_id" in v?({_id:String((v as Row)._id),name:(v as Row).name,shortName:(v as Row).shortName??null,logo:(v as Row).logo??null,groupName:(v as Row).groupName??null}):null;
-const nullableId=(v:unknown)=>v===null||v===undefined||v===""?null:String(v);
-const nullableNumber=(v:unknown)=>v===null||v===undefined||v===""?null:Number(v);
+import { TeamRepository } from "../teams/team.repository.js";
+import { SettingsService } from "../settings/settings.service.js";
+import type { PlayerListRecord } from "./player.types.js";
+import type { PlayerCreateInput, PlayerQueryInput, PlayerUpdateInput, AssignPlayerInput } from "./player.dto.js";
+import type { PlayerAdminDTO, PlayerPublicDTO, PlayerResponseDTO } from "./player.types.js";
+
 export class PlayerService {
-  constructor(private readonly _playerRepo:PlayerRepository,private readonly _teamRepo:TeamRepository,private readonly _settingsService:SettingsService){}
-  async list(query:Row,isAdmin:boolean){
-    const {page=1,limit=10,search,position,status,auctionStatus}=query;const filter:Row={};
-    if(search)filter.name={$regex:String(search),$options:"i"};if(position)filter.position=position;
-    if(isAdmin&&status)filter.status=status;else if(!isAdmin)filter.status="active";
-    if(isAdmin&&auctionStatus)filter.auctionStatus=auctionStatus;
-    if(query.teamRef==="unassigned")filter.teamRef=null;else if(query.teamRef)filter.teamRef=query.teamRef;
-    const result=await this._playerRepo.listPlayers(filter,Number(page),Number(limit));
-    return {items:(result.items as unknown as Row[]).map(p=>this.publicMap(p,isAdmin)),total:result.total,page:Number(page),limit:Number(limit)};
+  constructor(private readonly playerRepository: PlayerRepository, private readonly teamRepository: TeamRepository, private readonly settingsService: SettingsService) {}
+  async getPlayers(query: PlayerQueryInput, isAdmin: boolean): Promise<{ items: PlayerResponseDTO[]; total: number; page: number; limit: number }> {
+    const filter: import("./player.types.js").PlayerFilter = {};
+    if (query.search) filter.name = { $regex: query.search, $options: "i" };
+    if (query.position) filter.position = query.position;
+    if (isAdmin && query.status) filter.status = query.status;
+    else if (!isAdmin) filter.status = "active";
+    if (isAdmin && query.auctionStatus) filter.auctionStatus = query.auctionStatus;
+    if (query.teamRef === "unassigned") filter.teamRef = null;
+    else if (query.teamRef) filter.teamRef = query.teamRef;
+    const result = await this.playerRepository.listPlayers(filter, query.page, query.limit);
+    return { items: result.items.map((player) => this.mapPlayerResponse(player, isAdmin)), total: result.total, page: query.page, limit: query.limit };
   }
-  publicMap(p:Row,admin=false){
-    const {_id,name,position,isIconPlayer,teamRef,jerseyNo,auctionPrice,auctionStatus,status,profilePic,mobile,email,dateOfBirth}=p;
-    const team=brief(teamRef);const base={_id:String(_id),name,position,isIconPlayer,teamRef:team?team._id:teamRef?String(teamRef):null,team,jerseyNo,auctionPrice,auctionStatus,status,profilePic};
-    return admin?{...base,mobile,email:email??null,dateOfBirth:dateOfBirth??null}:base;
+  private mapPlayerResponse(player: PlayerListRecord, isAdmin: boolean): PlayerResponseDTO {
+    const team = player.teamRef && typeof player.teamRef === "object" && "_id" in player.teamRef
+      ? { _id: String(player.teamRef._id), name: player.teamRef.name, shortName: player.teamRef.shortName ?? null, logo: player.teamRef.logo ?? null, groupName: player.teamRef.groupName ?? null }
+      : null;
+    const base: PlayerPublicDTO = {
+      _id: String(player._id), name: player.name, position: player.position, isIconPlayer: player.isIconPlayer,
+      teamRef: team?._id ?? (player.teamRef ? String(player.teamRef) : null), team, jerseyNo: player.jerseyNo ?? null,
+      auctionPrice: player.auctionPrice, auctionStatus: player.auctionStatus, status: player.status, profilePic: player.profilePic ?? null,
+    };
+    return isAdmin ? { ...base, mobile: player.mobile, email: player.email ?? null, dateOfBirth: player.dateOfBirth ?? null } : base;
   }
-  async get(id:string,isAdmin:boolean){
-    if(!Types.ObjectId.isValid(id))throw new AppError("Invalid player ID",400,"INVALID_ID");
-    const p=await this._playerRepo.findPlayerPopulated(id) as unknown as Row|null;
-    if(!p||(!isAdmin&&p.status!=="active"))throw new AppError("Player not found",404,"NOT_FOUND");
-    return this.publicMap(p,isAdmin);
+  async getPlayerById(playerId: string, isAdmin: boolean): Promise<PlayerResponseDTO> {
+    if (!Types.ObjectId.isValid(playerId)) throw new AppError("Invalid player ID", 400, "INVALID_ID");
+    const player = await this.playerRepository.findPlayerPopulated(playerId);
+    if (!player || (!isAdmin && player.status !== "active")) throw new AppError("Player not found", 404, "NOT_FOUND");
+    return this.mapPlayerResponse(player, isAdmin);
   }
-  async create(data:Row){
-    const _settingsService=await this._settingsService.get();
-    if(await this._playerRepo.findByMobile(normalizeMobile(String(data.mobile))))throw new AppError("Mobile already exists",409,"DUPLICATE_MOBILE",{mobile:"Mobile already exists"});
-    const email=normalizeEmail(data.email as string|null|undefined);
-    if(email&&await this._playerRepo.findOne({email}))throw new AppError("Email already exists",409,"DUPLICATE_EMAIL",{email:"Email already exists"});
-    if((await this._playerRepo.count({status:"active"}))>=Number(_settingsService.maxActivePlayers)&&data.status!=="inactive")throw new AppError("Maximum active player limit reached",422,"PLAYER_LIMIT");
-    if(data.status==="inactive"){
-      const inactive=await this._playerRepo.create({...data,mobile:normalizeMobile(String(data.mobile)),email,teamRef:null,jerseyNo:null,auctionPrice:0,auctionStatus:"pending"});
-      return this.publicMap(inactive,true);
+  async createPlayer(data: PlayerCreateInput): Promise<PlayerAdminDTO> {
+    const settings = await this.settingsService.get();
+    const mobile = normalizeMobile(data.mobile); const email = normalizeEmail(data.email);
+    if (await this.playerRepository.findByMobile(mobile)) throw new AppError("Mobile already exists", 409, "DUPLICATE_MOBILE", { mobile: "Mobile already exists" });
+    if (email && await this.playerRepository.findOne({ email })) throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
+    if (data.status !== "inactive" && await this.playerRepository.count({ status: "active" }) >= settings.maxActivePlayers) throw new AppError("Maximum active player limit reached", 422, "PLAYER_LIMIT");
+    if (data.auctionStatus === "sold") {
+      if (settings.auctionState !== "in_progress") throw new AppError("Start or reopen the auction before marking a player sold", 409, "AUCTION_NOT_IN_PROGRESS");
+      if (!data.teamRef || !data.auctionPrice || data.auctionPrice <= 0) throw new AppError("A sold player requires a team and auction price", 422, "INVALID_SOLD_PLAYER");
+      await this.validatePlayerAssignment(data.teamRef, "", data.auctionPrice, data.isIconPlayer, data.position, data.jerseyNo);
     }
-    const auctionStatus=String(data.auctionStatus??"pending");
-    if(auctionStatus==="sold"){
-      if(_settingsService.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before marking a player sold",409,"AUCTION_NOT_IN_PROGRESS");
-      if(!data.teamRef||Number(data.auctionPrice)<=0)throw new AppError("Sold _playerRepo require a team and auction price",422,"INVALID_SOLD_PLAYER");
-      await this.validateAssignment(String(data.teamRef),"",Number(data.auctionPrice),Boolean(data.isIconPlayer),String(data.position),data.jerseyNo as number|null|undefined);
-    }else if(data.teamRef||data.jerseyNo!==null&&data.jerseyNo!==undefined||Number(data.auctionPrice||0)!==0){
-      throw new AppError("Pending and unsold _playerRepo cannot have a team, jersey number or auction price",422,"INVALID_AUCTION_FIELDS");
+    const createData = data.status === "inactive"
+      ? { ...data, mobile, email, teamRef: null, jerseyNo: null, auctionPrice: 0, auctionStatus: "pending" as const }
+      : { ...data, mobile, email, teamRef: data.auctionStatus === "sold" ? data.teamRef ?? null : null, jerseyNo: data.auctionStatus === "sold" ? data.jerseyNo ?? null : null, auctionPrice: data.auctionStatus === "sold" ? data.auctionPrice : 0 };
+    if (data.auctionStatus !== "sold" && data.status !== "inactive" && (data.teamRef || data.jerseyNo != null || data.auctionPrice !== 0)) throw new AppError("Pending and unsold players cannot have a team, jersey number or auction price", 422, "INVALID_AUCTION_FIELDS");
+    const created = await this.playerRepository.create(createData);
+    const response = await this.getPlayerById(String(created._id), true);
+    return response as PlayerAdminDTO;
+  }
+  async updatePlayer(playerId: string, data: PlayerUpdateInput): Promise<PlayerAdminDTO> {
+    const current = await this.playerRepository.findById(playerId);
+    if (!current) throw new AppError("Player not found", 404, "NOT_FOUND");
+    const mobile = data.mobile ? normalizeMobile(data.mobile) : current.mobile;
+    const email = "email" in data ? normalizeEmail(data.email) : current.email;
+    if (data.mobile && mobile !== current.mobile && await this.playerRepository.findByMobile(mobile)) throw new AppError("Mobile already exists", 409, "DUPLICATE_MOBILE", { mobile: "Mobile already exists" });
+    if (email && email !== current.email && await this.playerRepository.findOne({ email, _id: { $ne: playerId } })) throw new AppError("Email already exists", 409, "DUPLICATE_EMAIL", { email: "Email already exists" });
+    if (data.status === "inactive") return this.deactivatePlayer(playerId);
+    const settings = await this.settingsService.get();
+    const auctionChanged = ["teamRef", "jerseyNo", "auctionPrice", "auctionStatus", "isIconPlayer", "position", "status"].some((key) => key in data);
+    if (settings.auctionState === "completed" && auctionChanged) throw new AppError("Reopen the auction before changing auction-related player data", 409, "AUCTION_COMPLETED");
+    const merged = { ...current, ...data };
+    if (merged.auctionStatus === "sold") {
+      if (!merged.teamRef || merged.auctionPrice <= 0) throw new AppError("A sold player requires a team and auction price", 422, "INVALID_SOLD_PLAYER");
+      if (auctionChanged) await this.validatePlayerAssignment(String(merged.teamRef), playerId, merged.auctionPrice, merged.isIconPlayer, merged.position, merged.jerseyNo);
+    } else {
+      merged.teamRef = null; merged.jerseyNo = null; merged.auctionPrice = 0;
     }
-    const player=await this._playerRepo.create({
-      ...data,mobile:normalizeMobile(String(data.mobile)),email,
-      teamRef:auctionStatus==="sold"?data.teamRef:null,
-      jerseyNo:auctionStatus==="sold"?(data.jerseyNo??null):null,
-      auctionPrice:auctionStatus==="sold"?Number(data.auctionPrice):0,
-      auctionStatus
-    });
-    const populated=await this._playerRepo.findPlayerPopulated(String(player._id)) as unknown as Row;
-    return this.publicMap(populated,true);
+    const updateData = { ...data, ...(data.mobile ? { mobile } : {}), ...("email" in data ? { email } : {}), ...(merged.auctionStatus !== "sold" ? { teamRef: null, jerseyNo: null, auctionPrice: 0 } : {}) };
+    const updated = await this.playerRepository.update(playerId, updateData);
+    if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
+    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
   }
-  async update(id:string,data:Row){
-    const current=await this._playerRepo.findById(id);if(!current)throw new AppError("Player not found",404,"NOT_FOUND");
-    const email=normalizeEmail(data.email as string|null|undefined);
-    if(data.mobile&&normalizeMobile(String(data.mobile))!==current.mobile&&await this._playerRepo.findByMobile(normalizeMobile(String(data.mobile))))throw new AppError("Mobile already exists",409,"DUPLICATE_MOBILE",{mobile:"Mobile already exists"});
-    if(email&&email!==current.email&&await this._playerRepo.findOne({email,_id:{$ne:id}}))throw new AppError("Email already exists",409,"DUPLICATE_EMAIL",{email:"Email already exists"});
-    if(data.mobile)data.mobile=normalizeMobile(String(data.mobile));if("email"in data)data.email=email;
-    const merged:Row={...current,...data};
-    // Do not pass MongoDB-managed fields into $set; _id is immutable.
-    delete merged._id;
-    delete merged.createdAt;
-    delete merged.updatedAt;
-    delete merged.__v;
-    if(merged.status==="inactive"){
-      merged.teamRef=null;merged.jerseyNo=null;merged.auctionPrice=0;merged.auctionStatus="pending";
-      const _settingsService=await this._settingsService.get();if(_settingsService.auctionState==="completed")await this._settingsService.update({auctionState:"in_progress",auctionCompletedAt:null});
-      const inactive=await this._playerRepo.update(id,merged);if(!inactive)throw new AppError("Player not found",404,"NOT_FOUND");
-      return this.publicMap(inactive,true);
-    }
-    const _settingsService=await this._settingsService.get();
-    const auctionChanged=
-      ("teamRef" in data&&nullableId(data.teamRef)!==nullableId(current.teamRef))||
-      ("jerseyNo" in data&&nullableNumber(data.jerseyNo)!==nullableNumber(current.jerseyNo))||
-      ("auctionPrice" in data&&Number(data.auctionPrice)!==Number(current.auctionPrice))||
-      ("auctionStatus" in data&&data.auctionStatus!==current.auctionStatus)||
-      ("isIconPlayer" in data&&Boolean(data.isIconPlayer)!==Boolean(current.isIconPlayer))||
-      ("position" in data&&data.position!==current.position)||
-      ("status" in data&&data.status!==current.status);
-    if(_settingsService.auctionState==="completed"&&auctionChanged)throw new AppError("Reopen the auction before changing auction-related player data",409,"AUCTION_COMPLETED");
-    if(data.status==="active"&&current.status==="inactive"&&(await this._playerRepo.count({status:"active"}))>=Number(_settingsService.maxActivePlayers))throw new AppError("Maximum active player limit reached",422,"PLAYER_LIMIT");
-    if(merged.auctionStatus==="sold"){
-      if(auctionChanged&&_settingsService.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before changing auction assignments",409,"AUCTION_NOT_IN_PROGRESS");
-      if(!merged.teamRef||Number(merged.auctionPrice)<=0)throw new AppError("Sold _playerRepo require a team and auction price",422,"INVALID_SOLD_PLAYER");
-      if(auctionChanged)await this.validateAssignment(String(merged.teamRef),id,Number(merged.auctionPrice),Boolean(merged.isIconPlayer),String(merged.position),merged.jerseyNo as number|null|undefined);
-    }else if(merged.auctionStatus==="pending"||merged.auctionStatus==="unsold"){
-      merged.teamRef=null;merged.jerseyNo=null;merged.auctionPrice=0;
-    }
-    const updated=await this._playerRepo.update(id,merged);if(!updated)throw new AppError("Player not found",404,"NOT_FOUND");
-    return this.publicMap(updated,true);
+  private async validatePlayerAssignment(teamId: string, playerId: string, price: number, isIconPlayer: boolean, position: import("./player.types.js").PlayerPosition, jerseyNo?: number | null): Promise<void> {
+    const team = await this.teamRepository.findById(teamId);
+    if (!team || team.status !== "active") throw new AppError("Select an active team", 422, "INVALID_TEAM");
+    const settings = await this.settingsService.get(); const squad = await this.playerRepository.getTeamPlayers(teamId);
+    const existing = squad.filter((player) => String(player._id) !== playerId);
+    if (existing.length >= settings.maxPlayersPerTeam) throw new AppError("Team squad limit reached", 422, "SQUAD_LIMIT");
+    if (existing.reduce((total, player) => total + player.auctionPrice, 0) + price > settings.auctionBudgetPerTeam) throw new AppError("Team auction budget exceeded", 422, "BUDGET_EXCEEDED");
+    if (isIconPlayer && existing.some((player) => player.isIconPlayer)) throw new AppError("Team already has an icon player", 422, "ICON_LIMIT");
+    if (position === "GK" && existing.some((player) => player.position === "GK")) throw new AppError("Team already has a goalkeeper", 422, "GOALKEEPER_LIMIT");
+    if (jerseyNo != null && await this.playerRepository.findDuplicateJersey(teamId, jerseyNo, playerId || undefined)) throw new AppError("Jersey number already used in this team", 409, "DUPLICATE_JERSEY", { jerseyNo: "Jersey number already used in this team" });
   }
-  private async validateAssignment(teamId:string,playerId:string,price:number,isIcon:boolean,position:string,jerseyNo?:number|null){
-    const team=await this._teamRepo.findById(teamId);if(!team||team.status!=="active")throw new AppError("Select an active team",422,"INVALID_TEAM");
-    const _settingsService=await this._settingsService.get();const squad=await this._playerRepo.getTeamPlayers(teamId) as unknown as Row[];
-    const existing=squad.filter(p=>String(p._id)!==playerId);
-    if(existing.length>=Number(_settingsService.maxPlayersPerTeam))throw new AppError("Team squad limit reached",422,"SQUAD_LIMIT");
-    const cost=existing.reduce((sum,p)=>sum+Number(p.auctionPrice||0),0);if(cost+price>Number(_settingsService.auctionBudgetPerTeam))throw new AppError("Team auction budget exceeded",422,"BUDGET_EXCEEDED");
-    if(isIcon&&existing.some(p=>p.isIconPlayer))throw new AppError("Team already has an icon player",422,"ICON_LIMIT");
-    if(position==="GK"&&existing.some(p=>p.position==="GK"))throw new AppError("Team already has a goalkeeper",422,"GOALKEEPER_LIMIT");
-    if(jerseyNo!==null&&jerseyNo!==undefined&&await this._playerRepo.findDuplicateJersey(teamId,jerseyNo,playerId||undefined))throw new AppError("Jersey number already used in this team",409,"DUPLICATE_JERSEY",{jerseyNo:"Jersey number already used in this team"});
+  async assignPlayerToTeam(playerId: string, data: AssignPlayerInput): Promise<PlayerAdminDTO> {
+    const player = await this.playerRepository.findById(playerId);
+    if (!player || player.status !== "active") throw new AppError("Active player not found", 404, "PLAYER_NOT_FOUND");
+    if ((await this.settingsService.get()).auctionState !== "in_progress") throw new AppError("Start or reopen the auction before making assignments", 409, "AUCTION_NOT_IN_PROGRESS");
+    await this.validatePlayerAssignment(data.teamRef, playerId, data.auctionPrice, player.isIconPlayer, player.position, data.jerseyNo);
+    const updated = await this.playerRepository.update(playerId, { teamRef: data.teamRef, auctionPrice: data.auctionPrice, jerseyNo: data.jerseyNo ?? null, auctionStatus: "sold" });
+    if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
+    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
   }
-  async assign(id:string,data:{teamRef:string;auctionPrice:number;jerseyNo?:number|null}){
-    const p=await this._playerRepo.findById(id);if(!p||p.status!=="active")throw new AppError("Active player not found",404,"PLAYER_NOT_FOUND");
-    const _settingsService=await this._settingsService.get();if(_settingsService.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before making assignments",409,"AUCTION_NOT_IN_PROGRESS");
-    await this.validateAssignment(data.teamRef,id,data.auctionPrice,Boolean(p.isIconPlayer),String(p.position),data.jerseyNo);
-    const updated=await this._playerRepo.update(id,{teamRef:data.teamRef,auctionPrice:data.auctionPrice,jerseyNo:data.jerseyNo??null,auctionStatus:"sold"});
-    return this.publicMap(updated!,true);
+  async markPlayerUnsold(playerId: string): Promise<PlayerAdminDTO> {
+    if ((await this.settingsService.get()).auctionState !== "in_progress") throw new AppError("Start or reopen the auction before changing auction results", 409, "AUCTION_NOT_IN_PROGRESS");
+    const updated = await this.playerRepository.update(playerId, { teamRef: null, jerseyNo: null, auctionPrice: 0, auctionStatus: "unsold" });
+    if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
+    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
   }
-  async markUnsold(id:string){
-    const _settingsService=await this._settingsService.get();if(_settingsService.auctionState!=="in_progress")throw new AppError("Start or reopen the auction before changing auction results",409,"AUCTION_NOT_IN_PROGRESS");
-    const p=await this._playerRepo.findById(id);if(!p)throw new AppError("Player not found",404,"NOT_FOUND");
-    const updated=await this._playerRepo.update(id,{teamRef:null,jerseyNo:null,auctionPrice:0,auctionStatus:"unsold"});
-    return this.publicMap(updated!,true);
+  async deactivatePlayer(playerId: string): Promise<PlayerAdminDTO> {
+    if (!await this.playerRepository.findById(playerId)) throw new AppError("Player not found", 404, "NOT_FOUND");
+    if ((await this.settingsService.get()).auctionState === "completed") await this.settingsService.updateSettings({ auctionState: "in_progress", auctionCompletedAt: null });
+    const updated = await this.playerRepository.update(playerId, { status: "inactive", teamRef: null, jerseyNo: null, auctionPrice: 0, auctionStatus: "pending" });
+    if (!updated) throw new AppError("Player not found", 404, "NOT_FOUND");
+    return this.getPlayerById(playerId, true) as Promise<PlayerAdminDTO>;
   }
-  async deactivate(id:string){
-    const current=await this._playerRepo.findById(id);if(!current)throw new AppError("Player not found",404,"NOT_FOUND");
-    const _settingsService=await this._settingsService.get();if(_settingsService.auctionState==="completed")await this._settingsService.update({auctionState:"in_progress",auctionCompletedAt:null});
-    const p=await this._playerRepo.update(id,{status:"inactive",teamRef:null,jerseyNo:null,auctionPrice:0,auctionStatus:"pending"});
-    if(!p)throw new AppError("Player not found",404,"NOT_FOUND");return this.publicMap(p,true);
-  }
-  async remove(id:string){
-    const p=await this._playerRepo.findById(id);if(!p)throw new AppError("Player not found",404,"NOT_FOUND");
-    if(await this._playerRepo.countGoalReferences(id))throw new AppError("Player is referenced by match goals. Deactivate instead.",409,"PLAYER_REFERENCED");
-    await this._playerRepo.remove(id);return null;
+  async deletePlayer(playerId: string): Promise<void> {
+    if (!await this.playerRepository.findById(playerId)) throw new AppError("Player not found", 404, "NOT_FOUND");
+    if (await this.playerRepository.countGoalReferences(playerId)) throw new AppError("Player is referenced by match goals. Deactivate instead.", 409, "PLAYER_REFERENCED");
+    if (!await this.playerRepository.remove(playerId)) throw new AppError("Player not found", 404, "NOT_FOUND");
   }
 }

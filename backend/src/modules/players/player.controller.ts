@@ -1,15 +1,20 @@
 import type { RequestHandler } from "express";
 import { asyncHandler } from "../../shared/utils/asyncHandler.js";
 import { sendSuccess } from "../../shared/responses/response.helper.js";
-import { PlayerService } from "./player._playerService.js";
+import { PlayerService } from "./player.service.js";
+import { assignPlayerSchema, playerCreateSchema, playerQuerySchema, playerUpdateSchema } from "./player.dto.js";
 export class PlayerController {
-  constructor(private readonly _playerService:PlayerService){}
-  list:RequestHandler=asyncHandler(async(req,res)=>{const r=await this._playerService.list(req.query as Record<string,unknown>,Boolean(req.user));sendSuccess(res,r.items,"Players fetched",200,{page:r.page,limit:r.limit,total:r.total,totalPages:Math.ceil(r.total/r.limit)});});
-  get:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.get(String(req.params.id),Boolean(req.user)),"Player fetched"));
-  create:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.create(req.body as Record<string,unknown>),"Player created",201));
-  update:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.update(String(req.params.id),req.body as Record<string,unknown>),"Player updated"));
-  deactivate:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.deactivate(String(req.params.id)),"Player deactivated"));
-  remove:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.remove(String(req.params.id)),"Player deleted"));
-  assign:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.assign(String(req.params.id),req.body as {teamRef:string;auctionPrice:number;jerseyNo?:number|null}),"Player assigned"));
-  unsold:RequestHandler=asyncHandler(async(req,res)=>sendSuccess(res,await this._playerService.markUnsold(String(req.params.id)),"Player marked unsold"));
+  constructor(private readonly playerService: PlayerService) {}
+  getPlayers: RequestHandler = asyncHandler(async (req, res) => {
+    const query = playerQuerySchema.parse(req.query);
+    const result = await this.playerService.getPlayers(query, Boolean(req.user));
+    sendSuccess(res, result.items, "Players fetched", 200, { page: result.page, limit: result.limit, total: result.total, totalPages: Math.ceil(result.total / result.limit) });
+  });
+  getPlayerById: RequestHandler = asyncHandler(async (req, res) => sendSuccess(res, await this.playerService.getPlayerById(String(req.params.id), Boolean(req.user)), "Player fetched"));
+  createPlayer: RequestHandler = asyncHandler(async (req, res) => sendSuccess(res, await this.playerService.createPlayer(playerCreateSchema.parse(req.body)), "Player created", 201));
+  updatePlayer: RequestHandler = asyncHandler(async (req, res) => sendSuccess(res, await this.playerService.updatePlayer(String(req.params.id), playerUpdateSchema.parse(req.body)), "Player updated"));
+  deactivatePlayer: RequestHandler = asyncHandler(async (req, res) => sendSuccess(res, await this.playerService.deactivatePlayer(String(req.params.id)), "Player deactivated"));
+  deletePlayer: RequestHandler = asyncHandler(async (req, res) => { await this.playerService.deletePlayer(String(req.params.id)); sendSuccess(res, null, "Player deleted"); });
+  assignPlayerToTeam: RequestHandler = asyncHandler(async (req, res) => sendSuccess(res, await this.playerService.assignPlayerToTeam(String(req.params.id), assignPlayerSchema.parse(req.body)), "Player assigned"));
+  markPlayerUnsold: RequestHandler = asyncHandler(async (req, res) => sendSuccess(res, await this.playerService.markPlayerUnsold(String(req.params.id)), "Player marked unsold"));
 }

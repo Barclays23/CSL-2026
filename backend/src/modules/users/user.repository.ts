@@ -1,7 +1,15 @@
-import { UserModel } from "./user.model.js";
-import { CrudRepository } from "../../shared/utils/crud.repository.js";
-export class UserRepository extends CrudRepository {
-  constructor(){super(UserModel);}
-  async findByEmail(email:string){return this.native.findOne({email}).select("+passwordHash").lean().exec();}
-  async findByIdWithPassword(id:string){return this.native.findById(id).select("+passwordHash").lean().exec();}
+import type { Types } from "mongoose";
+import { UserModel, type UserRecord } from "./user.model.js";
+import type { IUserRepository, UserEntity, UserFields } from "./user.types.js";
+export class UserRepository implements IUserRepository {
+  async findUserByEmail(email: string): Promise<UserEntity | null> {
+    return UserModel.findOne({ email }).select("+passwordHash").lean().exec() as Promise<UserEntity | null>;
+  }
+  async findUserById(userId: string): Promise<UserEntity | null> {
+    return UserModel.findById(userId).select("+passwordHash").lean().exec() as Promise<UserEntity | null>;
+  }
+  async createUser(data: UserFields): Promise<UserEntity> {
+    const user = await UserModel.create(data);
+    return user.toObject() as UserEntity;
+  }
 }
