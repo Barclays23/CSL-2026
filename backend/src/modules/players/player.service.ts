@@ -65,6 +65,11 @@ export class PlayerService {
     if(email&&email!==current.email&&await this.players.findOne({email,_id:{$ne:id}}))throw new AppError("Email already exists",409,"DUPLICATE_EMAIL",{email:"Email already exists"});
     if(data.mobile)data.mobile=normalizeMobile(String(data.mobile));if("email"in data)data.email=email;
     const merged:Row={...current,...data};
+    // Do not pass MongoDB-managed fields into $set; _id is immutable.
+    delete merged._id;
+    delete merged.createdAt;
+    delete merged.updatedAt;
+    delete merged.__v;
     if(merged.status==="inactive"){
       merged.teamRef=null;merged.jerseyNo=null;merged.auctionPrice=0;merged.auctionStatus="pending";
       const settings=await this.settings.get();if(settings.auctionState==="completed")await this.settings.update({auctionState:"in_progress",auctionCompletedAt:null});
