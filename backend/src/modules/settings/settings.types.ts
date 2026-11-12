@@ -41,4 +41,5 @@ export interface ISettingsService {
   getTournamentSettings(): Promise<SettingsEntity>;
   initializeTournamentSettings(): Promise<SettingsEntity>;
   updateTournamentSettings(data: SettingsUpdateDTO): Promise<SettingsEntity>;
+  updateAuctionLifecycle(state: AuctionState, completedAt: Date | null): Promise<SettingsEntity>;
 }
