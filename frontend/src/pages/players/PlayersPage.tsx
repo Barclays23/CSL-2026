@@ -12,7 +12,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
 import { CardSkeletonGrid } from "@/components/ui/Skeleton";
-import { AUCTION_STATUSES, PLAYER_STATUSES, POSITIONS } from "@/constants/football";
+import { AUCTION_STATUSES, PLAYER_STATUSES, POSITIONS } from "@/constants/football.constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -23,6 +23,11 @@ import { getTeams } from "@/services/teamService";
 import type { Asset } from "@/types/api.types";
 import type { AuctionStatus, PlayerStatus, Position, PublicPlayer } from "@/types/player.types";
 import { errorMessage } from "@/utils/errorHandler";
+
+
+
+
+
 
 export function PlayersPage() {
   const { isAuthenticated } = useAuth();

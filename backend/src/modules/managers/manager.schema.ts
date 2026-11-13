@@ -1,33 +1,81 @@
+// backend/src/modules/manager/manager.schema.ts
 import { z } from "zod";
+import {
+  assetSchema,
+  mobileBase,
+  nameBase,
+  objectIdSchema,
+  optionalDate,
+  optionalEmail,
+} from "../../shared/schemas/common.schema.js";
 
-const optionalEmail = z.union([z.email(), z.literal(""), z.null()])
-  .optional()
-  .transform((value) => typeof value === "string" && value.trim() ? value.trim().toLowerCase() : null);
+const managerRoleSchema = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((value) => (typeof value === "string" ? value.trim() : ""))
+  .refine((value) => value.length <= 40, "Role cannot exceed 40 characters")
+  .refine(
+    (value) => /^(?:[A-Za-z]+(?:\s[A-Za-z]+)*)?$/.test(value),
+    "Role can contain only letters and single spaces"
+  )
+  .transform((value) => value || null);
 
-const optionalDateOfBirth = z.coerce.date()
-  .nullable()
-  .optional()
-  .refine((value) => !value || value <= new Date(), "Date of birth cannot be in the future");
-
-const managerFields = {
-  name: z.string().trim().min(2).max(80),
-  mobile: z.string().trim().min(7).max(20),
+// 1. Pure base object without defaults or object-level refinements (Zod v4 compatible)
+const managerBaseSchema = z.object({
+  name: nameBase,
+  mobile: mobileBase,
   email: optionalEmail,
-  dateOfBirth: optionalDateOfBirth,
-  teamRef: z.string().regex(/^[a-f\\d]{24}$/i).nullable().optional(),
-  role: z.string().trim().max(40).nullable().optional(),
-  profilePic: z.object({ url: z.url(), publicId: z.string().min(1) }).nullable().optional(),
-  status: z.enum(["active", "inactive"]).default("active"),
+  dateOfBirth: optionalDate,
+  teamRef: objectIdSchema.nullable().optional(),
+  role: managerRoleSchema.optional(),
+  profilePic: assetSchema.nullable().optional(),
+  status: z.enum(["active", "inactive"], {
+    error: "Select a valid manager status",
+  }),
+});
+
+const validateManagerStateRules = (
+  value: Partial<z.infer<typeof managerBaseSchema>>,
+  ctx: z.RefinementCtx
+): void => {
+  if (value.status === "inactive" && value.teamRef) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["teamRef"],
+      message: "Cannot assign a team to an inactive manager",
+    });
+  }
 };
 
-export const managerCreateSchema = z.object(managerFields).strict();
-export const managerUpdateSchema = z.object(managerFields).partial().strict()
-  .refine((value) => Object.keys(value).length > 0, "At least one manager field is required");
+// 2. Create Schema
+export const managerCreateSchema = managerBaseSchema
+  .extend({
+    status: z.enum(["active", "inactive"]).default("active"),
+  })
+  .strict()
+  .superRefine(validateManagerStateRules);
 
-export const managerQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().trim().max(100).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
-  teamRef: z.string().regex(/^[a-f\\d]{24}$/i).optional(),
-}).strict();
+// 3. Update Schema
+export const managerUpdateSchema = managerBaseSchema
+  .partial()
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one manager field is required",
+  })
+  .superRefine(validateManagerStateRules);
+
+// 4. Query Schema
+export const managerQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    search: z.string().trim().max(40).optional(),
+    status: z
+      .union([z.enum(["active", "inactive"]), z.literal("")])
+      .optional()
+      .transform((value) => value || undefined),
+    teamRef: z
+      .union([objectIdSchema, z.literal("")])
+      .optional()
+      .transform((value) => value || undefined),
+  })
+  .strict();

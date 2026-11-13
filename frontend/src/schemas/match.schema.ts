@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isKnockout } from "@/constants/football";
+import { isKnockout } from "@/constants/football.constants";
 
 const optionalScore = z
   .union([z.string(), z.number(), z.null(), z.undefined()])

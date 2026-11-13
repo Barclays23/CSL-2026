@@ -3,6 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import * as authService from "@/services/authService";
 import type { AdminUser } from "@/types/auth.types";
 import { errorMessage } from "@/utils/errorHandler";
+import { toast } from "sonner";
 
 
 
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login: async (email, password) => {
         const response = await authService.login(email, password);
         setUser(response.data);
+        toast.success(response.message);
         void navigate({ to: "/admin/dashboard" });
       },
       logout: async () => {

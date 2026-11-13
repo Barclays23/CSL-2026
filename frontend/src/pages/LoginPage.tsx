@@ -50,7 +50,6 @@ export function LoginPage() {
             setSubmitting(true);
             try {
               await login(values.identifier, values.password);
-              toast.success("Welcome back");
 
             } catch (error) {
               toast.error(errorMessage(error));
@@ -68,12 +67,12 @@ export function LoginPage() {
             <Input
               type="text"
               autoComplete="username"
-              placeholder="admin@csl.com or 9847012345 or admin_csl"
+              placeholder="Email, Mobile, or Username"
               {...form.register("identifier")}
             />
           </FormField>
           <FormField label="Password" required error={form.formState.errors.password?.message}>
-            <Input type="password" autoComplete="current-password" {...form.register("password")} />
+            <Input type="password" placeholder="Enter Your Password" autoComplete="current-password" {...form.register("password")} />
           </FormField>
 
           <Button type="submit" disabled={submitting}>

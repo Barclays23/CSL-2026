@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormField } from "@/components/forms/FormField";
@@ -11,7 +11,6 @@ import type { Asset } from "@/types/api.types";
 import type { AdminManager, PublicManager } from "@/types/manager.types";
 import type { Team } from "@/types/team.types";
 import { applyFieldErrors, isAdminRecord } from "@/utils/forms";
-
 
 export function ManagerForm({
   manager,
@@ -26,66 +25,96 @@ export function ManagerForm({
 }) {
   const admin = manager && isAdminRecord(manager) ? manager : null;
   const [photo, setPhoto] = useState<Asset | null>(manager?.profilePic ?? null);
-  
+
   const form = useForm<ManagerFormValues>({
     resolver: zodResolver(managerFormSchema) as Resolver<ManagerFormValues>,
+    mode: "onTouched",
     defaultValues: {
       name: manager?.name ?? "",
       mobile: admin?.mobile ?? "",
       email: admin?.email ?? "",
-      dateOfBirth: admin?.dateOfBirth ?? "",
+      dateOfBirth: admin?.dateOfBirth ? admin.dateOfBirth.slice(0, 10) : "",
       teamRef: manager?.teamRef ?? "",
       role: manager?.role ?? "Manager",
       status: manager?.status ?? "active",
     },
   });
 
+  const { register, handleSubmit, setError, setValue, watch, formState } = form;
+  const status = watch("status");
+  const isActive = status === "active";
+
+  useEffect(() => {
+    if (status === "inactive") {
+      setValue("teamRef", "", { shouldValidate: true });
+    }
+  }, [status, setValue]);
+
   return (
     <form
       className="grid gap-4"
-      onSubmit={form.handleSubmit(async (values) => {
+      onSubmit={handleSubmit(async (values) => {
         try {
           await onSubmit(values, photo);
         } catch (error) {
-          applyFieldErrors(error, form.setError);
+          applyFieldErrors(error, setError);
           throw error;
         }
       })}
     >
-      <FormField label="Name" required error={form.formState.errors.name?.message}>
-        <Input {...form.register("name")} />
+      <ImageUploader
+        label="Profile picture"
+        purpose="manager-profile"
+        value={photo}
+        onChange={setPhoto}
+      />
+
+      <FormField label="Name" required error={formState.errors.name?.message}>
+        <Input placeholder="Enter manager full name" {...register("name")} />
       </FormField>
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Mobile" required error={form.formState.errors.mobile?.message}>
-          <Input {...form.register("mobile")} inputMode="tel" />
+        <FormField label="Mobile" required error={formState.errors.mobile?.message}>
+          <Input {...register("mobile")} inputMode="tel" placeholder="9847012345" />
         </FormField>
-        <FormField label="Email" error={form.formState.errors.email?.message}>
-          <Input type="email" {...form.register("email")} />
+        <FormField label="Email" error={formState.errors.email?.message}>
+          <Input type="email" placeholder="manager@example.com" {...register("email")} />
         </FormField>
       </div>
-      <FormField label="Date of birth" error={form.formState.errors.dateOfBirth?.message}>
-        <Input type="date" {...form.register("dateOfBirth")} />
-      </FormField>
-      <FormField label="Team" error={form.formState.errors.teamRef?.message}>
-        <Select {...form.register("teamRef")}>
-          <option value="">Unassigned</option>
-          {teams.map((team) => (
-            <option key={team._id} value={team._id}>
-              {team.name}
-            </option>
-          ))}
-        </Select>
-      </FormField>
-      <FormField label="Role" error={form.formState.errors.role?.message}>
-        <Input {...form.register("role")} placeholder="Manager" />
-      </FormField>
-      <FormField label="Status">
-        <Select {...form.register("status")}>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Date of birth" error={formState.errors.dateOfBirth?.message}>
+          <Input type="date" {...register("dateOfBirth")} />
+        </FormField>
+        <FormField label="Role" error={formState.errors.role?.message}>
+          <Input {...register("role")} placeholder="Manager" />
+        </FormField>
+      </div>
+
+      <FormField
+        label="Status"
+        hint="Inactive managers cannot remain assigned to a team."
+        error={formState.errors.status?.message}
+      >
+        <Select {...register("status")}>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </Select>
       </FormField>
-      <ImageUploader label="Profile picture" purpose="manager-profile" value={photo} onChange={setPhoto} />
+
+      {isActive ? (
+        <FormField label="Team" error={formState.errors.teamRef?.message}>
+          <Select {...register("teamRef")}>
+            <option value="">Unassigned</option>
+            {teams.map((team) => (
+              <option key={team._id} value={team._id}>
+                {team.name}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+      ) : null}
+
       <Button type="submit" disabled={submitting}>
         {submitting ? "Saving…" : "Save manager"}
       </Button>

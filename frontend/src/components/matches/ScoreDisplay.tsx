@@ -1,4 +1,4 @@
-import { STAGE_LABEL, STATUS_LABEL } from "@/constants/football";
+import { STAGE_LABEL, STATUS_LABEL } from "@/constants/football.constants";
 import type { Match } from "@/types/match.types";
 import { getMatchScore } from "@/utils/getMatchScore";
 import { refId, isPopulated } from "@/utils/refs";

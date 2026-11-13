@@ -3,6 +3,8 @@ import { appConfig } from "../config/env.config.js";
 import { userService } from "../container/dependencies.js";
 
 
+
+
 async function seedInitialAdmin(): Promise<void> {
   await connectDatabase(appConfig.MONGODB_URI);
 

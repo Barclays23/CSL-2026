@@ -1,22 +1,23 @@
 import multer, { type Multer } from "multer";
-import { appConfig } from "../config/env.config.js";
+import {
+  FILE_UPLOAD_MESSAGES,
+  IMAGE_UPLOAD_LIMITS,
+  SUPPORTED_IMAGE_MIME_TYPES,
+  type SupportedImageMimeType,
+} from "../shared/constants/file.constants.js";
 
-const supportedImageMimeTypes: readonly string[] = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-];
+
+
 
 export const imageUpload: Multer = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: appConfig.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
-    files: 1,
+    fileSize: IMAGE_UPLOAD_LIMITS.MAX_SIZE_BYTES,
+    files: IMAGE_UPLOAD_LIMITS.MAX_FILES,
   },
   fileFilter: (_request, file, callback): void => {
-    if (!supportedImageMimeTypes.includes(file.mimetype)) {
-      callback(new Error("Only JPG, PNG, WEBP or AVIF images are allowed"));
+    if (!SUPPORTED_IMAGE_MIME_TYPES.includes(file.mimetype as SupportedImageMimeType)) {
+      callback(new Error(FILE_UPLOAD_MESSAGES.INVALID_IMAGE_TYPE));
       return;
     }
     callback(null, true);

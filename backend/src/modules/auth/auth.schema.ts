@@ -3,7 +3,7 @@ import { z } from "zod";
 
 
 
-// move to schema.constants.ts file
+// move to constants file
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const mobileRegex = /^(?:\+91)?[6-9]\d{9}$/;
 const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;

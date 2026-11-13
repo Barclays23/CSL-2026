@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
-import { MATCH_STATUSES, STAGES } from "@/constants/football";
+import { MATCH_STATUSES, STAGES } from "@/constants/football.constants";
 import { matchFormSchema, type MatchFormInput, type MatchFormValues } from "@/schemas/match.schema";
 import type { Match } from "@/types/match.types";
 import type { Team } from "@/types/team.types";

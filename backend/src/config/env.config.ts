@@ -1,6 +1,9 @@
 import "dotenv/config";
 import { z } from "zod";
 
+
+
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(5000),
@@ -34,7 +37,6 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
   CLOUDINARY_FOLDER: z.string().trim().min(1).default("csl-2026"),
-  UPLOAD_MAX_SIZE_MB: z.coerce.number().int().positive().max(25).default(5),
 });
 
 

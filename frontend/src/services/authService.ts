@@ -7,7 +7,7 @@ import type { AdminUser } from "@/types/auth.types";
 
 
 
-export function login(identifier: string, password: string) {
+export function login(identifier: string, password: string): Promise<ApiResponse<AdminUser>> {
   return run(() =>
     USE_MOCK_API
       ? previewRepository.login(identifier, password)

@@ -10,7 +10,7 @@ import { Drawer } from "@/components/ui/Drawer";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { POSITION_LABEL } from "@/constants/football";
+import { POSITION_LABEL } from "@/constants/football.constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { useServiceQuery } from "@/hooks/useServiceQuery";

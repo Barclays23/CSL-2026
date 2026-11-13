@@ -8,7 +8,7 @@ import type { SettingsUpdate } from "@/types/settings.types";
 import type { AdminSponsor, PublicSponsor, SponsorQuery, SponsorWrite } from "@/types/sponsor.types";
 import type { DashboardSummary, GroupStanding, StandingRow, TeamStatistics, TopScorer } from "@/types/statistics.types";
 import type { AuctionSummary, Team, TeamAuctionCard, TeamBrief, TeamSquadStats, TeamWrite } from "@/types/team.types";
-import { isKnockout } from "@/constants/football";
+import { isKnockout } from "@/constants/football.constants";
 import {
   commit,
   isAdmin,

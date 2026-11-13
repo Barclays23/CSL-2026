@@ -13,7 +13,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tabs } from "@/components/ui/Tabs";
-import { STAGES } from "@/constants/football";
+import { STAGES } from "@/constants/football.constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useServiceQuery } from "@/hooks/useServiceQuery";

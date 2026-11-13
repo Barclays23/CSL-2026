@@ -6,7 +6,21 @@ import type { ISettingsService } from "../settings/settings.interfaces.js";
 import type { ITeamRepository } from "../teams/team.types.js";
 import type { PlayerAssignmentInput } from "./player.dto.js";
 import type { IPlayerService, IPlayerRepository } from "./player.interfaces.js";
-import type { PlayerAdminDTO, PlayerCreateDTO, PlayerEntity, PlayerFields, PlayerListFilter, PlayerPublicDTO, PlayerQueryDTO, PlayerResponseDTO, PlayerUpdateDTO, PopulatedPlayerEntity } from "./player.types.js";
+import type { 
+  PlayerAdminDTO, 
+  PlayerCreateDTO, 
+  PlayerEntity, 
+  PlayerFields, 
+  PlayerListFilter, 
+  PlayerPublicDTO, 
+  PlayerQueryDTO, 
+  PlayerResponseDTO, 
+  PlayerUpdateDTO, 
+  PopulatedPlayerEntity 
+} from "./player.types.js";
+
+
+
 
 export class PlayerService implements IPlayerService {
   constructor(
