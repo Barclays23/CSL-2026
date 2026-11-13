@@ -10,6 +10,10 @@ import type { AdminUserDTO } from "../users/user.types.js";
 import { loginSchema } from "./auth.schema.js";
 import type { LoginInput } from "./auth.dto.js";
 
+
+
+
+
 export class AuthController implements IAuthController {
   constructor(
     private readonly _authService: IAuthService
@@ -22,7 +26,9 @@ export class AuthController implements IAuthController {
   ): Promise<void> => {
     try {
       const credentials: LoginInput = loginSchema.parse(request.body);
+
       const session: AuthSessionDTO = await this._authService.login(credentials);
+      
       response.cookie(AUTH_COOKIE_NAME, session.token, {
         httpOnly: true,
         secure: appConfig.COOKIE_SECURE,
@@ -30,9 +36,11 @@ export class AuthController implements IAuthController {
         path: "/",
         maxAge: 24 * 60 * 60 * 1000,
       });
+      
       response
         .status(HTTP_STATUS.OK)
         .json(ApiResponse.success<AdminUserDTO>(AUTH_MESSAGES.LOGIN_SUCCESS, session.user));
+
     } catch (error: unknown) {
       next(error);
     }
@@ -50,9 +58,11 @@ export class AuthController implements IAuthController {
         sameSite: appConfig.COOKIE_SAME_SITE,
         path: "/",
       });
+
       response
         .status(HTTP_STATUS.OK)
         .json(ApiResponse.success<null>(AUTH_MESSAGES.LOGOUT_SUCCESS, null));
+        
     } catch (error: unknown) {
       next(error);
     }

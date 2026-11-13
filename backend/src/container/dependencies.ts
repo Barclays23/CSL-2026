@@ -65,7 +65,7 @@ const statisticsRepo: IStatisticsRepository = new StatisticsRepository();
 // ============================================================================
 const uploadService: IUploadService     = new UploadService();
 export const settingsService: ISettingsService = new SettingsService(settingsRepo);
-const userService: IUserService         = new UserService(userRepo);
+export const userService: IUserService         = new UserService(userRepo);
 const authService: IAuthService         = new AuthService(userRepo);
 const sponsorService: ISponsorService   = new SponsorService(sponsorRepo);
 

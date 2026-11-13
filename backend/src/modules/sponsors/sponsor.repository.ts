@@ -52,7 +52,7 @@ export class SponsorRepository implements ISponsorRepository {
     let sponsorQuery = SponsorModel.findByIdAndUpdate(
       sponsorId,
       { $set: data },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
     if (includePrivateFields) {
       sponsorQuery = sponsorQuery.select("+contactPerson +contactMobile +notes");

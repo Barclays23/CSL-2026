@@ -122,7 +122,7 @@ export class PlayerRepository implements IPlayerRepository {
 
   async updatePlayer(playerId: string, data: Partial<PlayerFields>): Promise<PlayerEntity | null> {
     return PlayerModel.findByIdAndUpdate(playerId, { $set: data }, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).lean<PlayerEntity>().exec();
   }

@@ -14,18 +14,24 @@ import { PREVIEW_LOGIN } from "@/mocks/repository";
 import { loginSchema, type LoginValues } from "@/schemas/auth.schema";
 import { errorMessage } from "@/utils/errorHandler";
 
+
+
+
 export function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { identifier: "", password: "" },
   });
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) void navigate({ to: "/admin/dashboard" });
   }, [isAuthenticated, isLoading, navigate]);
+
+
 
   return (
     <PageContainer className="max-w-lg">
@@ -43,21 +49,33 @@ export function LoginPage() {
           onSubmit={form.handleSubmit(async (values) => {
             setSubmitting(true);
             try {
-              await login(values.email, values.password);
+              await login(values.identifier, values.password);
               toast.success("Welcome back");
+
             } catch (error) {
               toast.error(errorMessage(error));
+
             } finally {
               setSubmitting(false);
             }
           })}
         >
-          <FormField label="Email" required error={form.formState.errors.email?.message}>
-            <Input type="email" autoComplete="username" {...form.register("email")} />
+          <FormField
+            label="Email, Mobile, or Username"
+            required
+            error={form.formState.errors.identifier?.message}
+          >
+            <Input
+              type="text"
+              autoComplete="username"
+              placeholder="admin@csl.com or 9847012345 or admin_csl"
+              {...form.register("identifier")}
+            />
           </FormField>
           <FormField label="Password" required error={form.formState.errors.password?.message}>
             <Input type="password" autoComplete="current-password" {...form.register("password")} />
           </FormField>
+
           <Button type="submit" disabled={submitting}>
             {submitting ? "Signing in…" : "Sign in"}
           </Button>

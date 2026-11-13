@@ -56,7 +56,7 @@ export class MatchRepository implements IMatchRepository {
 
   async updateMatch(matchId: string, data: Partial<MatchFields>): Promise<MatchEntity | null> {
     return MatchModel.findByIdAndUpdate(matchId, { $set: data }, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).lean<MatchEntity>().exec();
   }
@@ -70,7 +70,10 @@ export class MatchRepository implements IMatchRepository {
     return MatchModel.findByIdAndUpdate(
       matchId,
       { $push: { goals: goal } },
-      { new: true, runValidators: true },
+      { 
+        returnDocument: "after", 
+        runValidators: true 
+      },
     ).populate(populatedMatchPaths).lean<PopulatedMatchEntity>().exec();
   }
 
@@ -89,7 +92,7 @@ export class MatchRepository implements IMatchRepository {
           "goals.$.ownGoalPlayerRef": goal.ownGoalPlayerRef,
         },
       },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     ).populate(populatedMatchPaths).lean<PopulatedMatchEntity>().exec();
   }
 
@@ -97,7 +100,7 @@ export class MatchRepository implements IMatchRepository {
     return MatchModel.findByIdAndUpdate(
       matchId,
       { $pull: { goals: { _id: new Types.ObjectId(goalId) } } },
-      { new: true },
+      { returnDocument: "after" },
     ).populate(populatedMatchPaths).lean<PopulatedMatchEntity>().exec();
   }
 }

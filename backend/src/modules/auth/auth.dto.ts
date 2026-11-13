@@ -1,15 +1,16 @@
+import type { AdminUserDTO } from "../users/user.types.js";
+
+
 /** Validated administrator login payload. */
 export interface LoginDto {
-  email: string;
+  identifier: string;
   password: string;
 }
 export type LoginInput = LoginDto;
+export type LoginCredentials = LoginDto;
 
-import type { AdminUserDTO } from "../users/user.types.js";
 
 export interface AuthSessionDTO {
   token: string;
   user: AdminUserDTO;
 }
-
-export type LoginCredentials = LoginDto;

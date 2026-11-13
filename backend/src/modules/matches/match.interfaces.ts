@@ -1,8 +1,11 @@
 import type { GoalFields, MatchFields, MatchEntity, PopulatedMatchEntity, MatchResponseDTO, MatchCreateDTO, MatchUpdateDTO, MatchQueryDTO, GoalCreateDTO, GoalUpdateDTO, MatchListFilter } from "./match.types.js";
 import type { Types } from "mongoose";
-import type { Asset } from "../../shared/types/common.types.js";
+import type { Asset, ControllerMethod } from "../../shared/types/common.types.js";
 import type { MatchCreateInput, MatchQueryInput, MatchUpdateInput, GoalInput } from "./match.dto.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
+
+
+
 
 export interface IMatchRepository {
   findMatches(filter: MatchListFilter, page: number, limit: number): Promise<{ items: PopulatedMatchEntity[]; total: number }>;
@@ -16,6 +19,9 @@ export interface IMatchRepository {
   updateMatchGoal(matchId: string, goalId: string, goal: GoalFields): Promise<PopulatedMatchEntity | null>;
   removeMatchGoal(matchId: string, goalId: string): Promise<PopulatedMatchEntity | null>;
 }
+
+
+
 export interface IMatchService {
   getMatches(query: MatchQueryDTO): Promise<import("../../shared/types/common.types.js").PaginatedResult<MatchResponseDTO>>;
   getMatchById(matchId: string): Promise<MatchResponseDTO>;
@@ -26,13 +32,16 @@ export interface IMatchService {
   updateMatchGoal(matchId: string, goalId: string, input: GoalUpdateDTO): Promise<MatchResponseDTO>;
   deleteMatchGoal(matchId: string, goalId: string): Promise<MatchResponseDTO>;
 }
+
+
+
 export interface IMatchController {
-  getMatches: import("../../shared/types/common.types.js").ControllerMethod;
-  getMatchById: import("../../shared/types/common.types.js").ControllerMethod;
-  createMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  updateMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  deleteMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  addGoalToMatch: import("../../shared/types/common.types.js").ControllerMethod;
-  updateMatchGoal: import("../../shared/types/common.types.js").ControllerMethod;
-  deleteMatchGoal: import("../../shared/types/common.types.js").ControllerMethod;
+  getMatches: ControllerMethod;
+  getMatchById: ControllerMethod;
+  createMatch: ControllerMethod;
+  updateMatch: ControllerMethod;
+  deleteMatch: ControllerMethod;
+  addGoalToMatch: ControllerMethod;
+  updateMatchGoal: ControllerMethod;
+  deleteMatchGoal: ControllerMethod;
 }

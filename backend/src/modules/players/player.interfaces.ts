@@ -1,8 +1,10 @@
 import type { PlayerFields, PlayerEntity, PopulatedPlayerEntity, PlayerAdminDTO, PlayerResponseDTO, PlayerCreateDTO, PlayerUpdateDTO, PlayerQueryDTO, PlayerListFilter, PlayerAuctionCountsDTO, PlayerAssignmentInput } from "./player.types.js";
 import type { Types } from "mongoose";
-import type { Asset } from "../../shared/types/common.types.js";
+import type { Asset, ControllerMethod } from "../../shared/types/common.types.js";
 import type { TeamBriefDTO } from "../teams/team.types.js";
 import type { PlayerCreateInput, PlayerQueryInput, PlayerUpdateInput } from "./player.dto.js";
+
+
 
 export interface IPlayerRepository {
   findPlayers(filter: PlayerListFilter, page: number, limit: number): Promise<{ items: PopulatedPlayerEntity[]; total: number }>;
@@ -20,6 +22,9 @@ export interface IPlayerRepository {
   updatePlayer(playerId: string, data: Partial<PlayerFields>): Promise<PlayerEntity | null>;
   deletePlayer(playerId: string): Promise<boolean>;
 }
+
+
+
 export interface IPlayerService {
   getPlayers(query: PlayerQueryDTO, isAdmin: boolean): Promise<import("../../shared/types/common.types.js").PaginatedResult<PlayerResponseDTO>>;
   getPlayerById(playerId: string, isAdmin: boolean): Promise<PlayerResponseDTO>;
@@ -30,13 +35,15 @@ export interface IPlayerService {
   deactivatePlayer(playerId: string): Promise<PlayerAdminDTO>;
   deletePlayer(playerId: string): Promise<void>;
 }
+
+
 export interface IPlayerController {
-  getPlayers: import("../../shared/types/common.types.js").ControllerMethod;
-  getPlayerById: import("../../shared/types/common.types.js").ControllerMethod;
-  createPlayer: import("../../shared/types/common.types.js").ControllerMethod;
-  updatePlayer: import("../../shared/types/common.types.js").ControllerMethod;
-  assignPlayerToTeam: import("../../shared/types/common.types.js").ControllerMethod;
-  markPlayerUnsold: import("../../shared/types/common.types.js").ControllerMethod;
-  deactivatePlayer: import("../../shared/types/common.types.js").ControllerMethod;
-  deletePlayer: import("../../shared/types/common.types.js").ControllerMethod;
+  getPlayers: ControllerMethod;
+  getPlayerById: ControllerMethod;
+  createPlayer: ControllerMethod;
+  updatePlayer: ControllerMethod;
+  assignPlayerToTeam: ControllerMethod;
+  markPlayerUnsold: ControllerMethod;
+  deactivatePlayer: ControllerMethod;
+  deletePlayer: ControllerMethod;
 }

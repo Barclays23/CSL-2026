@@ -74,7 +74,7 @@ export class TeamRepository implements ITeamRepository {
     if (data.groupName !== undefined) updateFields.groupName = data.groupName?.trim() || null;
     if (data.status !== undefined) updateFields.status = data.status;
     return TeamModel.findByIdAndUpdate(teamId, { $set: updateFields }, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).lean<TeamEntity>().exec();
   }

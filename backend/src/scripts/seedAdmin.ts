@@ -1,15 +1,14 @@
 import { connectDatabase, disconnectDatabase } from "../config/database.config.js";
 import { appConfig } from "../config/env.config.js";
-import { UserRepository } from "../modules/users/user.repository.js";
-import { UserService } from "../modules/users/user.service.js";
+import { userService } from "../container/dependencies.js";
 
 
 async function seedInitialAdmin(): Promise<void> {
   await connectDatabase(appConfig.MONGODB_URI);
+
   try {
-    const userRepository = new UserRepository();
-    const userService = new UserService(userRepository);
     await userService.createInitialAdmin();
+
   } finally {
     await disconnectDatabase();
   }

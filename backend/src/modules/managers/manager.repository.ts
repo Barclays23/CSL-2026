@@ -52,7 +52,7 @@ export class ManagerRepository implements IManagerRepository {
 
   async updateManager(managerId: string, data: Partial<ManagerFields>): Promise<ManagerEntity | null> {
     return ManagerModel.findByIdAndUpdate(managerId, { $set: data }, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).lean<ManagerEntity>().exec();
   }

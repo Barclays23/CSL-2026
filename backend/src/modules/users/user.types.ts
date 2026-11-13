@@ -1,6 +1,5 @@
 import type { Types } from "mongoose";
-import type { AdminUserDTO } from "./user.dto.js";
-import type { AdminUserCreateInput } from "./user.dto.js";
+
 
 export type UserStatus = "active" | "blocked";
 export type UserRole = "admin";
@@ -8,6 +7,8 @@ export type UserRole = "admin";
 export interface UserFields {
   name: string;
   email: string;
+  mobile: string;
+  username?: string;
   passwordHash: string;
   role: UserRole;
   status: UserStatus;

@@ -14,9 +14,22 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.enum(["15m", "30m", "1h", "1d", "7d"]).default("1d"),
   COOKIE_SECURE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
-  ADMIN_NAME: z.string().default("CSL Administrator"),
-  ADMIN_EMAIL: z.email().optional(),
+  ADMIN_NAME: z.string().trim().min(5).max(20).default("CSL Admin"),
+  ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
+  ADMIN_USERNAME: z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9_]{3,30}$/)
+  .optional()
+  .or(z.literal("")),
+  ADMIN_MOBILE: z
+    .string()
+    .trim()
+    .transform((val) => val.replace(/[\s()-]/g, ""))
+    .refine((val) => /^(?:\+91)?[6-9]\d{9}$/.test(val), "Invalid ADMIN_MOBILE")
+    .transform((val) => (val.startsWith("+91") ? val.slice(3) : val)),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),

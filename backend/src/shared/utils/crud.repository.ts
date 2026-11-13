@@ -48,7 +48,7 @@ export abstract class CrudRepository<TEntity extends object> {
     data: UpdateQuery<TEntity>,
   ): Promise<HydratedDocument<TEntity> | null> {
     return this.model.findByIdAndUpdate(id, { $set: data }, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).exec();
   }

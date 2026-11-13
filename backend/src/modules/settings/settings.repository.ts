@@ -11,7 +11,7 @@ export class SettingsRepository implements ISettingsRepository {
     const settings = await SettingsModel.findOneAndUpdate(
       { singletonKey: "CSL_CURRENT" },
       { $setOnInsert: { singletonKey: "CSL_CURRENT" } },
-      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true, runValidators: true },
     ).lean<SettingsEntity>().exec();
 
     if (!settings) throw new Error("Tournament settings could not be initialized");
@@ -22,7 +22,7 @@ export class SettingsRepository implements ISettingsRepository {
     return SettingsModel.findOneAndUpdate(
       { singletonKey: "CSL_CURRENT" },
       { $set: data },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     ).lean<SettingsEntity>().exec();
   }
 
@@ -30,7 +30,7 @@ export class SettingsRepository implements ISettingsRepository {
     return SettingsModel.findOneAndUpdate(
       { singletonKey: "CSL_CURRENT" },
       { $set: { auctionState: state, auctionCompletedAt: completedAt } },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     ).lean<SettingsEntity>().exec();
   }
 }

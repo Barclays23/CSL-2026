@@ -4,11 +4,16 @@ import { api, run } from "@/services/api";
 import type { ApiResponse } from "@/types/api.types";
 import type { AdminUser } from "@/types/auth.types";
 
-export function login(email: string, password: string) {
+
+
+
+export function login(identifier: string, password: string) {
   return run(() =>
     USE_MOCK_API
-      ? previewRepository.login(email, password)
-      : api.post<ApiResponse<AdminUser>>("/auth/login", { email, password }).then((response) => response.data),
+      ? previewRepository.login(identifier, password)
+      : api
+          .post<ApiResponse<AdminUser>>("/auth/login", { identifier, password })
+          .then((response) => response.data)
   );
 }
 

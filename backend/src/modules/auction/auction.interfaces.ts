@@ -1,6 +1,9 @@
 import type { AuctionCompletionValidationResult } from "./auction.dto.js";
 import type { AuctionState } from "../settings/settings.types.js";
 import type { SettingsEntity } from "../settings/settings.types.js";
+import { ControllerMethod } from "../../shared/types/common.types.js";
+
+
 
 export interface IAuctionService {
   startAuction(): Promise<SettingsEntity>;
@@ -8,8 +11,10 @@ export interface IAuctionService {
   reopenAuction(): Promise<SettingsEntity>;
   validateAuctionCompletion(): Promise<AuctionCompletionValidationResult>;
 }
+
+
 export interface IAuctionController {
-  startAuction: import("../../shared/types/common.types.js").ControllerMethod;
-  completeAuction: import("../../shared/types/common.types.js").ControllerMethod;
-  reopenAuction: import("../../shared/types/common.types.js").ControllerMethod;
+  startAuction: ControllerMethod;
+  completeAuction: ControllerMethod;
+  reopenAuction: ControllerMethod;
 }

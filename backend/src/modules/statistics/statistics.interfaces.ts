@@ -2,6 +2,9 @@ import type { GroupStandingDTO, TopScorerDTO, DashboardSummaryDTO, OverallTeamSt
 import type { MatchEntity, MatchResponseDTO, PopulatedMatchEntity } from "../matches/match.types.js";
 import type { PlayerPublicDTO, PlayerStatisticsEntity } from "../players/player.types.js";
 import type { TeamBriefDTO, TeamEntity } from "../teams/team.types.js";
+import { ControllerMethod } from "../../shared/types/common.types.js";
+
+
 
 export interface IStatisticsRepository {
   findCompletedMatches(): Promise<MatchEntity[]>;
@@ -13,6 +16,9 @@ export interface IStatisticsRepository {
   findRecentResultCards(limit: number): Promise<PopulatedMatchEntity[]>;
   countScheduledFixtures(): Promise<number>;
 }
+
+
+
 export interface IStatisticsService {
   getDashboardStatistics(): Promise<DashboardSummaryDTO>;
   getGroupStandings(): Promise<GroupStandingDTO[]>;
@@ -20,8 +26,10 @@ export interface IStatisticsService {
   getOverallTeamStatistics(): Promise<OverallTeamStatisticsDTO[]>;
   getTeamStatistics(teamId: string): Promise<TeamStatisticsDTO>;
 }
+
+
 export interface IStatisticsController {
-  getDashboardStatistics: import("../../shared/types/common.types.js").ControllerMethod;
-  getGroupStandings: import("../../shared/types/common.types.js").ControllerMethod;
-  getTopScorers: import("../../shared/types/common.types.js").ControllerMethod;
+  getDashboardStatistics: ControllerMethod;
+  getGroupStandings: ControllerMethod;
+  getTopScorers: ControllerMethod;
 }
